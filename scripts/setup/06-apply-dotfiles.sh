@@ -16,8 +16,8 @@ print_header "Step 7/9: Applying dotfiles"
 DOTFILES_DIR="$INSTALL_PATH/dotfiles"
 
 if [[ ! -d "$DOTFILES_DIR" ]]; then
-    log_warn "Dotfiles directory not found: $DOTFILES_DIR"
-    exit 0
+    log_error "Dotfiles directory not found: $DOTFILES_DIR"
+    exit 1
 fi
 
 # Backup existing files

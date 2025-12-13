@@ -16,9 +16,8 @@ print_header "Step 8/9: Running bootstrap.sh"
 BOOTSTRAP="$INSTALL_PATH/scripts/bootstrap.sh"
 
 if [[ ! -f "$BOOTSTRAP" ]]; then
-    log_warn "Bootstrap script not found: $BOOTSTRAP"
-    log_warn "You can run it manually later"
-    exit 0
+    log_error "Bootstrap script not found: $BOOTSTRAP"
+    exit 1
 fi
 
 # Check for .env file

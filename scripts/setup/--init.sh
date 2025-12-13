@@ -73,7 +73,20 @@ main() {
         fi
     done
 
-    print_footer "Setup complete!"
+    # Final verification (skip in TEST_MODE - Docker can't verify all checks)
+    if [[ "${TEST_MODE:-0}" != "1" ]]; then
+        echo ""
+        log_step "Running final healthcheck..."
+        if bash "$PROJECT_DIR/scripts/healthcheck.sh"; then
+            print_footer "Setup complete!"
+        else
+            log_error "Setup completed with errors. Review healthcheck output above."
+            exit 1
+        fi
+    else
+        log_info "[TEST] Skipping healthcheck in test mode"
+        print_footer "Setup complete!"
+    fi
 }
 
 main "$@"
