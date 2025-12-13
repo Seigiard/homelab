@@ -1,0 +1,131 @@
+# ===========================================
+# Homelab Aliases
+# ===========================================
+
+# -------------------------------------------
+# Navigation
+# -------------------------------------------
+
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+alias hl='cd /opt/homelab'
+alias hls='cd /opt/homelab/services'
+
+# -------------------------------------------
+# List files (with colors)
+# -------------------------------------------
+
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias lt='ls -alFt'  # Sort by time
+
+# -------------------------------------------
+# Grep (with colors)
+# -------------------------------------------
+
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# -------------------------------------------
+# Docker
+# -------------------------------------------
+
+alias d='docker'
+alias dc='docker compose'
+alias dcu='docker compose up -d'
+alias dcd='docker compose down'
+alias dcr='docker compose restart'
+alias dcl='docker compose logs -f'
+alias dcp='docker compose pull'
+alias dce='docker compose exec'
+alias dcs='docker compose ps'
+
+# Docker system
+alias dps='docker ps'
+alias dpsa='docker ps -a'
+alias di='docker images'
+alias dprune='docker system prune -af'
+alias dvprune='docker volume prune -f'
+
+# -------------------------------------------
+# Git
+# -------------------------------------------
+
+alias g='git'
+alias gs='git status'
+alias ga='git add'
+alias gaa='git add -A'
+alias gc='git commit -m'
+alias gp='git push'
+alias gpl='git pull'
+alias gl='git log --oneline -10'
+alias gd='git diff'
+alias gco='git checkout'
+alias gb='git branch'
+
+# -------------------------------------------
+# System
+# -------------------------------------------
+
+alias h='htop'
+alias ports='sudo netstat -tulpn'
+alias myip='curl -s ifconfig.me'
+alias localip='hostname -I | awk "{print \$1}"'
+alias df='df -h'
+alias du='du -h'
+alias free='free -h'
+
+# -------------------------------------------
+# Editors
+# -------------------------------------------
+
+alias e='micro'
+alias m='mc'
+
+# -------------------------------------------
+# Zellij
+# -------------------------------------------
+
+alias zj='zellij'
+alias zja='zellij attach'
+alias zjl='zellij list-sessions'
+
+# -------------------------------------------
+# Safety
+# -------------------------------------------
+
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# -------------------------------------------
+# Homelab specific
+# -------------------------------------------
+
+# Quick service management
+alias hldeploy='cd /opt/homelab && ./scripts/deploy.sh'
+alias hlstatus='cd /opt/homelab && docker compose ps'
+alias hllogs='cd /opt/homelab && docker compose logs -f'
+
+# Service shortcuts
+traefik() { cd /opt/homelab/services/traefik && docker compose "$@"; }
+adguard() { cd /opt/homelab/services/adguard && docker compose "$@"; }
+samba() { cd /opt/homelab/services/samba && docker compose "$@"; }
+immich() { cd /opt/homelab/services/immich && docker compose "$@"; }
+
+# -------------------------------------------
+# Misc
+# -------------------------------------------
+
+alias reload='source ~/.zshrc'
+alias path='echo -e ${PATH//:/\\n}'
+alias now='date +"%Y-%m-%d %H:%M:%S"'
+alias week='date +%V'
+
+# Alert for long-running commands (use: sleep 10; alert)
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'

@@ -1,0 +1,23 @@
+# Environment files with secrets
+.env
+
+# Local overrides
+docker-compose.override.yml
+
+# Runtime data
+*.log
+*.pid
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/

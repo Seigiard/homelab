@@ -1,0 +1,35 @@
+[user]
+    name = seigiard
+    email = seigiard@gmail.com
+
+[init]
+    defaultBranch = main
+
+[core]
+    editor = micro
+    autocrlf = input
+    pager = less -FRX
+
+[pull]
+    rebase = false
+
+[push]
+    default = current
+    autoSetupRemote = true
+
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    df = diff
+    lg = log --oneline --graph --decorate -10
+    last = log -1 HEAD --stat
+    unstage = reset HEAD --
+    amend = commit --amend --no-edit
+
+[color]
+    ui = auto
+
+[help]
+    autocorrect = 1
