@@ -15,6 +15,7 @@ plugins=(
     docker-compose
     zsh-autosuggestions
     zsh-syntax-highlighting
+    history-substring-search
 )
 
 # Load oh-my-zsh
@@ -63,6 +64,18 @@ setopt SHARE_HISTORY
 if [[ -z "$ZELLIJ" && -n "$SSH_CONNECTION" ]]; then
     eval "$(zellij setup --generate-auto-start zsh)"
 fi
+
+# -------------------------------------------
+# History substring search (↑/↓ with typed prefix)
+# -------------------------------------------
+
+# Bind ↑ and ↓ arrows to history-substring-search
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+
+# Also bind for terminals that send different codes
+bindkey "$terminfo[kcuu1]" history-substring-search-up
+bindkey "$terminfo[kcud1]" history-substring-search-down
 
 # -------------------------------------------
 # Custom prompt additions
