@@ -21,6 +21,18 @@ services:
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.service=api@internal"
 
+  avahi-helper:
+    image: hardillb/traefik-avahi-helper
+    container_name: avahi-helper
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
+    networks:
+      - traefik-net
+
 networks:
   traefik-net:
     external: true
