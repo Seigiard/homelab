@@ -1,0 +1,17 @@
+title: Homelab
+background:
+  image: https://images.unsplash.com/photo-1502790671504-542ad42d5189?auto=format&fit=crop&w=2560&q=80
+  blur: sm
+  opacity: 50
+
+theme: dark
+color: slate
+
+headerStyle: clean
+layout:
+  Infrastructure:
+    style: row
+    columns: 4
+  Services:
+    style: row
+    columns: 4

@@ -1,0 +1,10 @@
+- Infrastructure:
+    - Traefik:
+        icon: traefik
+        href: https://traefik.home.local
+        description: Reverse Proxy
+        server: my-docker
+        container: traefik
+
+- Services:
+    # Add services here as they are deployed
