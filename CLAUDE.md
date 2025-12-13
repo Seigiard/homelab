@@ -54,9 +54,9 @@ homelab/
 │   ├── bootstrap.sh      # Docker, папки, права
 │   └── deploy.sh         # Запуск всех сервисов
 ├── services/
-│   ├── traefik/
-│   ├── adguard/
-│   ├── samba/
+│   ├── traefik/          # ✅ Reverse proxy
+│   ├── homepage/         # ✅ Dashboard (home.local)
+│   ├── adguard/          # DNS (планируется)
 │   └── ...
 └── .env.example
 ```
@@ -74,8 +74,11 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 # После setup.sh — развернуть все сервисы
 ./scripts/deploy.sh
 
-# Развернуть конкретный сервис
-cd services/<name> && docker compose up -d
+# Управление сервисами
+./scripts/deploy.sh stop      # Остановить
+./scripts/deploy.sh restart   # Перезапустить
+./scripts/deploy.sh rebuild   # Пересобрать (pull + restart)
+./scripts/deploy.sh status    # Статус
 ```
 
 ## Полезные алиасы (после установки)

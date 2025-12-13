@@ -41,7 +41,9 @@ homelab/
 │       ├── 07-setup-ssh-key.sh
 │       └── 08-show-summary.sh
 ├── dotfiles/                  # Симлинкуются в ~
-├── docker/                    # Docker compose файлы
+├── services/                  # Docker сервисы
+│   ├── traefik/               # Reverse proxy (*.home.local)
+│   └── homepage/              # Dashboard (home.local)
 └── tests/                     # Docker-тестирование
 ```
 
@@ -93,6 +95,19 @@ docker run -it --rm homelab-test bash
 | 04-setup-avahi | `hostname` после установки |
 | 05-apply-dotfiles | `readlink` для symlink'ов |
 | 07-setup-ssh-key | Наличие файлов ключа |
+
+## Запуск сервисов
+
+```bash
+./scripts/deploy.sh           # Запустить все сервисы
+./scripts/deploy.sh stop      # Остановить все
+./scripts/deploy.sh status    # Статус контейнеров
+./scripts/deploy.sh restart   # Перезапустить
+./scripts/deploy.sh rebuild   # Пересобрать (pull + restart)
+./scripts/deploy.sh traefik   # Запустить один сервис
+```
+
+После первого запуска контейнеры автоматически поднимаются при перезагрузке (`restart: unless-stopped`).
 
 ## Healthcheck
 
