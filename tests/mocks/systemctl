@@ -1,0 +1,4 @@
+#!/bin/bash
+# Mock systemctl for Docker testing (no systemd available)
+echo "[MOCK] systemctl $@"
+exit 0

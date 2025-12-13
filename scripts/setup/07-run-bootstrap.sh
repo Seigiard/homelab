@@ -34,6 +34,6 @@ if [[ ! -f "$INSTALL_PATH/.env" ]]; then
 fi
 
 log_step "Running bootstrap..."
-sudo "$BOOTSTRAP"
+sudo TEST_MODE="${TEST_MODE:-0}" "$BOOTSTRAP"
 
 log_info "Bootstrap completed"

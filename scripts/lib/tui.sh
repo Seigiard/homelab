@@ -127,6 +127,12 @@ confirm() {
 }
 
 press_enter() {
+    # Skip in test mode
+    if [[ "${TEST_MODE:-0}" == "1" ]]; then
+        log_info "[TEST] Skipping interactive prompt"
+        return 0
+    fi
+
     local prompt="${1:-Press Enter to continue...}"
     echo ""
     read -p "$prompt"

@@ -20,7 +20,6 @@ packages=(
     # Editors
     micro
     # Terminal tools
-    zellij
     htop
     mc
     tree
@@ -34,8 +33,21 @@ packages=(
     zsh
 )
 
-log_step "Installing: ${packages[*]}"
+log_step "Installing apt packages: ${packages[*]}"
 sudo apt install -y "${packages[@]}"
+
+# Install zellij via snap (not in Ubuntu apt repos)
+if ! command -v zellij &> /dev/null; then
+    if [[ "${TEST_MODE:-0}" == "1" ]]; then
+        log_info "[TEST] Skipping zellij snap install"
+    else
+        log_step "Installing zellij via snap..."
+        sudo snap install zellij --classic
+        log_info "Zellij installed"
+    fi
+else
+    log_info "Zellij already installed"
+fi
 
 # Enable SSH
 sudo systemctl enable ssh

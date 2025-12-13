@@ -40,18 +40,23 @@ echo ""
 
 press_enter
 
-# Test connection
-log_step "Testing GitHub connection..."
-if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
-    log_info "GitHub SSH connection successful"
+# Skip GitHub operations in test mode
+if [[ "${TEST_MODE:-0}" == "1" ]]; then
+    log_info "[TEST] Skipping GitHub connection test"
 else
-    log_warn "Could not verify GitHub connection (this might be ok)"
-fi
+    # Test connection
+    log_step "Testing GitHub connection..."
+    if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+        log_info "GitHub SSH connection successful"
+    else
+        log_warn "Could not verify GitHub connection (this might be ok)"
+    fi
 
-# Switch remote to SSH (only if repo exists)
-if [[ -d "$INSTALL_PATH/.git" ]]; then
-    log_step "Switching remote to SSH..."
-    cd "$INSTALL_PATH"
-    git remote set-url origin "git@github.com:${GITHUB_USER}/${GITHUB_REPO}.git"
-    log_info "Remote switched to SSH"
+    # Switch remote to SSH (only if repo exists)
+    if [[ -d "$INSTALL_PATH/.git" ]]; then
+        log_step "Switching remote to SSH..."
+        cd "$INSTALL_PATH"
+        git remote set-url origin "git@github.com:${GITHUB_USER}/${GITHUB_REPO}.git"
+        log_info "Remote switched to SSH"
+    fi
 fi

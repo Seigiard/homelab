@@ -1,0 +1,4 @@
+#!/bin/bash
+# Mock hostnamectl for Docker testing (no systemd available)
+echo "[MOCK] hostnamectl $@"
+exit 0

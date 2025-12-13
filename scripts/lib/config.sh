@@ -26,3 +26,10 @@ export INSTALL_PATH="/opt/homelab"
 # -------------------------------------------
 
 export HOSTNAME="home"
+
+# -------------------------------------------
+# Environment fixes (Docker compatibility)
+# -------------------------------------------
+
+# USER may not be set in Docker
+export USER="${USER:-$(whoami)}"

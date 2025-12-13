@@ -161,6 +161,12 @@ set_permissions() {
 # -------------------------------------------
 
 create_docker_network() {
+    # Skip in test mode (no Docker daemon running)
+    if [[ "${TEST_MODE:-0}" == "1" ]]; then
+        log_info "[TEST] Skipping Docker network creation"
+        return 0
+    fi
+
     if docker network inspect traefik-net &> /dev/null; then
         log_info "Docker network 'traefik-net' already exists"
     else
@@ -175,6 +181,12 @@ create_docker_network() {
 # -------------------------------------------
 
 configure_firewall() {
+    # Skip in test mode (UFW may not work in Docker)
+    if [[ "${TEST_MODE:-0}" == "1" ]]; then
+        log_info "[TEST] Skipping firewall configuration"
+        return 0
+    fi
+
     if ! has_command ufw; then
         log_warn "UFW not installed, skipping firewall configuration"
         return 0
@@ -210,6 +222,12 @@ configure_firewall() {
 # -------------------------------------------
 
 setup_docker_user() {
+    # Skip in test mode
+    if [[ "${TEST_MODE:-0}" == "1" ]]; then
+        log_info "[TEST] Skipping Docker user setup"
+        return 0
+    fi
+
     SUDO_USER_NAME="${SUDO_USER:-$USER}"
 
     if id -nG "$SUDO_USER_NAME" | grep -qw "docker"; then

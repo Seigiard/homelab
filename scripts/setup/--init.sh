@@ -38,6 +38,9 @@ check_requirements() {
         exit 1
     fi
 
+    # Ensure USER is set (not always set in Docker)
+    export USER="${USER:-$(whoami)}"
+
     log_info "Running as user: $USER"
     log_info "Home directory: $HOME"
 
@@ -58,7 +61,7 @@ check_requirements() {
 main() {
     clear
     print_box "HOMELAB SETUP"
-    echo "      github.com/${GITHUB_USER}/${GITHUB_REPO}"
+    echo "github.com/${GITHUB_USER}/${GITHUB_REPO}"
     echo ""
 
     check_requirements
