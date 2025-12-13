@@ -1,82 +1,115 @@
-# NAS
+# Homelab
 
-## Equipment
+Скрипты для автоматической настройки домашнего сервера Ubuntu.
 
-HP ProDesk 600 G3 SFF:
-[h10032.www1.hp.com/ctg/Manual/c05387853.pdf](https://h10032.www1.hp.com/ctg/Manual/c05387853.pdf)
+## Быстрая установка
 
-- Intel Quad-Core i5-6400 CPU @ 2.70GHz
-- RAM 16 GB DDR4 (+ empty 2 slots)
-- SSD Crucial 256 GB
-- Intel HD Graphics 530
-- PCI Express x16 + PCI Express x4 sloty
-
-### Future upgrades
-
-скорее всего, 6pin проприоритарный, надо исследовать
-
-[What kind of 6 pin connector is this on my HP ProDesk 600? : r/computer](https://www.reddit.com/r/computer/comments/1k20v94/what_kind_of_6_pin_connector_is_this_on_my_hp/)
-
-> It will be a proprietary HP connector, you'll need to find one specific to that model
->
-> Well, its a Molex connector. I did a quick search and it seems this might be the cable you're looking for a "m2-l20611" cable.
->
-> Thank you very much! I just bought this cable from eBay using the part number you found. Turns out the port is HP proprietary and is called “P160” but this is not mentioned in HPs documentation.
-
-TODO: Поставить m2ssd + один диск и не морочить голову питанием на данный момент
-
-## Tasks
-
-## Этап 1
-
-Install Ubuntu Server
-
-### setup SSH
-
-```sh
-sudo apt update
-sudo apt install openssh-server
-
-sudo systemctl start ssh
-sudo systemctl enable ssh
-
-# проверка статуса
-sudo systemctl status ssh
-
+```bash
+curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup.sh | bash
 ```
 
-### Setup local domain
+Скрипт выполнит:
+1. Установку git и клонирование репозитория в `/opt/homelab`
+2. Обновление системы (apt update/upgrade)
+3. Установку пакетов (zsh, micro, zellij, htop, mc, jq и др.)
+4. Настройку Oh-My-Zsh с плагинами
+5. Генерацию SSH-ключа для GitHub
+6. Настройку git
+7. Настройку Avahi (mDNS)
+8. Применение dotfiles
+9. Установку Docker
 
-```sh
-sudo apt install avahi-daemon avahi-utils
-sudo nano /etc/avahi/avahi-daemon.conf
-# [server]
-# host-name=home
-# domain-name=local
-# use-ipv4=yes
-# use-ipv6=yes
+## Структура проекта
 
-# [publish]
-# publish-addresses=yes
-# publish-hinfo=yes
-# publish-workstation=yes
-# publish-domain=yes
-
-sudo systemctl restart avahi-daemon
-sudo systemctl enable avahi-daemon
+```
+homelab/
+├── scripts/
+│   ├── setup.sh              # Entry point (curl | bash)
+│   ├── bootstrap.sh          # Docker, директории, права
+│   ├── lib/
+│   │   ├── config.sh         # Общие переменные
+│   │   └── tui.sh            # TUI библиотека
+│   └── setup/
+│       ├── --init.sh         # Оркестратор
+│       ├── 00-update-system.sh
+│       ├── 01-install-packages.sh
+│       ├── 02-setup-zsh.sh
+│       ├── 03-setup-ssh-key.sh
+│       ├── 04-setup-git.sh
+│       ├── 05-setup-avahi.sh
+│       ├── 06-apply-dotfiles.sh
+│       ├── 07-run-bootstrap.sh
+│       └── 08-show-summary.sh
+├── dotfiles/                  # Симлинкуются в ~
+├── docker/                    # Docker compose файлы
+└── tests/                     # Docker-тестирование
 ```
 
-### Setup bash and apps
+## Тестирование
 
-```sh
-sudo apt install zellij micro mc
-# TODO: github repo with all setups
+Скрипты тестируются в Docker-контейнере с Ubuntu 22.04.
+
+### Запуск тестов
+
+```bash
+# Сборка (с кешем — быстро, изменённые файлы пересобираются)
+docker build -t homelab-test -f tests/Dockerfile .
+
+# Сборка без кеша (полная пересборка)
+docker build --no-cache -t homelab-test -f tests/Dockerfile .
+
+# Запуск теста
+docker run --rm homelab-test
+
+# Тест одного скрипта
+docker run --rm homelab-test /opt/homelab/scripts/setup/02-setup-zsh.sh
+
+# Интерактивный режим
+docker run -it --rm homelab-test bash
 ```
 
-### Setup dockers
+### Как работает TEST_MODE
 
-**Install Docker**
+В Docker устанавливается `TEST_MODE=1`, что:
+- Пропускает интерактивные промпты (`press_enter`)
+- Пропускает операции с GitHub (SSH test)
+- Пропускает операции с Docker daemon (network create)
+- Пропускает настройку firewall (UFW)
 
-[Ubuntu \| Docker Docs](https://docs.docker.com/engine/install/ubuntu/)
+### Моки
 
-**Create folders**
+В Docker нет systemd, поэтому используются заглушки:
+- `tests/mocks/systemctl` — эмулирует systemctl
+- `tests/mocks/hostnamectl` — эмулирует hostnamectl
+
+### Верификация
+
+Каждый скрипт проверяет результат своей работы:
+
+| Скрипт | Что проверяется |
+|--------|-----------------|
+| 01-install-packages | `dpkg -s` для каждого пакета |
+| 02-setup-zsh | `getent passwd` для проверки shell |
+| 03-setup-ssh-key | Наличие файлов ключа |
+| 05-setup-avahi | `hostname` после установки |
+| 06-apply-dotfiles | `readlink` для symlink'ов |
+
+## Перезапуск отдельных шагов
+
+После установки можно перезапустить любой шаг:
+
+```bash
+cd ~/homelab
+./scripts/setup/03-setup-ssh-key.sh
+```
+
+## Конфигурация
+
+Основные переменные в `scripts/lib/config.sh`:
+
+```bash
+GITHUB_USER="seigiard"
+GITHUB_EMAIL="seigiard@gmail.com"
+INSTALL_PATH="/opt/homelab"
+HOSTNAME="home"
+```
