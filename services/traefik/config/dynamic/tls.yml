@@ -1,0 +1,7 @@
+# TLS Configuration for local development
+# Uses default Traefik self-signed certificate
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
