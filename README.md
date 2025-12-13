@@ -94,6 +94,24 @@ docker run -it --rm homelab-test bash
 | 05-setup-avahi | `hostname` после установки |
 | 06-apply-dotfiles | `readlink` для symlink'ов |
 
+## Healthcheck
+
+Проверка состояния системы после установки:
+
+```bash
+cd ~/homelab
+./scripts/healthcheck.sh
+```
+
+Проверяет:
+- Установленные пакеты (zsh, git, jq, micro, zellij и др.)
+- Shell пользователя (zsh)
+- SSH-ключ
+- Git config
+- Hostname
+- Dotfiles (symlinks)
+- Docker (daemon, compose, сеть traefik-net)
+
 ## Перезапуск отдельных шагов
 
 После установки можно перезапустить любой шаг:
