@@ -45,13 +45,13 @@ homelab/
 │   ├── bootstrap.sh              # Docker, папки, права
 │   └── deploy.sh                 # Запуск всех сервисов
 ├── services/
-│   ├── traefik/
-│   ├── adguard/
-│   ├── samba/
-│   ├── immich/
-│   ├── syncthing/
-│   ├── homepage/
-│   └── monitoring/
+│   ├── traefik/                  # ✅ Reverse proxy
+│   ├── homepage/                 # ✅ Dashboard (home.local)
+│   ├── adguard/                  # DNS
+│   ├── samba/                    # Файлы
+│   ├── immich/                   # Фото
+│   ├── syncthing/                # Синхронизация
+│   └── monitoring/               # Dozzle + Glances
 └── docs/
     └── manual-steps.md
 ```
@@ -94,10 +94,10 @@ curl | bash (setup.sh)
               └── source 00-*.sh, 01-*.sh, ...
 ```
 
-### Фаза 2: Traefik (Reverse Proxy)
+### Фаза 2: Traefik (Reverse Proxy) ✅
 
-- [ ] **Шаг 2.1:** `services/traefik/docker-compose.yml` (порты 80, 443, 8080)
-- [ ] **Шаг 2.2:** `services/traefik/config/traefik.yml` (роутинг *.home.local)
+- [x] **Шаг 2.1:** `services/traefik/docker-compose.yml` (порты 80, 443, 8080)
+- [x] **Шаг 2.2:** `services/traefik/config/traefik.yml` (роутинг *.home.local)
 
 ### Фаза 3: AdGuard Home (DNS)
 
@@ -115,13 +115,13 @@ curl | bash (setup.sh)
 
 ### Фаза 6: Вспомогательные сервисы
 
-- [ ] **Шаг 6.1:** `services/homepage/docker-compose.yml`
+- [x] **Шаг 6.1:** `services/homepage/docker-compose.yml` ✅
 - [ ] **Шаг 6.2:** `services/syncthing/docker-compose.yml`
 - [ ] **Шаг 6.3:** `services/monitoring/docker-compose.yml` (Dozzle + Glances)
 
 ### Фаза 7: Финализация
 
-- [ ] **Шаг 7.1:** `scripts/deploy.sh`
+- [x] **Шаг 7.1:** `scripts/deploy.sh` ✅
 - [ ] **Шаг 7.2:** Обновить README.md
 
 ---
