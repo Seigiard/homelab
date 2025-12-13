@@ -1,17 +1,17 @@
 [user]
-    name = seigiard
-    email = seigiard@gmail.com
+	name = seigiard
+	email = seigiard@gmail.com
 
 [init]
-    defaultBranch = main
+	defaultBranch = main
 
 [core]
-    editor = micro
+	editor = micro
     autocrlf = input
     pager = less -FRX
 
 [pull]
-    rebase = false
+	rebase = false
 
 [push]
     default = current
