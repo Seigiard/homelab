@@ -1,6 +1,6 @@
 #!/bin/bash
 # ===========================================
-# Step 05: Configure Avahi (mDNS)
+# Step 04: Configure Avahi (mDNS)
 # ===========================================
 
 set -e
@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 6/9: Configuring Avahi (mDNS)"
+print_header "Step 5/9: Configuring Avahi (mDNS)"
 
 # Set hostname
 log_step "Setting hostname to: $HOSTNAME"

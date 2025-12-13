@@ -1,6 +1,6 @@
 #!/bin/bash
 # ===========================================
-# Step 07: Run Bootstrap (Docker, folders, permissions)
+# Step 06: Run Bootstrap (Docker, folders, permissions)
 # ===========================================
 
 set -e
@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 8/9: Running bootstrap.sh"
+print_header "Step 7/9: Running bootstrap.sh"
 
 BOOTSTRAP="$INSTALL_PATH/scripts/bootstrap.sh"
 

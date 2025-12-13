@@ -1,6 +1,6 @@
 #!/bin/bash
 # ===========================================
-# Step 04: Configure Git
+# Step 03: Configure Git
 # ===========================================
 
 set -e
@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 5/9: Configuring Git"
+print_header "Step 4/9: Configuring Git"
 
 git config --global user.name "$GITHUB_USER"
 git config --global user.email "$GITHUB_EMAIL"

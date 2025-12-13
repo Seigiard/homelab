@@ -135,7 +135,8 @@ press_enter() {
 
     local prompt="${1:-Press Enter to continue...}"
     echo ""
-    read -p "$prompt"
+    echo -e "${GREEN}[→]${NC} $prompt"
+    read
     echo ""
 }
 
