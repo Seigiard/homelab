@@ -36,11 +36,11 @@ homelab/
 │   │   ├── 00-update-system.sh   # apt update/upgrade
 │   │   ├── 01-install-packages.sh
 │   │   ├── 02-setup-zsh.sh
-│   │   ├── 03-setup-ssh-key.sh
-│   │   ├── 04-setup-git.sh
-│   │   ├── 05-setup-avahi.sh
-│   │   ├── 06-apply-dotfiles.sh
-│   │   ├── 07-run-bootstrap.sh
+│   │   ├── 03-setup-git.sh
+│   │   ├── 04-setup-avahi.sh
+│   │   ├── 05-apply-dotfiles.sh
+│   │   ├── 06-run-bootstrap.sh
+│   │   ├── 07-setup-ssh-key.sh   # Интерактивный, в конце
 │   │   └── 08-show-summary.sh
 │   ├── bootstrap.sh              # Docker, папки, права
 │   └── deploy.sh                 # Запуск всех сервисов

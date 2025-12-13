@@ -13,11 +13,11 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 2. Обновление системы (apt update/upgrade)
 3. Установку пакетов (zsh, micro, zellij, htop, mc, jq и др.)
 4. Настройку Oh-My-Zsh с плагинами
-5. Генерацию SSH-ключа для GitHub
-6. Настройку git
-7. Настройку Avahi (mDNS)
-8. Применение dotfiles
-9. Установку Docker
+5. Настройку git
+6. Настройку Avahi (mDNS)
+7. Применение dotfiles
+8. Установку Docker
+9. Генерацию SSH-ключа для GitHub (интерактивный шаг)
 
 ## Структура проекта
 
@@ -34,11 +34,11 @@ homelab/
 │       ├── 00-update-system.sh
 │       ├── 01-install-packages.sh
 │       ├── 02-setup-zsh.sh
-│       ├── 03-setup-ssh-key.sh
-│       ├── 04-setup-git.sh
-│       ├── 05-setup-avahi.sh
-│       ├── 06-apply-dotfiles.sh
-│       ├── 07-run-bootstrap.sh
+│       ├── 03-setup-git.sh
+│       ├── 04-setup-avahi.sh
+│       ├── 05-apply-dotfiles.sh
+│       ├── 06-run-bootstrap.sh
+│       ├── 07-setup-ssh-key.sh
 │       └── 08-show-summary.sh
 ├── dotfiles/                  # Симлинкуются в ~
 ├── docker/                    # Docker compose файлы
@@ -90,9 +90,9 @@ docker run -it --rm homelab-test bash
 |--------|-----------------|
 | 01-install-packages | `dpkg -s` для каждого пакета |
 | 02-setup-zsh | `getent passwd` для проверки shell |
-| 03-setup-ssh-key | Наличие файлов ключа |
-| 05-setup-avahi | `hostname` после установки |
-| 06-apply-dotfiles | `readlink` для symlink'ов |
+| 04-setup-avahi | `hostname` после установки |
+| 05-apply-dotfiles | `readlink` для symlink'ов |
+| 07-setup-ssh-key | Наличие файлов ключа |
 
 ## Healthcheck
 
@@ -118,7 +118,7 @@ cd ~/homelab
 
 ```bash
 cd ~/homelab
-./scripts/setup/03-setup-ssh-key.sh
+./scripts/setup/07-setup-ssh-key.sh
 ```
 
 ## Конфигурация
