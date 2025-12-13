@@ -36,6 +36,13 @@ packages=(
 log_step "Installing apt packages: ${packages[*]}"
 sudo apt install -y "${packages[@]}"
 
+# Verify packages installed
+log_step "Verifying installed packages..."
+for pkg in "${packages[@]}"; do
+    require_package "$pkg"
+done
+log_info "All packages installed"
+
 # Install zellij via snap (not in Ubuntu apt repos)
 if ! command -v zellij &> /dev/null; then
     if [[ "${TEST_MODE:-0}" == "1" ]]; then
@@ -43,6 +50,7 @@ if ! command -v zellij &> /dev/null; then
     else
         log_step "Installing zellij via snap..."
         sudo snap install zellij --classic
+        require_command zellij
         log_info "Zellij installed"
     fi
 else
@@ -53,4 +61,4 @@ fi
 sudo systemctl enable ssh
 sudo systemctl start ssh
 
-log_info "Packages installed"
+log_info "Setup complete"

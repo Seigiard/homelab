@@ -271,6 +271,33 @@ die() {
     exit "${2:-1}"
 }
 
+# -------------------------------------------
+# Verification Functions
+# -------------------------------------------
+
+# Check if apt package is installed
+require_package() {
+    local pkg="$1"
+    if ! dpkg -s "$pkg" &>/dev/null; then
+        log_error "Package '$pkg' is not installed"
+        return 1
+    fi
+}
+
+# Check if command is available
+require_command() {
+    local cmd="$1"
+    if ! command -v "$cmd" &>/dev/null; then
+        log_error "Command '$cmd' not found"
+        return 1
+    fi
+}
+
+# Get user's default shell from /etc/passwd (not $SHELL)
+get_user_shell() {
+    getent passwd "$USER" | cut -d: -f7
+}
+
 # Trap cleanup
 cleanup_trap() {
     spinner_stop "fail"

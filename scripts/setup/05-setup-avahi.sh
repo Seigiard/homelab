@@ -17,6 +17,16 @@ print_header "Step 6/9: Configuring Avahi (mDNS)"
 log_step "Setting hostname to: $HOSTNAME"
 sudo hostnamectl set-hostname "$HOSTNAME"
 
+# Verify hostname (skip in test mode - mock doesn't change real hostname)
+if [[ "${TEST_MODE:-0}" == "1" ]]; then
+    log_info "[TEST] Hostname would be set to: $HOSTNAME"
+elif [[ "$(hostname)" == "$HOSTNAME" ]]; then
+    log_info "Hostname set: $HOSTNAME"
+else
+    log_error "Failed to set hostname"
+    exit 1
+fi
+
 # Configure avahi
 sudo tee /etc/avahi/avahi-daemon.conf > /dev/null << EOF
 [server]

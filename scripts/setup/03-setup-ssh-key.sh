@@ -22,7 +22,14 @@ else
     mkdir -p "$HOME/.ssh"
     chmod 700 "$HOME/.ssh"
     ssh-keygen -t ed25519 -C "$GITHUB_EMAIL" -f "$SSH_KEY" -N ""
-    log_info "SSH key generated"
+
+    # Verify key was created
+    if [[ -f "$SSH_KEY" && -f "${SSH_KEY}.pub" ]]; then
+        log_info "SSH key generated"
+    else
+        log_error "SSH key generation failed"
+        exit 1
+    fi
 fi
 
 # Start ssh-agent

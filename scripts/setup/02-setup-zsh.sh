@@ -18,7 +18,14 @@ if [[ -d "$HOME/.oh-my-zsh" ]]; then
 else
     log_step "Installing Oh-My-Zsh..."
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    log_info "Oh-My-Zsh installed"
+
+    # Verify installation
+    if [[ -d "$HOME/.oh-my-zsh" ]]; then
+        log_info "Oh-My-Zsh installed"
+    else
+        log_error "Oh-My-Zsh installation failed"
+        exit 1
+    fi
 fi
 
 # Install plugins
@@ -34,11 +41,28 @@ if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
     git clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
 fi
 
-# Change default shell
-if [[ "$SHELL" != *"zsh"* ]]; then
+# Verify plugins
+if [[ -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" && -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
+    log_info "Plugins installed"
+else
+    log_error "Plugin installation failed"
+    exit 1
+fi
+
+# Change default shell (check via /etc/passwd, not $SHELL)
+current_shell=$(get_user_shell)
+if [[ "$current_shell" != *"zsh"* ]]; then
     log_step "Changing default shell to zsh..."
     sudo chsh -s "$(which zsh)" "$USER"
-    log_info "Default shell changed to zsh"
+
+    # Verify shell changed
+    new_shell=$(get_user_shell)
+    if [[ "$new_shell" == *"zsh"* ]]; then
+        log_info "Default shell changed to zsh"
+    else
+        log_error "Failed to change shell to zsh"
+        exit 1
+    fi
 else
     log_info "Zsh is already default shell"
 fi

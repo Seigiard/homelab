@@ -44,7 +44,14 @@ for file in "$DOTFILES_DIR"/.*; do
 
     # Create symlink
     ln -s "$file" "$target"
-    log_info "Linked: $filename"
+
+    # Verify symlink
+    if [[ -L "$target" && "$(readlink "$target")" == "$file" ]]; then
+        log_info "Linked: $filename"
+    else
+        log_error "Failed to link: $filename"
+        exit 1
+    fi
 done
 
 log_info "Dotfiles applied"
