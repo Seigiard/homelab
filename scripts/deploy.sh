@@ -6,6 +6,7 @@
 #   ./scripts/deploy.sh          # Start all services
 #   ./scripts/deploy.sh traefik  # Start specific service
 #   ./scripts/deploy.sh stop     # Stop all services
+#   ./scripts/deploy.sh rebuild  # Pull new images and restart
 
 set -e
 
@@ -54,6 +55,22 @@ stop_service() {
     fi
 }
 
+rebuild_service() {
+    local service="$1"
+    local service_dir="$SERVICES_DIR/$service"
+
+    if [[ ! -d "$service_dir" ]]; then
+        log_error "Service not found: $service"
+        return 1
+    fi
+
+    log_step "Rebuilding $service..."
+    docker compose -f "$service_dir/docker-compose.yml" --env-file "$PROJECT_DIR/.env" down
+    docker compose -f "$service_dir/docker-compose.yml" --env-file "$PROJECT_DIR/.env" pull
+    docker compose -f "$service_dir/docker-compose.yml" --env-file "$PROJECT_DIR/.env" up -d
+    log_info "$service rebuilt"
+}
+
 start_all() {
     print_box "DEPLOYING SERVICES"
 
@@ -95,6 +112,18 @@ status() {
     docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 }
 
+rebuild_all() {
+    print_box "REBUILDING SERVICES"
+
+    for service in "${SERVICE_ORDER[@]}"; do
+        if [[ -d "$SERVICES_DIR/$service" ]]; then
+            rebuild_service "$service"
+        fi
+    done
+
+    print_footer "All services rebuilt!"
+}
+
 # -------------------------------------------
 # Main
 # -------------------------------------------
@@ -112,6 +141,9 @@ case "${1:-}" in
     "restart")
         stop_all
         start_all
+        ;;
+    "rebuild")
+        rebuild_all
         ;;
     *)
         # Start specific service
