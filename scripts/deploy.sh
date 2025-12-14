@@ -133,17 +133,30 @@ case "${1:-}" in
         start_all
         ;;
     "stop")
-        stop_all
+        if [[ -n "${2:-}" ]]; then
+            stop_service "$2"
+        else
+            stop_all
+        fi
         ;;
     "status")
         status
         ;;
     "restart")
-        stop_all
-        start_all
+        if [[ -n "${2:-}" ]]; then
+            stop_service "$2"
+            start_service "$2"
+        else
+            stop_all
+            start_all
+        fi
         ;;
     "rebuild")
-        rebuild_all
+        if [[ -n "${2:-}" ]]; then
+            rebuild_service "$2"
+        else
+            rebuild_all
+        fi
         ;;
     *)
         # Start specific service
