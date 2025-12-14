@@ -6,16 +6,16 @@ services:
     user: root
     environment:
       - TZ=${TZ:-Europe/Kyiv}
-      - HOMEPAGE_ALLOWED_HOSTS=${LOCAL_DOMAIN:-home.local}
+      - HOMEPAGE_ALLOWED_HOSTS=${LOCAL_DOMAIN:-home.local},home.${EXTERNAL_DOMAIN:-1218217.xyz}
     volumes:
       - ./config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - traefik-net
     labels:
-      # Traefik routing
+      # Traefik routing (local + external)
       - "traefik.enable=true"
-      - "traefik.http.routers.homepage.rule=Host(`${LOCAL_DOMAIN:-home.local}`)"
+      - "traefik.http.routers.homepage.rule=Host(`${LOCAL_DOMAIN:-home.local}`) || Host(`home.${EXTERNAL_DOMAIN:-1218217.xyz}`)"
       - "traefik.http.routers.homepage.entrypoints=web"
       - "traefik.http.services.homepage.loadbalancer.server.port=3000"
 
