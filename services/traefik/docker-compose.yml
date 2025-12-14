@@ -15,11 +15,18 @@ services:
     networks:
       - traefik-net
     labels:
+      # Traefik routing
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${LOCAL_DOMAIN:-home.local}`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.service=api@internal"
+      # Homepage
+      - "homepage.group=Infrastructure"
+      - "homepage.name=Traefik"
+      - "homepage.icon=traefik"
+      - "homepage.href=https://traefik.${LOCAL_DOMAIN:-home.local}"
+      - "homepage.description=Reverse Proxy"
 
   avahi-helper:
     image: hardillb/traefik-avahi-helper
@@ -32,6 +39,11 @@ services:
       - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
     networks:
       - traefik-net
+    labels:
+      - "homepage.group=Infrastructure"
+      - "homepage.name=Avahi Helper"
+      - "homepage.icon=avahi"
+      - "homepage.description=mDNS for *.home.local"
 
 networks:
   traefik-net:
