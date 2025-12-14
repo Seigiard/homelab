@@ -42,8 +42,8 @@ homelab/
 │       └── 08-show-summary.sh
 ├── dotfiles/                  # Симлинкуются в ~
 ├── services/                  # Docker сервисы
-│   ├── traefik/               # Reverse proxy (*.home.local)
-│   └── homepage/              # Dashboard (home.local)
+│   ├── traefik/               # Reverse proxy + avahi-helper (*.home.local)
+│   └── homepage/              # Dashboard с Docker auto-discovery
 └── tests/                     # Docker-тестирование
 ```
 
@@ -108,6 +108,33 @@ docker run -it --rm homelab-test bash
 ```
 
 После первого запуска контейнеры автоматически поднимаются при перезагрузке (`restart: unless-stopped`).
+
+## Текущие сервисы
+
+| Сервис | URL | Описание |
+|--------|-----|----------|
+| Homepage | https://home.local | Dashboard с Docker auto-discovery |
+| Traefik | https://traefik.home.local | Reverse proxy dashboard |
+
+### Как добавить новый сервис
+
+1. Создай `services/myservice/docker-compose.yml`
+2. Добавь Traefik labels для роутинга
+3. Добавь Homepage labels для auto-discovery
+4. Запусти `./scripts/deploy.sh myservice`
+
+Пример labels:
+```yaml
+labels:
+  - traefik.enable=true
+  - traefik.http.routers.myservice.rule=Host(`myservice.home.local`)
+  - traefik.http.routers.myservice.entrypoints=websecure
+  - traefik.http.routers.myservice.tls=true
+  - homepage.group=Services
+  - homepage.name=My Service
+  - homepage.icon=myservice
+  - homepage.href=https://myservice.home.local
+```
 
 ## Healthcheck
 

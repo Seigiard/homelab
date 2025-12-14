@@ -98,11 +98,14 @@ curl | bash (setup.sh)
 
 - [x] **Шаг 2.1:** `services/traefik/docker-compose.yml` (порты 80, 443, 8080)
 - [x] **Шаг 2.2:** `services/traefik/config/traefik.yml` (роутинг *.home.local)
+- [x] **Шаг 2.3:** traefik-avahi-helper для автоматических mDNS записей
 
-### Фаза 3: AdGuard Home (DNS)
+### Фаза 3: AdGuard Home (DNS) — отложено
+
+> mDNS через traefik-avahi-helper решает задачу *.home.local без AdGuard.
+> AdGuard понадобится только для блокировки рекламы.
 
 - [ ] **Шаг 3.1:** `services/adguard/docker-compose.yml` (порты 53, 3000)
-- [ ] **Шаг 3.2:** Документация настройки DNS rewrites (*.home.local → IP)
 
 ### Фаза 4: Samba (Файлы)
 
@@ -116,8 +119,9 @@ curl | bash (setup.sh)
 ### Фаза 6: Вспомогательные сервисы
 
 - [x] **Шаг 6.1:** `services/homepage/docker-compose.yml` ✅
-- [ ] **Шаг 6.2:** `services/syncthing/docker-compose.yml`
-- [ ] **Шаг 6.3:** `services/monitoring/docker-compose.yml` (Dozzle + Glances)
+- [x] **Шаг 6.2:** Homepage Docker auto-discovery (homepage.* labels) ✅
+- [ ] **Шаг 6.3:** `services/syncthing/docker-compose.yml`
+- [ ] **Шаг 6.4:** `services/monitoring/docker-compose.yml` (Dozzle + Glances)
 
 ### Фаза 7: Финализация
 

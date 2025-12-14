@@ -58,14 +58,16 @@ backups/                  <-- Бэкапы контейнеров и баз да
 | users/yuliia/files/    |                    |                      |             |       |
 | users/yuliia/photos/   |                    | y.photos.home.local  | immich      | auth  |
 
-pi-hole/adguard
-cloudflared to 1218217.xyz
-syncthing
-gopeed or transmission
-immich
-dozzle
-glances
+## Сервисы
 
-[GitHub - hardillb/traefik-avahi-helper: A container to create mDNS CNAMEs for Traefik exposed container](https://github.com/hardillb/traefik-avahi-helper)
-
-[Home - Homepage](https://gethomepage.dev/)
+| Сервис | Статус | Описание |
+|--------|--------|----------|
+| traefik-avahi-helper | ✅ | mDNS CNAME для *.home.local |
+| Homepage | ✅ | Dashboard с Docker auto-discovery |
+| AdGuard | ⏳ | DNS + блокировка рекламы |
+| Syncthing | ⏳ | Синхронизация файлов |
+| Immich | ⏳ | Фото-библиотека |
+| Samba | ⏳ | Файловый сервер |
+| Dozzle | ⏳ | Docker logs viewer |
+| Glances | ⏳ | System monitoring |
+| Cloudflared | ⏳ | Туннель для внешнего доступа |
