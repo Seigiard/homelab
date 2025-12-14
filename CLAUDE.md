@@ -54,11 +54,19 @@ homelab/
 ├── scripts/
 │   ├── setup.sh          # curl | bash точка входа
 │   ├── bootstrap.sh      # Docker, папки, права
-│   └── deploy.sh         # Запуск всех сервисов
+│   ├── lib/tui.sh        # TUI библиотека
+│   └── docker/           # Управление сервисами
+│       ├── _lib.sh       # Общие функции
+│       ├── deploy.sh     # Деплой сервисов
+│       ├── stop.sh       # Остановка сервисов
+│       ├── rebuild.sh    # Пересборка (pull + restart)
+│       └── status.sh     # Статус контейнеров
 ├── services/
 │   ├── traefik/          # ✅ Reverse proxy
 │   ├── homepage/         # ✅ Dashboard (home.local)
-│   ├── adguard/          # DNS (планируется)
+│   ├── cloudflared/      # ✅ Cloudflare Tunnel
+│   ├── glances/          # ✅ System monitoring
+│   ├── dozzle/           # ✅ Docker logs viewer
 │   └── ...
 └── .env.example
 ```
@@ -73,14 +81,20 @@ homelab/
 # Первичная настройка сервера (на чистой Ubuntu)
 curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup.sh | bash
 
-# После setup.sh — развернуть все сервисы
-./scripts/deploy.sh
+# Деплой сервисов
+./scripts/docker/deploy.sh                      # Все сервисы
+./scripts/docker/deploy.sh traefik homepage     # Конкретные сервисы
 
-# Управление сервисами
-./scripts/deploy.sh stop      # Остановить
-./scripts/deploy.sh restart   # Перезапустить
-./scripts/deploy.sh rebuild   # Пересобрать (pull + restart)
-./scripts/deploy.sh status    # Статус
+# Остановка сервисов
+./scripts/docker/stop.sh                        # Все сервисы
+./scripts/docker/stop.sh dozzle glances         # Конкретные сервисы
+
+# Пересборка (pull + restart)
+./scripts/docker/rebuild.sh                     # Все сервисы
+./scripts/docker/rebuild.sh homepage            # Конкретные сервисы
+
+# Статус контейнеров
+./scripts/docker/status.sh
 ```
 
 ## Полезные алиасы (после установки)
@@ -90,7 +104,10 @@ hl          # cd /opt/homelab
 dc          # docker compose
 dcu         # docker compose up -d
 dcl         # docker compose logs -f
-hldeploy    # запуск deploy.sh
+hldeploy    # ./scripts/docker/deploy.sh
+hlstop      # ./scripts/docker/stop.sh
+hlrebuild   # ./scripts/docker/rebuild.sh
+hlstatus    # ./scripts/docker/status.sh
 ```
 
 ## Важные заметки
