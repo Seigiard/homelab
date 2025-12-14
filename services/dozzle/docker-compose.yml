@@ -1,0 +1,30 @@
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - DOZZLE_NO_ANALYTICS=true
+      - DOZZLE_ENABLE_ACTIONS=true
+      - DOZZLE_ENABLE_SHELL=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing (local only - no external access until auth is configured)
+      - traefik.enable=true
+      - traefik.http.routers.dozzle.rule=Host(`dozzle.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.dozzle.entrypoints=web
+      - traefik.http.services.dozzle.loadbalancer.server.port=8080
+      # Homepage
+      - homepage.group=Infrastructure
+      - homepage.name=Dozzle
+      - homepage.icon=dozzle
+      - homepage.href=http://dozzle.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=Docker Logs Viewer
+
+networks:
+  traefik-net:
+    external: true

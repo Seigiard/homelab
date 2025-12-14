@@ -22,6 +22,7 @@ SERVICE_ORDER=(
     homepage
     cloudflared
     glances
+    dozzle
     # Add more services here in dependency order
 )
 
