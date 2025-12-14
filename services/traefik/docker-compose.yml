@@ -35,11 +35,6 @@ services:
       - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
     networks:
       - traefik-net
-    labels:
-      - "homepage.group=Infrastructure"
-      - "homepage.name=Avahi Helper"
-      - "homepage.icon=avahi"
-      - "homepage.description=mDNS for *.home.local"
 
 networks:
   traefik-net:

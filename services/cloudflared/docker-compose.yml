@@ -8,11 +8,6 @@ services:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     networks:
       - traefik-net
-    labels:
-      - "homepage.group=Infrastructure"
-      - "homepage.name=Cloudflare Tunnel"
-      - "homepage.icon=cloudflare"
-      - "homepage.description=External access via 1218217.xyz"
 
 networks:
   traefik-net:

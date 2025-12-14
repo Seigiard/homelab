@@ -21,6 +21,7 @@ SERVICE_ORDER=(
     traefik
     homepage
     cloudflared
+    glances
     # Add more services here in dependency order
 )
 

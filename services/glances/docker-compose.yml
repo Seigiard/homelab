@@ -1,0 +1,29 @@
+services:
+  glances:
+    image: nicolargo/glances:latest-full
+    container_name: glances
+    restart: unless-stopped
+    pid: host
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - GLANCES_OPT=-w
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing (local + external)
+      - traefik.enable=true
+      - traefik.http.routers.glances.rule=Host(`glances.${LOCAL_DOMAIN:-home.local}`) || Host(`glances.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.glances.entrypoints=web
+      - traefik.http.services.glances.loadbalancer.server.port=61208
+      # Homepage
+      - homepage.group=Infrastructure
+      - homepage.name=Glances
+      - homepage.icon=glances
+      - homepage.href=http://glances.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=System Monitoring
+
+networks:
+  traefik-net:
+    external: true
