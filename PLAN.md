@@ -94,11 +94,12 @@ curl | bash (setup.sh)
               └── source 00-*.sh, 01-*.sh, ...
 ```
 
-### Фаза 2: Traefik (Reverse Proxy) ✅
+### Фаза 2: Traefik + Cloudflare Tunnel ✅
 
-- [x] **Шаг 2.1:** `services/traefik/docker-compose.yml` (порты 80, 443, 8080)
+- [x] **Шаг 2.1:** `services/traefik/docker-compose.yml` (HTTP на порту 80)
 - [x] **Шаг 2.2:** `services/traefik/config/traefik.yml` (роутинг *.home.local)
 - [x] **Шаг 2.3:** traefik-avahi-helper для автоматических mDNS записей
+- [x] **Шаг 2.4:** `services/cloudflared/docker-compose.yml` — внешний доступ через 1218217.xyz
 
 ### Фаза 3: AdGuard Home (DNS) — отложено
 
@@ -132,7 +133,6 @@ curl | bash (setup.sh)
 
 ## Отложено на потом
 
-- [ ] Cloudflare туннель (cloudflared)
 - [ ] Торренты (transmission/qbittorrent)
 - [ ] Jellyfin (медиа-сервер)
 - [ ] Paperless (документы)

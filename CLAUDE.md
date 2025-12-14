@@ -23,11 +23,12 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 ### Принятые решения
 
 - **Организация:** каждый сервис в `services/<name>/docker-compose.yml`
+- **Локальная сеть:** HTTP (без SSL) через *.home.local
+- **Внешний доступ:** HTTPS через Cloudflare Tunnel (*.1218217.xyz)
 - **mDNS:** traefik-avahi-helper (автоматические *.home.local записи)
-- **Reverse Proxy:** Traefik v3 (роутинг по *.home.local)
+- **Reverse Proxy:** Traefik v3
 - **Dashboard:** Homepage с Docker auto-discovery
 - **Shell:** Zsh + Oh-My-Zsh
-- **Хранение:** Data vs Appdata паттерн (см. ENVIRONMENT.md)
 
 ### Пользователи
 
@@ -102,24 +103,20 @@ hldeploy    # запуск deploy.sh
 
 ## Добавление новых сервисов
 
-Для автоматического появления на Homepage добавь labels:
-
 ```yaml
 labels:
-  # Traefik routing
+  # Traefik routing (local + external)
   - traefik.enable=true
-  - traefik.http.routers.myservice.rule=Host(`myservice.home.local`)
-  - traefik.http.routers.myservice.entrypoints=websecure
-  - traefik.http.routers.myservice.tls=true
+  - traefik.http.routers.myservice.rule=Host(`myservice.home.local`) || Host(`myservice.1218217.xyz`)
+  - traefik.http.routers.myservice.entrypoints=web
   # Homepage auto-discovery
   - homepage.group=Services
   - homepage.name=My Service
   - homepage.icon=myservice
-  - homepage.href=https://myservice.home.local
-  - homepage.description=Description here
+  - homepage.href=http://myservice.home.local
 ```
 
 ## Известные особенности
 
-- **Homepage + Docker socket:** требует `user: root` в docker-compose, т.к. внутренний пользователь `node` не имеет доступа к socket
-- **Docker GID:** на сервере группа docker имеет GID=988
+- **Homepage + Docker socket:** требует `user: root` в docker-compose
+- **Cloudflare настройки:** SSL mode = Flexible, Always Use HTTPS = OFF
