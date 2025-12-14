@@ -14,6 +14,7 @@ services:
     networks:
       - traefik-net
     labels:
+      # Traefik routing
       - "traefik.enable=true"
       - "traefik.http.routers.homepage.rule=Host(`${LOCAL_DOMAIN:-home.local}`)"
       - "traefik.http.routers.homepage.entrypoints=websecure"
