@@ -3,6 +3,8 @@ services:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
     restart: unless-stopped
+    group_add:
+      - ${DOCKER_GID:-988}  # docker group for socket access
     environment:
       - TZ=${TZ:-Europe/Kyiv}
       - PUID=${PUID:-1000}
