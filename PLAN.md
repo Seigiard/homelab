@@ -122,12 +122,24 @@ curl | bash (setup.sh)
 - [x] **Шаг 6.1:** `services/homepage/docker-compose.yml` ✅
 - [x] **Шаг 6.2:** Homepage Docker auto-discovery (homepage.* labels) ✅
 - [ ] **Шаг 6.3:** `services/syncthing/docker-compose.yml`
-- [ ] **Шаг 6.4:** `services/monitoring/docker-compose.yml` (Dozzle + Glances)
+- [x] **Шаг 6.4:** `services/glances/docker-compose.yml` — системный мониторинг ✅
+- [x] **Шаг 6.5:** `services/dozzle/docker-compose.yml` — просмотр логов Docker ✅
 
 ### Фаза 7: Финализация
 
 - [x] **Шаг 7.1:** `scripts/deploy.sh` ✅
 - [ ] **Шаг 7.2:** Обновить README.md
+
+---
+
+### Фаза 8: Аутентификация для внешнего доступа
+
+> Сейчас Dozzle доступен только локально (home.local). Для безопасного внешнего доступа нужна аутентификация.
+
+- [ ] **Шаг 8.1:** Выбрать решение: Cloudflare Zero Trust vs Authelia vs Authentik
+- [ ] **Шаг 8.2:** Настроить аутентификацию с поддержкой пользователей (andrew, yuliia)
+- [ ] **Шаг 8.3:** Включить внешний доступ к Dozzle через 1218217.xyz с аутентификацией
+- [ ] **Шаг 8.4:** Применить аутентификацию к другим чувствительным сервисам
 
 ---
 
