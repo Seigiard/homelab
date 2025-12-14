@@ -5,27 +5,23 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
-      - "8080:8080" # Dashboard
+      - "8080:8080"  # Dashboard (insecure mode)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./config/dynamic:/etc/traefik/dynamic:ro
-      - ${APPDATA_PATH:-/opt/homelab/appdata}/traefik/acme:/acme
     networks:
       - traefik-net
     labels:
       # Traefik routing
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${LOCAL_DOMAIN:-home.local}`)"
-      - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.entrypoints=web"
       - "traefik.http.routers.dashboard.service=api@internal"
       # Homepage
       - "homepage.group=Infrastructure"
       - "homepage.name=Traefik"
       - "homepage.icon=traefik"
-      - "homepage.href=https://traefik.${LOCAL_DOMAIN:-home.local}"
+      - "homepage.href=http://traefik.${LOCAL_DOMAIN:-home.local}"
       - "homepage.description=Reverse Proxy"
 
   avahi-helper:

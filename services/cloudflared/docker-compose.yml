@@ -1,0 +1,19 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - traefik-net
+    labels:
+      - "homepage.group=Infrastructure"
+      - "homepage.name=Cloudflare Tunnel"
+      - "homepage.icon=cloudflare"
+      - "homepage.description=External access via 1218217.xyz"
+
+networks:
+  traefik-net:
+    external: true

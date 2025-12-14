@@ -20,6 +20,7 @@ source "$SCRIPT_DIR/lib/tui.sh"
 SERVICE_ORDER=(
     traefik
     homepage
+    cloudflared
     # Add more services here in dependency order
 )
 
