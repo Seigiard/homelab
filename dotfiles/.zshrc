@@ -37,7 +37,7 @@ export HOMELAB_PATH="/opt/homelab"
 # Path
 # -------------------------------------------
 
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
 # -------------------------------------------
 # History
@@ -52,6 +52,9 @@ setopt SHARE_HISTORY
 # -------------------------------------------
 # Aliases
 # -------------------------------------------
+
+# rgrc colorizer (auto-colorize common commands)
+command -v rgrc &>/dev/null && eval "$(rgrc --aliases)"
 
 # Load custom aliases
 [[ -f ~/.aliases ]] && source ~/.aliases

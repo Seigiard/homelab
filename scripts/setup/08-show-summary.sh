@@ -14,8 +14,9 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 print_header "Step 9/9: Setup Complete!"
 
 log_info "Installed packages:"
-echo "      git, curl, wget, micro, zellij"
-echo "      htop, mc, tree, ncdu, jq, zsh"
+echo "      APT:   ${APT_PACKAGES[*]}"
+echo "      Snap:  ${SNAP_PACKAGES[*]}"
+echo "      Cargo: ${CARGO_PACKAGES[*]}"
 echo ""
 
 log_info "Configuration:"

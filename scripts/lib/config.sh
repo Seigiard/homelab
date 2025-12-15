@@ -28,6 +28,39 @@ export INSTALL_PATH="/opt/homelab"
 export HOSTNAME="home"
 
 # -------------------------------------------
+# Packages
+# -------------------------------------------
+
+# APT packages to install
+APT_PACKAGES=(
+    # Essential
+    curl
+    wget
+    # Editors
+    micro
+    # Terminal tools
+    htop
+    mc
+    tree
+    ncdu
+    jq
+    # Network
+    openssh-server
+    avahi-daemon
+    avahi-utils
+    # Shell
+    zsh
+    # Build tools (for cargo)
+    cargo
+)
+
+# Snap packages
+SNAP_PACKAGES=(zellij)
+
+# Cargo packages
+CARGO_PACKAGES=(rgrc)
+
+# -------------------------------------------
 # Environment fixes (Docker compatibility)
 # -------------------------------------------
 

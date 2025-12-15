@@ -13,52 +13,60 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 print_header "Step 2/9: Installing packages"
 
-packages=(
-    # Essential
-    curl
-    wget
-    # Editors
-    micro
-    # Terminal tools
-    htop
-    mc
-    tree
-    ncdu
-    jq
-    # Network
-    openssh-server
-    avahi-daemon
-    avahi-utils
-    # Shell
-    zsh
-)
+# -------------------------------------------
+# APT packages
+# -------------------------------------------
 
-log_step "Installing apt packages: ${packages[*]}"
-sudo apt install -y "${packages[@]}"
+log_step "Installing apt packages: ${APT_PACKAGES[*]}"
+sudo apt install -y "${APT_PACKAGES[@]}"
 
 # Verify packages installed
 log_step "Verifying installed packages..."
-for pkg in "${packages[@]}"; do
+for pkg in "${APT_PACKAGES[@]}"; do
     require_package "$pkg"
 done
-log_info "All packages installed"
+log_info "APT packages installed"
 
-# Install zellij via snap (not in Ubuntu apt repos)
-if ! command -v zellij &> /dev/null; then
-    if [[ "${TEST_MODE:-0}" == "1" ]]; then
-        log_info "[TEST] Skipping zellij snap install"
+# -------------------------------------------
+# Snap packages
+# -------------------------------------------
+
+for pkg in "${SNAP_PACKAGES[@]}"; do
+    if ! command -v "$pkg" &> /dev/null; then
+        if [[ "${TEST_MODE:-0}" == "1" ]]; then
+            log_info "[TEST] Skipping $pkg snap install"
+        else
+            log_step "Installing $pkg via snap..."
+            sudo snap install "$pkg" --classic
+            require_command "$pkg"
+            log_info "$pkg installed"
+        fi
     else
-        log_step "Installing zellij via snap..."
-        sudo snap install zellij --classic
-        require_command zellij
-        log_info "Zellij installed"
+        log_info "$pkg already installed"
     fi
-else
-    log_info "Zellij already installed"
+done
+
+# -------------------------------------------
+# Cargo packages
+# -------------------------------------------
+
+if [[ ${#CARGO_PACKAGES[@]} -gt 0 ]]; then
+    log_step "Installing cargo packages: ${CARGO_PACKAGES[*]}"
+    for pkg in "${CARGO_PACKAGES[@]}"; do
+        if ! command -v "$pkg" &> /dev/null; then
+            cargo install "$pkg"
+            log_info "$pkg installed"
+        else
+            log_info "$pkg already installed"
+        fi
+    done
 fi
 
-# Enable SSH
+# -------------------------------------------
+# Enable services
+# -------------------------------------------
+
 sudo systemctl enable ssh
 sudo systemctl start ssh
 
-log_info "Setup complete"
+log_info "Package installation complete"
