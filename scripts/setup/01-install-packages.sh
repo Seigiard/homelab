@@ -47,10 +47,29 @@ for pkg in "${SNAP_PACKAGES[@]}"; do
 done
 
 # -------------------------------------------
+# Rust (via rustup)
+# -------------------------------------------
+
+if ! command -v cargo &> /dev/null; then
+    log_step "Installing Rust via rustup..."
+    # Remove old system packages if present
+    sudo apt remove -y cargo rustc 2>/dev/null || true
+    # Install rustup (non-interactive)
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+    log_info "Rust $(cargo --version) installed"
+else
+    log_info "Rust already installed: $(cargo --version)"
+fi
+
+# -------------------------------------------
 # Cargo packages
 # -------------------------------------------
 
 if [[ ${#CARGO_PACKAGES[@]} -gt 0 ]]; then
+    # Ensure cargo is in PATH
+    [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
+
     log_step "Installing cargo packages: ${CARGO_PACKAGES[*]}"
     for pkg in "${CARGO_PACKAGES[@]}"; do
         if ! command -v "$pkg" &> /dev/null; then

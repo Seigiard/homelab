@@ -50,8 +50,6 @@ APT_PACKAGES=(
     avahi-utils
     # Shell
     zsh
-    # Build tools (for cargo)
-    cargo
 )
 
 # Snap packages
