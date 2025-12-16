@@ -137,3 +137,4 @@ labels:
 
 - **Homepage + Docker socket:** требует `user: root` в docker-compose
 - **Cloudflare настройки:** SSL mode = Flexible, Always Use HTTPS = OFF
+- **Traefik после деплоя сервисов:** иногда требует перезапуска (`./scripts/docker/rebuild.sh traefik`) чтобы подхватить новые роутеры
