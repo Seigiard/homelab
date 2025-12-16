@@ -64,10 +64,12 @@ backups/                  <-- Бэкапы контейнеров и баз да
 |--------|--------|----------|
 | traefik-avahi-helper | ✅ | mDNS CNAME для *.home.local |
 | Homepage | ✅ | Dashboard с Docker auto-discovery |
+| Cloudflared | ✅ | Туннель для внешнего доступа |
+| Glances | ✅ | System monitoring |
+| Dozzle | ✅ | Docker logs viewer (local only) |
+| Samba | ✅ | SMB file shares (public, andrew, yuliia) |
+| FileBrowser | ✅ | Web file manager (files.home.local) |
 | AdGuard | ⏳ | DNS + блокировка рекламы |
 | Syncthing | ⏳ | Синхронизация файлов |
 | Immich | ⏳ | Фото-библиотека |
-| Samba | ⏳ | Файловый сервер |
-| Dozzle | ⏳ | Docker logs viewer |
-| Glances | ⏳ | System monitoring |
-| Cloudflared | ⏳ | Туннель для внешнего доступа |
+| Authelia | ⏳ | SSO аутентификация для внешнего доступа |
