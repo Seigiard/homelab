@@ -6,9 +6,10 @@ services:
     environment:
       - TZ=${TZ:-Europe/Kyiv}
       - FB_NOAUTH=true
+      - FB_DATABASE=/database/filebrowser.db
     volumes:
       - ${DATA_PATH:-/mnt/data}/public:/srv
-      - ./config/public.db:/database/filebrowser.db
+      - ./config/public:/database
     networks:
       - traefik-net
     labels:
@@ -31,9 +32,10 @@ services:
     environment:
       - TZ=${TZ:-Europe/Kyiv}
       - FB_NOAUTH=true
+      - FB_DATABASE=/database/filebrowser.db
     volumes:
       - ${DATA_PATH:-/mnt/data}/users/andrew:/srv
-      - ./config/andrew.db:/database/filebrowser.db
+      - ./config/andrew:/database
     networks:
       - traefik-net
     labels:
@@ -50,9 +52,10 @@ services:
     environment:
       - TZ=${TZ:-Europe/Kyiv}
       - FB_NOAUTH=true
+      - FB_DATABASE=/database/filebrowser.db
     volumes:
       - ${DATA_PATH:-/mnt/data}/users/yuliia:/srv
-      - ./config/yuliia.db:/database/filebrowser.db
+      - ./config/yuliia:/database
     networks:
       - traefik-net
     labels:
