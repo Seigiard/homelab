@@ -18,6 +18,8 @@ SERVICE_ORDER=(
     cloudflared
     glances
     dozzle
+    samba
+    filebrowser
     # Add more services here in dependency order
 )
 

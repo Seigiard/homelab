@@ -1,0 +1,67 @@
+services:
+  filebrowser-public:
+    image: filebrowser/filebrowser
+    container_name: filebrowser-public
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - FB_NOAUTH=true
+    volumes:
+      - ${DATA_PATH:-/mnt/data}/public:/srv
+      - ./config/public.db:/database/filebrowser.db
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing
+      - traefik.enable=true
+      - traefik.http.routers.filebrowser-public.rule=Host(`files.${LOCAL_DOMAIN:-home.local}`) || Host(`files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-public.entrypoints=web
+      - traefik.http.services.filebrowser-public.loadbalancer.server.port=80
+      # Homepage
+      - homepage.group=Files
+      - homepage.name=Public Files
+      - homepage.icon=filebrowser
+      - homepage.href=http://files.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=Shared files (public)
+
+  filebrowser-andrew:
+    image: filebrowser/filebrowser
+    container_name: filebrowser-andrew
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - FB_NOAUTH=true
+    volumes:
+      - ${DATA_PATH:-/mnt/data}/users/andrew:/srv
+      - ./config/andrew.db:/database/filebrowser.db
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing (local + external, auth via Authelia later)
+      - traefik.enable=true
+      - traefik.http.routers.filebrowser-andrew.rule=Host(`a.files.${LOCAL_DOMAIN:-home.local}`) || Host(`a.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-andrew.entrypoints=web
+      - traefik.http.services.filebrowser-andrew.loadbalancer.server.port=80
+
+  filebrowser-yuliia:
+    image: filebrowser/filebrowser
+    container_name: filebrowser-yuliia
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - FB_NOAUTH=true
+    volumes:
+      - ${DATA_PATH:-/mnt/data}/users/yuliia:/srv
+      - ./config/yuliia.db:/database/filebrowser.db
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing (local + external, auth via Authelia later)
+      - traefik.enable=true
+      - traefik.http.routers.filebrowser-yuliia.rule=Host(`y.files.${LOCAL_DOMAIN:-home.local}`) || Host(`y.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-yuliia.entrypoints=web
+      - traefik.http.services.filebrowser-yuliia.loadbalancer.server.port=80
+
+networks:
+  traefik-net:
+    external: true

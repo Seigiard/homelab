@@ -1,0 +1,32 @@
+services:
+  samba:
+    image: dperson/samba
+    container_name: samba
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - USERID=${PUID:-1000}
+      - GROUPID=${PGID:-1000}
+    command: >-
+      -u "${SAMBA_USER_ANDREW};${SAMBA_PASS_ANDREW}"
+      -u "${SAMBA_USER_YULIIA};${SAMBA_PASS_YULIIA}"
+      -s "public;/data/public;yes;no;yes;all"
+      -s "andrew;/data/users/andrew;yes;no;no;${SAMBA_USER_ANDREW}"
+      -s "yuliia;/data/users/yuliia;yes;no;no;${SAMBA_USER_YULIIA}"
+    volumes:
+      - ${DATA_PATH:-/mnt/data}:/data
+    ports:
+      - "139:139"
+      - "445:445"
+    networks:
+      - traefik-net
+    labels:
+      # Homepage (no web UI, just for visibility)
+      - homepage.group=Infrastructure
+      - homepage.name=Samba
+      - homepage.icon=samba
+      - homepage.description=SMB File Shares
+
+networks:
+  traefik-net:
+    external: true
