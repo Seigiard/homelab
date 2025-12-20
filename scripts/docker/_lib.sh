@@ -20,6 +20,7 @@ SERVICE_ORDER=(
     dozzle
     samba
     filebrowser
+    komga
     # Add more services here in dependency order
 )
 

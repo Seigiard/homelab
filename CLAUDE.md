@@ -67,6 +67,9 @@ homelab/
 │   ├── cloudflared/      # ✅ Cloudflare Tunnel
 │   ├── glances/          # ✅ System monitoring
 │   ├── dozzle/           # ✅ Docker logs viewer
+│   ├── samba/            # ✅ SMB file shares
+│   ├── filebrowser/      # ✅ Web file manager
+│   ├── komga/            # ✅ Comics & Manga reader
 │   └── ...
 └── .env.example
 ```

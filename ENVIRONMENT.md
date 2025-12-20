@@ -69,6 +69,7 @@ backups/                  <-- Бэкапы контейнеров и баз да
 | Dozzle | ✅ | Docker logs viewer (local only) |
 | Samba | ✅ | SMB file shares (public, andrew, yuliia) |
 | FileBrowser | ✅ | Web file manager (files.home.local) |
+| Komga | ✅ | Comics & Manga reader (comics.home.local) |
 | AdGuard | ⏳ | DNS + блокировка рекламы |
 | Syncthing | ⏳ | Синхронизация файлов |
 | Immich | ⏳ | Фото-библиотека |

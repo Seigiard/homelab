@@ -143,6 +143,12 @@ curl | bash (setup.sh)
 
 ---
 
+### Фаза 9: Медиа-сервисы
+
+- [x] **Шаг 9.1:** `services/komga/docker-compose.yml` — комиксы/манга ✅
+
+---
+
 ## Отложено на потом
 
 - [ ] Торренты (transmission/qbittorrent)
