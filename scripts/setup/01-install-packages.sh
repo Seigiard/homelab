@@ -47,15 +47,17 @@ for pkg in "${SNAP_PACKAGES[@]}"; do
 done
 
 # -------------------------------------------
-# Lazygit (via PPA)
+# Lazygit (from GitHub releases)
 # -------------------------------------------
 
 if ! command -v lazygit &> /dev/null; then
-    log_step "Installing lazygit via PPA..."
-    sudo add-apt-repository -y ppa:lazygit-team/release
-    sudo apt update
-    sudo apt install -y lazygit
-    log_info "lazygit installed"
+    log_step "Installing lazygit from GitHub..."
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    curl -Lo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+    tar xf /tmp/lazygit.tar.gz -C /tmp lazygit
+    sudo install /tmp/lazygit /usr/local/bin
+    rm -f /tmp/lazygit /tmp/lazygit.tar.gz
+    log_info "lazygit ${LAZYGIT_VERSION} installed"
 else
     log_info "lazygit already installed: $(lazygit --version)"
 fi
