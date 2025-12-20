@@ -1,0 +1,29 @@
+services:
+  opds-generator:
+    image: ghcr.io/seigiard/opds-generator:latest
+    container_name: opds-generator
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - BASE_URL=http://opds.${LOCAL_DOMAIN:-home.local}
+    volumes:
+      - ${DATA_PATH:-/mnt/data}/public/library:/books:ro
+      - ./data:/data
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing
+      - traefik.enable=true
+      - traefik.http.routers.opds.rule=Host(`opds.${LOCAL_DOMAIN:-home.local}`) || Host(`opds.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.opds.entrypoints=web
+      - traefik.http.services.opds.loadbalancer.server.port=8080
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=OPDS Catalog
+      - homepage.icon=calibre
+      - homepage.href=http://opds.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=E-book OPDS feed
+
+networks:
+  traefik-net:
+    external: true

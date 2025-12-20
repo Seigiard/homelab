@@ -21,6 +21,7 @@ SERVICE_ORDER=(
     samba
     filebrowser
     komga
+    opds-generator
     # Add more services here in dependency order
 )
 

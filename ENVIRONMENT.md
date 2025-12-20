@@ -70,6 +70,7 @@ backups/                  <-- Бэкапы контейнеров и баз да
 | Samba | ✅ | SMB file shares (public, andrew, yuliia) |
 | FileBrowser | ✅ | Web file manager (files.home.local) |
 | Komga | ✅ | Comics & Manga reader (comics.home.local) |
+| OPDS Generator | ✅ | E-book OPDS catalog (opds.home.local) |
 | AdGuard | ⏳ | DNS + блокировка рекламы |
 | Syncthing | ⏳ | Синхронизация файлов |
 | Immich | ⏳ | Фото-библиотека |
