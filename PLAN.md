@@ -145,8 +145,7 @@ curl | bash (setup.sh)
 
 ### Фаза 9: Медиа-сервисы
 
-- [x] **Шаг 9.1:** `services/komga/docker-compose.yml` — комиксы/манга ✅
-- [x] **Шаг 9.2:** `services/opds-generator/docker-compose.yml` — OPDS каталог книг ✅
+- [x] **Шаг 9.1:** `services/opds-generator/docker-compose.yml` — OPDS каталог книг ✅
 
 ---
 

@@ -69,7 +69,6 @@ homelab/
 │   ├── dozzle/           # ✅ Docker logs viewer
 │   ├── samba/            # ✅ SMB file shares
 │   ├── filebrowser/      # ✅ Web file manager
-│   ├── komga/            # ✅ Comics & Manga reader
 │   ├── opds-generator/   # ✅ E-book OPDS catalog
 │   └── ...
 └── .env.example

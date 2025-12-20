@@ -20,7 +20,6 @@ SERVICE_ORDER=(
     dozzle
     samba
     filebrowser
-    komga
     opds-generator
     # Add more services here in dependency order
 )
