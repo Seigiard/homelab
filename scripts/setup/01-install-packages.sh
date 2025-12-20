@@ -47,6 +47,20 @@ for pkg in "${SNAP_PACKAGES[@]}"; do
 done
 
 # -------------------------------------------
+# Lazygit (via PPA)
+# -------------------------------------------
+
+if ! command -v lazygit &> /dev/null; then
+    log_step "Installing lazygit via PPA..."
+    sudo add-apt-repository -y ppa:lazygit-team/release
+    sudo apt update
+    sudo apt install -y lazygit
+    log_info "lazygit installed"
+else
+    log_info "lazygit already installed: $(lazygit --version)"
+fi
+
+# -------------------------------------------
 # Rust (via rustup)
 # -------------------------------------------
 
