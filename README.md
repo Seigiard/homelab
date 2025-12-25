@@ -61,13 +61,16 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 
 ## Current Services
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| Homepage | http://home.local | Dashboard with Docker auto-discovery |
-| Traefik | http://traefik.home.local | Reverse proxy dashboard |
-| Dozzle | http://dozzle.home.local | Docker logs viewer |
-| Glances | http://glances.home.local | System monitoring |
-| FileBrowser | http://files.home.local | Web file manager |
+| Service | Local URL | External URL | Description |
+|---------|-----------|--------------|-------------|
+| Homepage | http://home.local | — | Dashboard with Docker auto-discovery |
+| Traefik | http://traefik.home.local | — | Reverse proxy dashboard |
+| Dozzle | http://dozzle.home.local | — | Docker logs viewer |
+| Glances | http://glances.home.local | — | System monitoring |
+| FileBrowser | http://files.home.local | https://files.1218217.xyz | Web file manager |
+| OPDS Generator | http://opds.home.local | https://opds.1218217.xyz | E-book OPDS catalog |
+| Cloudflared | — | *.1218217.xyz | Cloudflare Tunnel (external access) |
+| Samba | — | — | SMB file shares (ports 139, 445) |
 
 ## Adding New Services
 
