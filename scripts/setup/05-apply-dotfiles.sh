@@ -28,8 +28,8 @@ mkdir -p "$backup_dir"
 for file in "$DOTFILES_DIR"/.*; do
     filename=$(basename "$file")
 
-    # Skip . and ..
-    [[ "$filename" == "." || "$filename" == ".." ]] && continue
+    # Skip . and .. and .config (handled separately)
+    [[ "$filename" == "." || "$filename" == ".." || "$filename" == ".config" ]] && continue
 
     target="$HOME/$filename"
 
