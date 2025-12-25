@@ -54,4 +54,30 @@ for file in "$DOTFILES_DIR"/.*; do
     fi
 done
 
+# Handle .config directory (symlink subdirectories, not the whole dir)
+CONFIG_SRC="$DOTFILES_DIR/.config"
+if [[ -d "$CONFIG_SRC" ]]; then
+    mkdir -p "$HOME/.config"
+
+    for app_dir in "$CONFIG_SRC"/*/; do
+        [[ ! -d "$app_dir" ]] && continue
+
+        app_name=$(basename "$app_dir")
+        target="$HOME/.config/$app_name"
+
+        # Backup if exists and not a symlink
+        if [[ -d "$target" && ! -L "$target" ]]; then
+            mv "$target" "$backup_dir/"
+            log_step "Backed up: .config/$app_name"
+        fi
+
+        # Remove existing symlink
+        [[ -L "$target" ]] && rm "$target"
+
+        # Create symlink
+        ln -s "$app_dir" "$target"
+        log_info "Linked: .config/$app_name"
+    done
+fi
+
 log_info "Dotfiles applied"
