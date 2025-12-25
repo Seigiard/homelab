@@ -1,36 +1,36 @@
 # Homelab
 
-Скрипты для автоматической настройки домашнего сервера Ubuntu.
+Automated setup scripts for Ubuntu home server.
 
-## Быстрая установка
+## Quick Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup.sh | bash
 ```
 
-Скрипт выполнит:
-1. Установку git и клонирование репозитория в `/opt/homelab`
-2. Обновление системы (apt update/upgrade)
-3. Установку пакетов (zsh, micro, zellij, htop, mc, jq и др.)
-4. Настройку Oh-My-Zsh с плагинами
-5. Настройку git
-6. Настройку Avahi (mDNS)
-7. Применение dotfiles
-8. Установку Docker
-9. Генерацию SSH-ключа для GitHub (интерактивный шаг)
+The script will:
+1. Install git and clone repository to `/opt/homelab`
+2. Update system (apt update/upgrade)
+3. Install packages (zsh, micro, zellij, htop, mc, jq, etc.)
+4. Setup Oh-My-Zsh with plugins
+5. Configure git
+6. Setup Avahi (mDNS)
+7. Apply dotfiles
+8. Install Docker
+9. Generate SSH key for GitHub (interactive step)
 
-## Структура проекта
+## Project Structure
 
 ```
 homelab/
 ├── scripts/
 │   ├── setup.sh              # Entry point (curl | bash)
-│   ├── bootstrap.sh          # Docker, директории, права
+│   ├── bootstrap.sh          # Docker, directories, permissions
 │   ├── lib/
-│   │   ├── config.sh         # Общие переменные
-│   │   └── tui.sh            # TUI библиотека
+│   │   ├── config.sh         # Shared variables
+│   │   └── tui.sh            # TUI library
 │   └── setup/
-│       ├── --init.sh         # Оркестратор
+│       ├── --init.sh         # Orchestrator
 │       ├── 00-update-system.sh
 │       ├── 01-install-packages.sh
 │       ├── 02-setup-zsh.sh
@@ -40,132 +40,104 @@ homelab/
 │       ├── 06-run-bootstrap.sh
 │       ├── 07-setup-ssh-key.sh
 │       └── 08-show-summary.sh
-├── dotfiles/                  # Симлинкуются в ~
-├── services/                  # Docker сервисы
+├── dotfiles/                  # Symlinked to ~
+├── services/                  # Docker services
 │   ├── traefik/               # Reverse proxy + avahi-helper (*.home.local)
-│   └── homepage/              # Dashboard с Docker auto-discovery
-└── tests/                     # Docker-тестирование
+│   └── homepage/              # Dashboard with Docker auto-discovery
+└── tests/                     # Docker testing (see TESTING.md)
 ```
 
-## Тестирование
-
-Скрипты тестируются в Docker-контейнере с Ubuntu 22.04.
-
-### Запуск тестов
+## Running Services
 
 ```bash
-# Сборка (с кешем — быстро, изменённые файлы пересобираются)
-docker build -t homelab-test -f tests/Dockerfile .
-
-# Сборка без кеша (полная пересборка)
-docker build --no-cache -t homelab-test -f tests/Dockerfile .
-
-# Запуск теста
-docker run --rm homelab-test
-
-# Тест одного скрипта
-docker run --rm homelab-test /opt/homelab/scripts/setup/02-setup-zsh.sh
-
-# Интерактивный режим
-docker run -it --rm homelab-test bash
+./scripts/docker/deploy.sh           # Deploy all services
+./scripts/docker/stop.sh             # Stop all
+./scripts/docker/status.sh           # Container status
+./scripts/docker/rebuild.sh          # Rebuild (pull + restart)
+./scripts/docker/deploy.sh traefik   # Deploy single service
 ```
 
-### Как работает TEST_MODE
+After first deployment, containers auto-start on reboot (`restart: unless-stopped`).
 
-В Docker устанавливается `TEST_MODE=1`, что:
-- Пропускает интерактивные промпты (`press_enter`)
-- Пропускает операции с GitHub (SSH test)
-- Пропускает операции с Docker daemon (network create)
-- Пропускает настройку firewall (UFW)
+## Current Services
 
-### Моки
+| Service | URL | Description |
+|---------|-----|-------------|
+| Homepage | http://home.local | Dashboard with Docker auto-discovery |
+| Traefik | http://traefik.home.local | Reverse proxy dashboard |
+| Dozzle | http://dozzle.home.local | Docker logs viewer |
+| Glances | http://glances.home.local | System monitoring |
+| FileBrowser | http://files.home.local | Web file manager |
 
-В Docker нет systemd, поэтому используются заглушки:
-- `tests/mocks/systemctl` — эмулирует systemctl
-- `tests/mocks/hostnamectl` — эмулирует hostnamectl
+## Adding New Services
 
-### Верификация
+1. Create `services/myservice/docker-compose.yml`
+2. Add Traefik labels for routing
+3. Add Homepage labels for auto-discovery
+4. Run `./scripts/docker/deploy.sh myservice`
 
-Каждый скрипт проверяет результат своей работы:
-
-| Скрипт | Что проверяется |
-|--------|-----------------|
-| 01-install-packages | `dpkg -s` для каждого пакета |
-| 02-setup-zsh | `getent passwd` для проверки shell |
-| 04-setup-avahi | `hostname` после установки |
-| 05-apply-dotfiles | `readlink` для symlink'ов |
-| 07-setup-ssh-key | Наличие файлов ключа |
-
-## Запуск сервисов
-
-```bash
-./scripts/deploy.sh           # Запустить все сервисы
-./scripts/deploy.sh stop      # Остановить все
-./scripts/deploy.sh status    # Статус контейнеров
-./scripts/deploy.sh restart   # Перезапустить
-./scripts/deploy.sh rebuild   # Пересобрать (pull + restart)
-./scripts/deploy.sh traefik   # Запустить один сервис
-```
-
-После первого запуска контейнеры автоматически поднимаются при перезагрузке (`restart: unless-stopped`).
-
-## Текущие сервисы
-
-| Сервис | URL | Описание |
-|--------|-----|----------|
-| Homepage | https://home.local | Dashboard с Docker auto-discovery |
-| Traefik | https://traefik.home.local | Reverse proxy dashboard |
-
-### Как добавить новый сервис
-
-1. Создай `services/myservice/docker-compose.yml`
-2. Добавь Traefik labels для роутинга
-3. Добавь Homepage labels для auto-discovery
-4. Запусти `./scripts/deploy.sh myservice`
-
-Пример labels:
+Example labels:
 ```yaml
 labels:
   - traefik.enable=true
   - traefik.http.routers.myservice.rule=Host(`myservice.home.local`)
-  - traefik.http.routers.myservice.entrypoints=websecure
-  - traefik.http.routers.myservice.tls=true
+  - traefik.http.routers.myservice.entrypoints=web
   - homepage.group=Services
   - homepage.name=My Service
   - homepage.icon=myservice
-  - homepage.href=https://myservice.home.local
+  - homepage.href=http://myservice.home.local
 ```
 
 ## Healthcheck
 
-Проверка состояния системы после установки:
+Verify system state after installation:
 
 ```bash
 cd ~/homelab
 ./scripts/healthcheck.sh
 ```
 
-Проверяет:
-- Установленные пакеты (zsh, git, jq, micro, zellij и др.)
-- Shell пользователя (zsh)
-- SSH-ключ
+Checks:
+- Installed packages (zsh, git, jq, micro, zellij, etc.)
+- User shell (zsh)
+- SSH key
 - Git config
 - Hostname
 - Dotfiles (symlinks)
-- Docker (daemon, compose, сеть traefik-net)
+- Docker (daemon, compose, traefik-net network)
 
-## Перезапуск отдельных шагов
+## Re-running Individual Steps
 
-После установки можно перезапустить любой шаг:
+After installation, you can re-run any step:
 
 ```bash
 cd ~/homelab
 ./scripts/setup/07-setup-ssh-key.sh
 ```
 
-## Конфигурация
+## Troubleshooting
 
-Основные переменные в `scripts/lib/config.sh`:
+### Chrome/Firefox can't open *.home.local
+
+Safari uses the system mDNS resolver and works immediately. Chrome and Firefox use their own DNS resolvers which may cache failed requests to `.local` domains.
+
+**Solution — clear browser DNS cache:**
+
+**Chrome:**
+```
+chrome://net-internals/#dns → Clear host cache
+```
+
+**Firefox:**
+```
+about:networking → DNS → Clear DNS Cache
+```
+
+After clearing cache, `*.home.local` should work in all browsers.
+
+## Configuration
+
+Main variables in `scripts/lib/config.sh`:
 
 ```bash
 GITHUB_USER="seigiard"
