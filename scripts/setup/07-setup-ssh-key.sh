@@ -16,7 +16,7 @@ print_header "Step 8/9: Setting up SSH key for GitHub"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 
 if [[ -f "$SSH_KEY" ]]; then
-    log_warn "SSH key already exists: $SSH_KEY"
+    log_info "SSH key already exists: $SSH_KEY"
 else
     log_step "Generating new SSH key..."
     mkdir -p "$HOME/.ssh"
@@ -36,13 +36,19 @@ fi
 eval "$(ssh-agent -s)" > /dev/null
 ssh-add "$SSH_KEY" 2>/dev/null
 
+# Always show key and instructions
 echo ""
-echo -e "${YELLOW}═══════════════════════════════════════════${NC}"
-echo -e "${YELLOW}  Add this SSH key to GitHub:${NC}"
-echo -e "${YELLOW}  https://github.com/settings/ssh/new${NC}"
-echo -e "${YELLOW}═══════════════════════════════════════════${NC}"
+echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}  ВАЖНО: Добавьте этот SSH-ключ в GitHub перед продолжением${NC}"
+echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
 echo ""
+echo -e "  1. Скопируйте ключ ниже"
+echo -e "  2. Откройте: ${CYAN}https://github.com/settings/ssh/new${NC}"
+echo -e "  3. Вставьте ключ и нажмите 'Add SSH key'"
+echo ""
+echo -e "${CYAN}─── Ваш публичный ключ ───${NC}"
 cat "${SSH_KEY}.pub"
+echo -e "${CYAN}──────────────────────────${NC}"
 echo ""
 
 press_enter
