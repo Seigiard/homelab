@@ -36,6 +36,7 @@ APT_PACKAGES=(
     # Essential
     curl
     wget
+    build-essential
     # Editors
     micro
     # Terminal tools
