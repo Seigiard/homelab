@@ -57,6 +57,10 @@ press_enter
 if [[ "${TEST_MODE:-0}" == "1" ]]; then
     log_info "[TEST] Skipping GitHub connection test"
 else
+    # Add GitHub to known_hosts (prevents interactive prompt)
+    log_step "Adding GitHub to known_hosts..."
+    ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+
     # Test connection
     log_step "Testing GitHub connection..."
     if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
