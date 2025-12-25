@@ -1,4 +1,4 @@
 default_shell "zsh"
 mouse_mode true
 copy_on_select true
-theme "ayu_light"
+theme "gruvbox-light"
