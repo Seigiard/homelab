@@ -71,7 +71,7 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 2. Для `.config/*` — создать `dotfiles/.config/<app>/`
 3. Скрипт `05-apply-dotfiles.sh` автоматически симлинкует
 
-### Перезапустить шаг установки
+### Перезапустить шаг усsтановки
 ```bash
 ./scripts/setup/07-setup-ssh-key.sh  # любой шаг можно запустить отдельно
 ```
@@ -82,3 +82,4 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 - Traefik подхватывает сервисы через Docker labels автоматически
 - Homepage + Docker socket требует `user: root`
 - Cloudflare: SSL mode = Flexible, Always Use HTTPS = OFF
+- После каждого этапа или завершённой задачи обновляй PLAN.md, README.md, ENVIRONMENT.md, CLAUDE.md ЕСЛИ НЕОБХОДИМО СОХРАНИТЬ ИНФОРМАЦИЮ В СООТВЕТСТВУЮЩЕМ ФАЙЛЕ
