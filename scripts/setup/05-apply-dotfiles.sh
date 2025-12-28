@@ -54,11 +54,12 @@ for file in "$DOTFILES_DIR"/.*; do
     fi
 done
 
-# Handle .config directory (symlink subdirectories, not the whole dir)
+# Handle .config directory (symlink subdirectories and files)
 CONFIG_SRC="$DOTFILES_DIR/.config"
 if [[ -d "$CONFIG_SRC" ]]; then
     mkdir -p "$HOME/.config"
 
+    # Symlink subdirectories
     for app_dir in "$CONFIG_SRC"/*/; do
         [[ ! -d "$app_dir" ]] && continue
 
@@ -77,6 +78,27 @@ if [[ -d "$CONFIG_SRC" ]]; then
         # Create symlink
         ln -s "$app_dir" "$target"
         log_info "Linked: .config/$app_name"
+    done
+
+    # Symlink individual files (e.g., starship.toml)
+    for config_file in "$CONFIG_SRC"/*; do
+        [[ ! -f "$config_file" ]] && continue
+
+        filename=$(basename "$config_file")
+        target="$HOME/.config/$filename"
+
+        # Backup if exists and not a symlink
+        if [[ -f "$target" && ! -L "$target" ]]; then
+            mv "$target" "$backup_dir/"
+            log_step "Backed up: .config/$filename"
+        fi
+
+        # Remove existing symlink
+        [[ -L "$target" ]] && rm "$target"
+
+        # Create symlink
+        ln -s "$config_file" "$target"
+        log_info "Linked: .config/$filename"
     done
 fi
 

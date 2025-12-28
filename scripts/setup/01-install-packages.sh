@@ -102,6 +102,19 @@ if [[ ${#CARGO_PACKAGES[@]} -gt 0 ]]; then
 fi
 
 # -------------------------------------------
+# Starship (from GitHub releases)
+# -------------------------------------------
+
+if ! command -v starship &> /dev/null; then
+    log_step "Installing Starship prompt..."
+    curl -sS https://starship.rs/install.sh | sh -s -- -y
+    require_command "starship"
+    log_info "starship $(starship --version | head -1) installed"
+else
+    log_info "starship already installed: $(starship --version | head -1)"
+fi
+
+# -------------------------------------------
 # Enable services
 # -------------------------------------------
 

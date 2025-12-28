@@ -5,8 +5,8 @@
 # Path to oh-my-zsh installation
 export ZSH="$HOME/.oh-my-zsh"
 
-# Theme
-ZSH_THEME="robbyrussell"
+# Theme disabled - using Starship prompt instead
+ZSH_THEME=""
 
 # Plugins
 plugins=(
@@ -25,8 +25,8 @@ source $ZSH/oh-my-zsh.sh
 # Environment
 # -------------------------------------------
 
-export EDITOR='micro'
-export VISUAL='micro'
+export EDITOR='nano'
+export VISUAL='nano'
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
@@ -81,8 +81,7 @@ bindkey "$terminfo[kcuu1]" history-substring-search-up
 bindkey "$terminfo[kcud1]" history-substring-search-down
 
 # -------------------------------------------
-# Custom prompt additions
+# Starship prompt
 # -------------------------------------------
 
-# Show hostname in prompt (useful for SSH)
-# PROMPT="%{$fg[cyan]%}%m%{$reset_color%} $PROMPT"
+eval "$(starship init zsh)"
