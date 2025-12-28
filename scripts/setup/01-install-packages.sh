@@ -115,6 +115,19 @@ else
 fi
 
 # -------------------------------------------
+# Rclone (cloud storage sync)
+# -------------------------------------------
+
+if ! command -v rclone &> /dev/null; then
+    log_step "Installing rclone..."
+    curl -sS https://rclone.org/install.sh | sudo bash
+    require_command "rclone"
+    log_info "rclone $(rclone version | head -1) installed"
+else
+    log_info "rclone already installed: $(rclone version | head -1)"
+fi
+
+# -------------------------------------------
 # Enable services
 # -------------------------------------------
 
