@@ -69,6 +69,8 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 | Glances | http://glances.home.local | — | System monitoring |
 | FileBrowser | http://files.home.local | https://files.1218217.xyz | Web file manager |
 | OPDS Generator | http://opds.home.local | https://opds.1218217.xyz | E-book OPDS catalog |
+| Calibre Web | http://calibre.home.local | https://calibre.1218217.xyz | E-book library (CWA) |
+| Backrest | http://backup.home.local | — | Backup management (restic + rclone) |
 | Cloudflared | — | *.1218217.xyz | Cloudflare Tunnel (external access) |
 | Samba | — | — | SMB file shares (ports 139, 445) |
 
@@ -148,3 +150,41 @@ GITHUB_EMAIL="seigiard@gmail.com"
 INSTALL_PATH="/opt/homelab"
 HOSTNAME="home"
 ```
+
+## Backup Setup
+
+### 1. Configure rclone
+
+rclone is installed automatically. Configure a remote for backups:
+
+```bash
+rclone config
+```
+
+Example: Add Google Drive remote named `gdrive`:
+1. Choose `n` (new remote)
+2. Name: `gdrive`
+3. Storage: `drive` (Google Drive)
+4. Follow OAuth flow in browser
+
+Verify configuration:
+```bash
+rclone listremotes        # Should show: gdrive:
+rclone lsd gdrive:        # List folders
+```
+
+### 2. Configure Backrest
+
+After deploying Backrest (`./scripts/docker/deploy.sh backrest`):
+
+1. Open http://backup.home.local
+2. **Add Repository**:
+   - URI: `rclone:gdrive:backups/homelab`
+   - Password: create a strong encryption password (save it!)
+3. **Add Backup Plans**:
+   - Path: `/backup/appdata` → container configs
+   - Path: `/backup/users` → user data
+   - Schedule: `0 3 * * *` (daily at 3 AM)
+4. **Test**: Run backup manually, verify in Google Drive
+
+Backrest uses [restic](https://restic.net/) for encrypted, deduplicated backups.
