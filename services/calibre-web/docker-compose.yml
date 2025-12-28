@@ -1,0 +1,31 @@
+services:
+  calibre-web:
+    image: crocodilestick/calibre-web-automated:latest
+    container_name: calibre-web
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Europe/Kyiv}
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/calibre-web:/config
+      - ${DATA_PATH:-/mnt/data}/public/calibre:/calibre-library
+      - ${DATA_PATH:-/mnt/data}/public/calibre-books-in:/cwa-book-ingest
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing
+      - traefik.enable=true
+      - traefik.http.routers.calibre-web.rule=Host(`calibre.${LOCAL_DOMAIN:-home.local}`) || Host(`calibre.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.calibre-web.entrypoints=web
+      - traefik.http.services.calibre-web.loadbalancer.server.port=8083
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Calibre Web
+      - homepage.icon=calibre-web
+      - homepage.href=http://calibre.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=E-book Library
+
+networks:
+  traefik-net:
+    external: true
