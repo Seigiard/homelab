@@ -60,15 +60,6 @@ command -v rgrc &>/dev/null && eval "$(rgrc --aliases)"
 [[ -f ~/.aliases ]] && source ~/.aliases
 
 # -------------------------------------------
-# Zellij auto-start
-# -------------------------------------------
-
-# Auto-start zellij on SSH sessions (attach to existing or create new)
-if [[ -z "$ZELLIJ" && -n "$SSH_CONNECTION" ]]; then
-    eval "$(zellij setup --generate-auto-start zsh)"
-fi
-
-# -------------------------------------------
 # History substring search (↑/↓ with typed prefix)
 # -------------------------------------------
 

@@ -114,12 +114,6 @@ alias hlrebuild='/opt/homelab/scripts/docker/rebuild.sh'
 alias hlstatus='/opt/homelab/scripts/docker/status.sh'
 alias hllogs='cd /opt/homelab && docker compose logs -f'
 
-# Service shortcuts
-traefik() { cd /opt/homelab/services/traefik && docker compose "$@"; }
-adguard() { cd /opt/homelab/services/adguard && docker compose "$@"; }
-samba() { cd /opt/homelab/services/samba && docker compose "$@"; }
-immich() { cd /opt/homelab/services/immich && docker compose "$@"; }
-
 # -------------------------------------------
 # Misc
 # -------------------------------------------
