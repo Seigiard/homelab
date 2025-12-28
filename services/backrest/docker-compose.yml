@@ -1,0 +1,41 @@
+services:
+  backrest:
+    image: garethgeorge/backrest:latest
+    container_name: backrest
+    hostname: backrest
+    restart: unless-stopped
+    environment:
+      - BACKREST_DATA=/data
+      - BACKREST_CONFIG=/config/config.json
+      - XDG_CACHE_HOME=/cache
+      - TMPDIR=/tmp
+      - TZ=${TZ:-Europe/Kyiv}
+    volumes:
+      # Backrest internal
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/backrest/data:/data
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/backrest/config:/config
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/backrest/cache:/cache
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/backrest/tmp:/tmp
+      # Rclone config from host
+      - ${HOME}/.config/rclone:/root/.config/rclone:ro
+      # Directories to backup (read-only)
+      - ${APPDATA_PATH:-/opt/homelab/appdata}:/backup/appdata:ro
+      - ${DATA_PATH:-/mnt/data}/users:/backup/users:ro
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing (local only)
+      - traefik.enable=true
+      - traefik.http.routers.backrest.rule=Host(`backup.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.backrest.entrypoints=web
+      - traefik.http.services.backrest.loadbalancer.server.port=9898
+      # Homepage
+      - homepage.group=Infrastructure
+      - homepage.name=Backrest
+      - homepage.icon=backrest
+      - homepage.href=http://backup.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=Backup Management
+
+networks:
+  traefik-net:
+    external: true
