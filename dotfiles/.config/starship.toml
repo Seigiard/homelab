@@ -30,9 +30,10 @@ truncation_length=32
 format='([$all_status$ahead_behind]($style) )'
 
 [username]
-disabled = true
+show_always = false
+format = "[\\[$user@]($style)"
 
 [hostname]
 ssh_only = true
 ssh_symbol = ""
-format = "[[$ssh_user@$hostname\\]]($style) "
+format = "[$hostname\\]]($style) "
