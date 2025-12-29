@@ -11,7 +11,7 @@ services:
       - CALIBRE_LISTEN=0.0.0.0
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/calibre:/config
-      - ${DATA_PATH:-/mnt/data}/public/calibre:/calibre-library
+      - ${DATA_PATH:-/mnt/data}/calibre:/calibre-library
       - ${DATA_PATH:-/mnt/data}/public/calibre-books-in:/cwa-book-ingest
     networks:
       - traefik-net
