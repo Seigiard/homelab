@@ -7,6 +7,8 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=${TZ:-Europe/Kyiv}
+      - CALIBRE_PORT=8083
+      - CALIBRE_LISTEN=0.0.0.0
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/calibre-web:/config
       - ${DATA_PATH:-/mnt/data}/public/calibre:/calibre-library
