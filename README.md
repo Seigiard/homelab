@@ -69,7 +69,7 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 | Glances | http://glances.home.local | — | System monitoring |
 | FileBrowser | http://files.home.local | https://files.1218217.xyz | Web file manager |
 | OPDS Generator | http://opds.home.local | https://opds.1218217.xyz | E-book OPDS catalog |
-| Calibre Web | http://calibre.home.local | https://calibre.1218217.xyz | E-book library (CWA) |
+| Calibre | http://calibre.home.local | https://calibre.1218217.xyz | E-book library (CWA) |
 | Backrest | http://backup.home.local | — | Backup management (restic + rclone) |
 | Cloudflared | — | *.1218217.xyz | Cloudflare Tunnel (external access) |
 | Samba | — | — | SMB file shares (ports 139, 445) |

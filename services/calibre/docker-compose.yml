@@ -1,7 +1,7 @@
 services:
-  calibre-web:
+  calibre:
     image: crocodilestick/calibre-web-automated:latest
-    container_name: calibre-web
+    container_name: calibre
     restart: unless-stopped
     environment:
       - PUID=1000
@@ -10,7 +10,7 @@ services:
       - CALIBRE_PORT=8083
       - CALIBRE_LISTEN=0.0.0.0
     volumes:
-      - ${APPDATA_PATH:-/opt/homelab/appdata}/calibre-web:/config
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/calibre:/config
       - ${DATA_PATH:-/mnt/data}/public/calibre:/calibre-library
       - ${DATA_PATH:-/mnt/data}/public/calibre-books-in:/cwa-book-ingest
     networks:
@@ -18,13 +18,13 @@ services:
     labels:
       # Traefik routing
       - traefik.enable=true
-      - traefik.http.routers.calibre-web.rule=Host(`calibre.${LOCAL_DOMAIN:-home.local}`) || Host(`calibre.${EXTERNAL_DOMAIN:-1218217.xyz}`)
-      - traefik.http.routers.calibre-web.entrypoints=web
-      - traefik.http.services.calibre-web.loadbalancer.server.port=8083
+      - traefik.http.routers.calibre.rule=Host(`calibre.${LOCAL_DOMAIN:-home.local}`) || Host(`calibre.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.calibre.entrypoints=web
+      - traefik.http.services.calibre.loadbalancer.server.port=8083
       # Homepage
       - homepage.group=Media
-      - homepage.name=Calibre Web
-      - homepage.icon=calibre-web
+      - homepage.name=Calibre
+      - homepage.icon=calibre
       - homepage.href=http://calibre.${LOCAL_DOMAIN:-home.local}
       - homepage.description=E-book Library
 
