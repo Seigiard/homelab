@@ -69,7 +69,7 @@ sudo systemctl enable avahi-daemon
 ### Setup bash and apps
 
 ```sh
-sudo apt install zellij micro mc
+sudo apt install micro mc
 # TODO: github repo with all setups
 ```
 

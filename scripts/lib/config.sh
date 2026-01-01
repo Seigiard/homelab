@@ -53,11 +53,8 @@ APT_PACKAGES=(
     zsh
 )
 
-# Snap packages
-SNAP_PACKAGES=(zellij)
-
 # Cargo packages
-CARGO_PACKAGES=(rgrc)
+CARGO_PACKAGES=(rgrc zoxide)
 
 # -------------------------------------------
 # Environment fixes (Docker compatibility)

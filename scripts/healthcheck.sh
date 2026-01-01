@@ -44,11 +44,11 @@ for pkg in "${packages[@]}"; do
     fi
 done
 
-# Zellij (snap)
-if command -v zellij &>/dev/null; then
-    check_pass "zellij"
+# Zoxide (cargo)
+if command -v zoxide &>/dev/null; then
+    check_pass "zoxide"
 else
-    check_fail "zellij not installed"
+    check_fail "zoxide not installed"
 fi
 
 # --- Shell ---

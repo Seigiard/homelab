@@ -88,12 +88,10 @@ alias e='micro'
 alias m='mc'
 
 # -------------------------------------------
-# Zellij
+# Zoxide (smart cd)
 # -------------------------------------------
 
-alias zj='zellij'
-alias zja='zellij attach'
-alias zjl='zellij list-sessions'
+alias zi='zoxide query -i'
 
 # -------------------------------------------
 # Safety

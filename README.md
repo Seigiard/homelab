@@ -11,7 +11,7 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 The script will:
 1. Install git and clone repository to `/opt/homelab`
 2. Update system (apt update/upgrade)
-3. Install packages (zsh, micro, zellij, htop, mc, jq, etc.)
+3. Install packages (zsh, micro, zoxide, htop, mc, jq, etc.)
 4. Setup Oh-My-Zsh with plugins
 5. Configure git
 6. Setup Avahi (mDNS)
@@ -103,7 +103,7 @@ cd ~/homelab
 ```
 
 Checks:
-- Installed packages (zsh, git, jq, micro, zellij, etc.)
+- Installed packages (zsh, git, jq, micro, zoxide, etc.)
 - User shell (zsh)
 - SSH key
 - Git config
