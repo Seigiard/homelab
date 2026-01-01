@@ -2,23 +2,27 @@
 # Homelab Zsh Configuration
 # ===========================================
 
-# Path to oh-my-zsh installation
+# Helpers
+has() { command -v "$1" > /dev/null 2>&1; }
+try_source() { [[ -s "$1" ]] && source "$1"; }
+
+# -------------------------------------------
+# Oh My Zsh
+# -------------------------------------------
+
 export ZSH="$HOME/.oh-my-zsh"
-
-# Theme disabled - using Starship prompt instead
 ZSH_THEME=""
+ZSH_DISABLE_COMPFIX="true"
 
-# Plugins
 plugins=(
     git
     docker
     docker-compose
     zsh-autosuggestions
     zsh-syntax-highlighting
-    history-substring-search
+    zsh-history-substring-search
 )
 
-# Load oh-my-zsh
 source $ZSH/oh-my-zsh.sh
 
 # -------------------------------------------
@@ -29,8 +33,6 @@ export EDITOR='nano'
 export VISUAL='nano'
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-
-# Homelab path
 export HOMELAB_PATH="/opt/homelab"
 
 # -------------------------------------------
@@ -45,34 +47,30 @@ export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
 HISTSIZE=10000
 SAVEHIST=10000
-setopt HIST_IGNORE_DUPS
-setopt HIST_IGNORE_SPACE
-setopt SHARE_HISTORY
+HISTFILE=~/.zsh_history
+setopt share_history
+setopt appendhistory
+setopt inc_append_history
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_space
+setopt hist_reduce_blanks
+setopt extended_history
 
 # -------------------------------------------
-# Aliases
+# Key bindings (↑/↓ history substring search)
 # -------------------------------------------
 
-# rgrc colorizer (auto-colorize common commands)
-command -v rgrc &>/dev/null && eval "$(rgrc --aliases)"
-
-# Load custom aliases
-[[ -f ~/.aliases ]] && source ~/.aliases
-
-# -------------------------------------------
-# History substring search (↑/↓ with typed prefix)
-# -------------------------------------------
-
-# Bind ↑ and ↓ arrows to history-substring-search
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
-
-# Also bind for terminals that send different codes
 bindkey "$terminfo[kcuu1]" history-substring-search-up
 bindkey "$terminfo[kcud1]" history-substring-search-down
 
 # -------------------------------------------
-# Starship prompt
+# Tools initialization
 # -------------------------------------------
 
-eval "$(starship init zsh)"
+has rgrc && eval "$(rgrc --aliases)"
+has zoxide && eval "$(zoxide init zsh)"
+has starship && eval "$(starship init zsh)"
+try_source ~/.aliases
