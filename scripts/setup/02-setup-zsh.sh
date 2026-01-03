@@ -41,11 +41,23 @@ if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
     git clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
 fi
 
+if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-history-substring-search" ]]; then
+    log_step "Installing zsh-history-substring-search..."
+    git clone https://github.com/zsh-users/zsh-history-substring-search "$ZSH_CUSTOM/plugins/zsh-history-substring-search"
+fi
+
 # Verify plugins
-if [[ -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" && -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
-    log_info "Plugins installed"
+plugins_ok=true
+for plugin in zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search; do
+    if [[ ! -d "$ZSH_CUSTOM/plugins/$plugin" ]]; then
+        log_error "Plugin '$plugin' installation failed"
+        plugins_ok=false
+    fi
+done
+
+if [[ "$plugins_ok" == "true" ]]; then
+    log_info "All plugins installed"
 else
-    log_error "Plugin installation failed"
     exit 1
 fi
 
