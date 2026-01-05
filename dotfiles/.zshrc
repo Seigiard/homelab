@@ -16,8 +16,6 @@ ZSH_DISABLE_COMPFIX="true"
 
 plugins=(
     git
-    docker
-    docker-compose
     zsh-autosuggestions
     zsh-syntax-highlighting
     zsh-history-substring-search
@@ -67,10 +65,25 @@ bindkey "$terminfo[kcuu1]" history-substring-search-up
 bindkey "$terminfo[kcud1]" history-substring-search-down
 
 # -------------------------------------------
+# mise - polyglot version manager
+# -------------------------------------------
+
+has mise && eval "$(mise activate zsh)"
+
+# -------------------------------------------
+# fzf configuration (use fd for speed)
+# -------------------------------------------
+
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always --line-range :500 {}'"
+
+# -------------------------------------------
 # Tools initialization
 # -------------------------------------------
 
 has rgrc && eval "$(rgrc --aliases)"
-has zoxide && eval "$(zoxide init zsh)"
+has zoxide && eval "$(zoxide init zsh --cmd cd)"
 has starship && eval "$(starship init zsh)"
 try_source ~/.aliases

@@ -115,6 +115,31 @@ else
 fi
 
 # -------------------------------------------
+# mise (polyglot version manager)
+# -------------------------------------------
+
+if ! command -v mise &> /dev/null; then
+    log_step "Installing mise version manager..."
+    curl https://mise.run | sh
+    # Add to path for current session
+    export PATH="$HOME/.local/bin:$PATH"
+    require_command "mise"
+    log_info "mise $(mise --version) installed"
+else
+    log_info "mise already installed: $(mise --version)"
+fi
+
+# -------------------------------------------
+# fd symlink (apt package is fd-find, command is fdfind)
+# -------------------------------------------
+
+if command -v fdfind &> /dev/null && ! command -v fd &> /dev/null; then
+    log_step "Creating fd symlink..."
+    sudo ln -sf "$(which fdfind)" /usr/local/bin/fd
+    log_info "fd symlink created"
+fi
+
+# -------------------------------------------
 # Rclone (cloud storage sync)
 # -------------------------------------------
 

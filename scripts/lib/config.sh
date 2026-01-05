@@ -40,11 +40,14 @@ APT_PACKAGES=(
     # Editors
     micro
     # Terminal tools
-    htop
+    btop       # htop replacement with graphs
     mc
     tree
     ncdu
     jq
+    fd-find    # fast find alternative
+    ripgrep    # fast grep alternative
+    fzf        # fuzzy finder
     # Network
     openssh-server
     avahi-daemon
@@ -53,8 +56,16 @@ APT_PACKAGES=(
     zsh
 )
 
-# Cargo packages
-CARGO_PACKAGES=(rgrc zoxide)
+# Cargo packages (cross-platform CLI tools)
+CARGO_PACKAGES=(
+    eza        # ls replacement with icons/colors
+    bat        # cat with syntax highlighting
+    procs      # ps replacement with tree view
+    dust       # du replacement with visual tree
+    duf        # df replacement with nice table
+    rgrc       # colorizes terminal output
+    zoxide     # smarter cd command
+)
 
 # -------------------------------------------
 # Environment fixes (Docker compatibility)
