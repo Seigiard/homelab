@@ -65,6 +65,7 @@ CARGO_PACKAGES=(
     duf        # df replacement with nice table
     rgrc       # colorizes terminal output
     zoxide     # smarter cd command
+    yazi-fm    # terminal file manager
 )
 
 # -------------------------------------------
