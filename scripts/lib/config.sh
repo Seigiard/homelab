@@ -61,7 +61,7 @@ CARGO_PACKAGES=(
     eza        # ls replacement with icons/colors
     bat        # cat with syntax highlighting
     procs      # ps replacement with tree view
-    dust       # du replacement with visual tree
+    du-dust    # du replacement with visual tree
     duf        # df replacement with nice table
     rgrc       # colorizes terminal output
     zoxide     # smarter cd command
