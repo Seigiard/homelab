@@ -21,3 +21,7 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Service runtime data (should be in appdata/)
+services/filebrowser/config/
+services/opds-generator/data/

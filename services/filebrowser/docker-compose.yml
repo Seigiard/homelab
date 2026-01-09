@@ -9,7 +9,7 @@ services:
       - FB_DATABASE=/database/filebrowser.db
     volumes:
       - ${DATA_PATH:-/mnt/data}/public:/srv
-      - ./config/public:/database
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/filebrowser/public:/database
     networks:
       - traefik-net
     labels:
@@ -35,7 +35,7 @@ services:
       - FB_DATABASE=/database/filebrowser.db
     volumes:
       - ${DATA_PATH:-/mnt/data}/users/andrew:/srv
-      - ./config/andrew:/database
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/filebrowser/andrew:/database
     networks:
       - traefik-net
     labels:
@@ -55,7 +55,7 @@ services:
       - FB_DATABASE=/database/filebrowser.db
     volumes:
       - ${DATA_PATH:-/mnt/data}/users/yuliia:/srv
-      - ./config/yuliia:/database
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/filebrowser/yuliia:/database
     networks:
       - traefik-net
     labels:
