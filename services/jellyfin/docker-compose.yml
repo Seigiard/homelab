@@ -1,0 +1,39 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    user: ${PUID:-1000}:${PGID:-1000}
+    group_add:
+      - "${RENDER_GROUP_ID:-104}"
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - JELLYFIN_PublishedServerUrl=http://movies.${LOCAL_DOMAIN:-home.local}
+    volumes:
+      # Config & cache (SSD)
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/jellyfin/config:/config
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/jellyfin/cache:/cache
+      # Media (HDD) - mount entire public folder, configure libraries in UI
+      - ${DATA_PATH:-/mnt/data}/public:/media:ro
+    devices:
+      # Intel QuickSync / VAAPI
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card0:/dev/dri/card0
+    networks:
+      - traefik-net
+    labels:
+      # Traefik
+      - traefik.enable=true
+      - traefik.http.routers.jellyfin.rule=Host(`movies.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.jellyfin.entrypoints=web
+      - traefik.http.services.jellyfin.loadbalancer.server.port=8096
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Jellyfin
+      - homepage.icon=jellyfin
+      - homepage.href=http://movies.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=Media streaming server
+
+networks:
+  traefik-net:
+    external: true
