@@ -1,0 +1,63 @@
+services:
+  pricebuddy:
+    image: jez500/pricebuddy:latest
+    container_name: pricebuddy
+    restart: unless-stopped
+    depends_on:
+      pricebuddy-db:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ:-Europe/Kyiv}
+      - APP_URL=http://prices.${LOCAL_DOMAIN:-home.local}
+      - ASSET_URL=http://prices.${LOCAL_DOMAIN:-home.local}
+      - DB_HOST=pricebuddy-db
+      - DB_DATABASE=pricebuddy
+      - DB_USERNAME=pricebuddy
+      - DB_PASSWORD=pricebuddy
+      - SCRAPER_URL=http://pricebuddy-scraper:3000
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/pricebuddy/storage:/app/storage
+    networks:
+      - traefik-net
+    labels:
+      # Traefik
+      - traefik.enable=true
+      - traefik.http.routers.pricebuddy.rule=Host(`prices.${LOCAL_DOMAIN:-home.local}`) || Host(`prices.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.pricebuddy.entrypoints=web
+      - traefik.http.services.pricebuddy.loadbalancer.server.port=80
+      # Homepage
+      - homepage.group=Tools
+      - homepage.name=PriceBuddy
+      - homepage.icon=mdi-tag-outline
+      - homepage.href=http://prices.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=Price Tracker
+
+  pricebuddy-db:
+    image: mysql:8.2
+    container_name: pricebuddy-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=pricebuddy
+      - MYSQL_DATABASE=pricebuddy
+      - MYSQL_USER=pricebuddy
+      - MYSQL_PASSWORD=pricebuddy
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/pricebuddy/db:/var/lib/mysql
+    networks:
+      - traefik-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pricebuddy-scraper:
+    image: jez500/seleniumbase-scrapper:latest
+    container_name: pricebuddy-scraper
+    restart: unless-stopped
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true
