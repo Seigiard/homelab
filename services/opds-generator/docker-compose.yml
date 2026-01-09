@@ -5,7 +5,8 @@ services:
     restart: unless-stopped
     environment:
       - TZ=${TZ:-Europe/Kyiv}
-      - BASE_URL=http://opds.${LOCAL_DOMAIN:-home.local}
+      - ADMIN_USER=${OPDS_ADMIN_USER:-admin}
+      - ADMIN_TOKEN=${OPDS_ADMIN_TOKEN}
     volumes:
       - ${DATA_PATH:-/mnt/data}/public/library:/books:ro
       - ${APPDATA_PATH:-/opt/homelab/appdata}/opds-generator:/data
