@@ -16,7 +16,7 @@ services:
       - DB_PASSWORD=pricebuddy
       - SCRAPER_URL=http://pricebuddy-scraper:3000
     volumes:
-      - ${APPDATA_PATH:-/opt/homelab/appdata}/pricebuddy/storage:/app/storage
+      - pricebuddy-storage:/app/storage
     networks:
       - traefik-net
     labels:
@@ -57,6 +57,9 @@ services:
     restart: unless-stopped
     networks:
       - traefik-net
+
+volumes:
+  pricebuddy-storage:
 
 networks:
   traefik-net:
