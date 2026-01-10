@@ -102,6 +102,19 @@ if [[ ${#CARGO_PACKAGES[@]} -gt 0 ]]; then
 fi
 
 # -------------------------------------------
+# Yazi (requires special installation method)
+# -------------------------------------------
+
+if ! command -v yazi &> /dev/null; then
+    [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
+    log_step "Installing Yazi file manager..."
+    cargo install --force yazi-build
+    log_info "yazi installed"
+else
+    log_info "yazi already installed"
+fi
+
+# -------------------------------------------
 # Starship (from GitHub releases)
 # -------------------------------------------
 
