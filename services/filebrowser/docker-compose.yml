@@ -4,7 +4,7 @@ services:
     container_name: filebrowser-public
     restart: unless-stopped
     environment:
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
       - FB_NOAUTH=true
       - FB_DATABASE=/database/filebrowser.db
     volumes:
@@ -30,7 +30,7 @@ services:
     container_name: filebrowser-andrew
     restart: unless-stopped
     environment:
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
       - FB_NOAUTH=true
       - FB_DATABASE=/database/filebrowser.db
     volumes:
@@ -50,7 +50,7 @@ services:
     container_name: filebrowser-yuliia
     restart: unless-stopped
     environment:
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
       - FB_NOAUTH=true
       - FB_DATABASE=/database/filebrowser.db
     volumes:

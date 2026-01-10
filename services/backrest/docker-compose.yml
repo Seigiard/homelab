@@ -9,7 +9,7 @@ services:
       - BACKREST_CONFIG=/config/config.json
       - XDG_CACHE_HOME=/cache
       - TMPDIR=/tmp
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
     volumes:
       # Backrest internal
       - ${APPDATA_PATH:-/opt/homelab/appdata}/backrest/data:/data

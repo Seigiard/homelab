@@ -7,7 +7,7 @@ services:
     group_add:
       - "${RENDER_GROUP_ID:-104}"
     environment:
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
       - JELLYFIN_PublishedServerUrl=http://movies.${LOCAL_DOMAIN:-home.local}
     volumes:
       # Config & cache (SSD)

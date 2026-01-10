@@ -4,7 +4,7 @@ services:
     container_name: opds-generator
     restart: unless-stopped
     environment:
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
       - ADMIN_USER=${OPDS_ADMIN_USER:-admin}
       - ADMIN_TOKEN=${OPDS_ADMIN_TOKEN}
     volumes:

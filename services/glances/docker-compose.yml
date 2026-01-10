@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     pid: host
     environment:
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
       - GLANCES_OPT=-w
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

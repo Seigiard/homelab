@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     user: root
     environment:
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
       - HOMEPAGE_ALLOWED_HOSTS=${LOCAL_DOMAIN:-home.local},${EXTERNAL_DOMAIN:-1218217.xyz},home.${EXTERNAL_DOMAIN:-1218217.xyz}
     volumes:
       - ./config:/app/config

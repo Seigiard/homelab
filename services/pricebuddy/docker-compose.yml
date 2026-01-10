@@ -7,7 +7,7 @@ services:
       pricebuddy-db:
         condition: service_healthy
     environment:
-      - TZ=${TZ:-Europe/Kyiv}
+      - TZ=${TZ:-Europe/Bratislava}
       - APP_URL=http://prices.${LOCAL_DOMAIN:-home.local}
       - ASSET_URL=http://prices.${LOCAL_DOMAIN:-home.local}
       - DB_HOST=pricebuddy-db
