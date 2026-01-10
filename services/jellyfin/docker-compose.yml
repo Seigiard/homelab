@@ -14,7 +14,7 @@ services:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/jellyfin/config:/config
       - ${APPDATA_PATH:-/opt/homelab/appdata}/jellyfin/cache:/cache
       # Media (HDD) - mount entire public folder, configure libraries in UI
-      - ${DATA_PATH:-/mnt/data}/public:/media:ro
+      - ${DATA_PATH:-/mnt/data}/public:/media
     devices:
       # Intel QuickSync / VAAPI
       - /dev/dri/renderD128:/dev/dri/renderD128
