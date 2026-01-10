@@ -1,0 +1,30 @@
+services:
+  threadfin:
+    image: fyb3roptik/threadfin:latest
+    container_name: threadfin
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    volumes:
+      - ${APPDATA_PATH:-./appdata}/threadfin:/home/threadfin/conf
+      - /tmp/threadfin:/tmp/threadfin
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing (local only)
+      - traefik.enable=true
+      - traefik.http.routers.threadfin.rule=Host(`threadfin.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.threadfin.entrypoints=web
+      - traefik.http.services.threadfin.loadbalancer.server.port=34400
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Threadfin
+      - homepage.icon=threadfin
+      - homepage.href=http://threadfin.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=IPTV Proxy
+
+networks:
+  traefik-net:
+    external: true
