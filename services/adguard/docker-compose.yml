@@ -1,0 +1,32 @@
+services:
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: adguard
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "3000:3000/tcp"  # Initial setup, then moves to 80
+    volumes:
+      - ${APPDATA_PATH:-./appdata}/adguard/work:/opt/adguardhome/work
+      - ${APPDATA_PATH:-./appdata}/adguard/conf:/opt/adguardhome/conf
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing (local only)
+      - traefik.enable=true
+      - traefik.http.routers.adguard.rule=Host(`dns.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.adguard.entrypoints=web
+      - traefik.http.services.adguard.loadbalancer.server.port=80
+      # Homepage
+      - homepage.group=Infrastructure
+      - homepage.name=AdGuard Home
+      - homepage.icon=adguard-home
+      - homepage.href=http://dns.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=DNS & Ad Blocker
+
+networks:
+  traefik-net:
+    external: true

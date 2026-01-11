@@ -24,18 +24,6 @@ services:
       - "homepage.href=http://traefik.${LOCAL_DOMAIN:-home.local}"
       - "homepage.description=Reverse Proxy"
 
-  avahi-helper:
-    image: hardillb/traefik-avahi-helper
-    container_name: avahi-helper
-    restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
-    networks:
-      - traefik-net
-
 networks:
   traefik-net:
     external: true
