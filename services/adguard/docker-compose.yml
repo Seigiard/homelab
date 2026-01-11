@@ -8,7 +8,7 @@ services:
     ports:
       - "53:53/tcp"
       - "53:53/udp"
-      - "3000:3000/tcp"  # Initial setup, then moves to 80
+      - "3000:80/tcp"  # Web UI (AdGuard listens on 80 inside)
     volumes:
       - ${APPDATA_PATH:-./appdata}/adguard/work:/opt/adguardhome/work
       - ${APPDATA_PATH:-./appdata}/adguard/conf:/opt/adguardhome/conf
