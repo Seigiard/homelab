@@ -55,6 +55,68 @@ check_requirements() {
 }
 
 # -------------------------------------------
+# Setup SSH key for passwordless access
+# -------------------------------------------
+
+setup_client_ssh_key() {
+    print_header "SSH Key Setup (passwordless login)"
+
+    echo -e "Чтобы входить на сервер без пароля, добавьте свой SSH-ключ."
+    echo ""
+    echo -e "${CYAN}─── Как получить ключ на вашем компьютере ───${NC}"
+    echo ""
+    echo -e "  ${BOLD}macOS/Linux:${NC}"
+    echo -e "    cat ~/.ssh/id_ed25519.pub"
+    echo ""
+    echo -e "  ${BOLD}Windows (PowerShell):${NC}"
+    echo -e "    type \$env:USERPROFILE\\.ssh\\id_ed25519.pub"
+    echo ""
+    echo -e "  ${BOLD}Если ключа нет — создайте:${NC}"
+    echo -e "    ssh-keygen -t ed25519"
+    echo ""
+    echo -e "${CYAN}─────────────────────────────────────────────${NC}"
+    echo ""
+
+    # Skip in test mode
+    if [[ "${TEST_MODE:-0}" == "1" ]]; then
+        log_info "[TEST] Skipping SSH key setup"
+        return 0
+    fi
+
+    if ! confirm "Добавить SSH-ключ для входа без пароля?" "y"; then
+        log_info "Пропускаем настройку SSH-ключа"
+        return 0
+    fi
+
+    echo ""
+    echo -e "${YELLOW}Вставьте ваш публичный ключ (одной строкой, начинается с ssh-):${NC}"
+    read -r ssh_key
+
+    # Validate key format
+    if [[ ! "$ssh_key" =~ ^ssh-(ed25519|rsa|ecdsa) ]]; then
+        log_error "Неверный формат ключа. Ключ должен начинаться с ssh-ed25519, ssh-rsa или ssh-ecdsa"
+        return 1
+    fi
+
+    # Setup authorized_keys
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+
+    # Check if key already exists
+    if [[ -f "$HOME/.ssh/authorized_keys" ]] && grep -qF "$ssh_key" "$HOME/.ssh/authorized_keys"; then
+        log_info "Этот ключ уже добавлен"
+    else
+        echo "$ssh_key" >> "$HOME/.ssh/authorized_keys"
+        chmod 600 "$HOME/.ssh/authorized_keys"
+        log_info "SSH-ключ добавлен в authorized_keys"
+    fi
+
+    echo ""
+    log_info "Теперь вы можете входить без пароля: ssh $USER@$(hostname)"
+    echo ""
+}
+
+# -------------------------------------------
 # Main
 # -------------------------------------------
 
@@ -65,6 +127,7 @@ main() {
     echo ""
 
     check_requirements
+    setup_client_ssh_key
 
     # Run all numbered scripts in order
     for script in "$SCRIPT_DIR"/[0-9][0-9]-*.sh; do
