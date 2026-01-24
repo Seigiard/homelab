@@ -63,11 +63,15 @@ Roadmap проекта и статус реализации.
 - [ ] Authelia
 - [ ] Включить внешний доступ к Dozzle/Glances с аутентификацией
 
+### Фаза 9: Медиа-сервисы
+
+- [x] `services/jellyfin/` — медиа-стриминг
+- [x] `services/qbittorrent/` — торрент-клиент
+
 ---
 
 ## Отложено
 
-- [ ] Торренты (transmission/qbittorrent)
-- [ ] Jellyfin (медиа-сервер)
 - [ ] Paperless (документы)
 - [ ] Home Assistant
+- [ ] Prowlarr / Sonarr / Radarr (автоматизация медиа)
