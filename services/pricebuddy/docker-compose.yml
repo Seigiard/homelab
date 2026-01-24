@@ -36,6 +36,7 @@ services:
     image: mysql:8.2
     container_name: pricebuddy-db
     restart: unless-stopped
+    command: --skip-log-bin
     environment:
       - MYSQL_ROOT_PASSWORD=pricebuddy
       - MYSQL_DATABASE=pricebuddy
