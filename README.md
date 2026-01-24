@@ -9,6 +9,7 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 ```
 
 The script will:
+
 1. Install git and clone repository to `/opt/homelab`
 2. Update system (apt update/upgrade)
 3. Install packages (zsh, micro, zoxide, htop, mc, jq, etc.)
@@ -61,18 +62,18 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 
 ## Current Services
 
-| Service | Local URL | External URL | Description |
-|---------|-----------|--------------|-------------|
-| Homepage | http://home.local | — | Dashboard with Docker auto-discovery |
-| Traefik | http://traefik.home.local | — | Reverse proxy dashboard |
-| Dozzle | http://dozzle.home.local | — | Docker logs viewer |
-| Glances | http://glances.home.local | — | System monitoring |
-| FileBrowser | http://files.home.local | https://files.1218217.xyz | Web file manager |
-| OPDS Generator | http://opds.home.local | https://opds.1218217.xyz | E-book OPDS catalog |
-| Calibre | http://calibre.home.local | https://calibre.1218217.xyz | E-book library (CWA) |
-| Backrest | http://backup.home.local | — | Backup management (restic + rclone) |
-| Cloudflared | — | *.1218217.xyz | Cloudflare Tunnel (external access) |
-| Samba | — | — | SMB file shares (ports 139, 445) |
+| Service        | Local URL                 | External URL                | Description                          |
+| -------------- | ------------------------- | --------------------------- | ------------------------------------ |
+| Homepage       | http://home.local         | —                           | Dashboard with Docker auto-discovery |
+| Traefik        | http://traefik.home.local | —                           | Reverse proxy dashboard              |
+| Dozzle         | http://dozzle.home.local  | —                           | Docker logs viewer                   |
+| Glances        | http://glances.home.local | —                           | System monitoring                    |
+| FileBrowser    | http://files.home.local   | https://files.1218217.xyz   | Web file manager                     |
+| OPDS Generator | http://opds.home.local    | https://opds.1218217.xyz    | E-book OPDS catalog                  |
+| Calibre        | http://calibre.home.local | https://calibre.1218217.xyz | E-book library (CWA)                 |
+| Backrest       | http://backup.home.local  | —                           | Backup management (restic + rclone)  |
+| Cloudflared    | —                         | \*.1218217.xyz              | Cloudflare Tunnel (external access)  |
+| Samba          | —                         | —                           | SMB file shares (ports 139, 445)     |
 
 ## Adding New Services
 
@@ -82,6 +83,7 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 4. Run `./scripts/docker/deploy.sh myservice`
 
 Example labels:
+
 ```yaml
 labels:
   - traefik.enable=true
@@ -103,6 +105,7 @@ cd ~/homelab
 ```
 
 Checks:
+
 - Installed packages (zsh, git, jq, micro, zoxide, etc.)
 - User shell (zsh)
 - SSH key
@@ -122,18 +125,20 @@ cd ~/homelab
 
 ## Troubleshooting
 
-### Chrome/Firefox can't open *.home.local
+### Chrome/Firefox can't open \*.home.local
 
 Safari uses the system mDNS resolver and works immediately. Chrome and Firefox use their own DNS resolvers which may cache failed requests to `.local` domains.
 
 **Solution — clear browser DNS cache:**
 
 **Chrome:**
+
 ```
 chrome://net-internals/#dns → Clear host cache
 ```
 
 **Firefox:**
+
 ```
 about:networking → DNS → Clear DNS Cache
 ```
@@ -162,12 +167,14 @@ rclone config
 ```
 
 Example: Add Google Drive remote named `gdrive`:
+
 1. Choose `n` (new remote)
 2. Name: `gdrive`
 3. Storage: `drive` (Google Drive)
 4. Follow OAuth flow in browser
 
 Verify configuration:
+
 ```bash
 rclone listremotes        # Should show: gdrive:
 rclone lsd gdrive:        # List folders
