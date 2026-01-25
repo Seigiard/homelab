@@ -22,13 +22,14 @@ Thumbs.db
 tmp/
 temp/
 
+# App Data
+appdata
+
 # Service runtime data (should be in appdata/)
 services/filebrowser/config/
 services/opds-generator/data/
 
 # SSL certificates (contain private keys)
 services/traefik/data/acme.json
-
-appdata
 
 services/authelia/config/users_database.yml
