@@ -17,12 +17,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.dozzle.rule=Host(`dozzle.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.dozzle.entrypoints=web
+      - traefik.http.routers.dozzle.middlewares=authelia@docker
       - traefik.http.services.dozzle.loadbalancer.server.port=8080
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.dozzle-secure.rule=Host(`dozzle.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.dozzle-secure.entrypoints=websecure
       - traefik.http.routers.dozzle-secure.tls=true
       - traefik.http.routers.dozzle-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.dozzle-secure.middlewares=authelia@docker
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Dozzle

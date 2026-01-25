@@ -1,0 +1,33 @@
+---
+# Authelia Users Database
+# Generate password hash with:
+#   docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'your-password'
+
+users:
+  admin:
+    disabled: false
+    displayname: 'Admin'
+    # TODO: Replace with real password hash
+    password: '$argon2id$v=19$m=65536,t=3,p=4$REPLACE_WITH_REAL_HASH'
+    email: 'admin@example.com'
+    groups:
+      - 'admins'
+      - 'users'
+
+  andrew:
+    disabled: false
+    displayname: 'Andrew'
+    # TODO: Replace with real password hash
+    password: '$argon2id$v=19$m=65536,t=3,p=4$REPLACE_WITH_REAL_HASH'
+    email: 'andrew@example.com'
+    groups:
+      - 'users'
+
+  yuliia:
+    disabled: false
+    displayname: 'Yuliia'
+    # TODO: Replace with real password hash
+    password: '$argon2id$v=19$m=65536,t=3,p=4$REPLACE_WITH_REAL_HASH'
+    email: 'yuliia@example.com'
+    groups:
+      - 'users'

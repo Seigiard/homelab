@@ -1,0 +1,36 @@
+services:
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+      - AUTHELIA_JWT_SECRET=${AUTHELIA_JWT_SECRET}
+      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY=${AUTHELIA_STORAGE_ENCRYPTION_KEY}
+    volumes:
+      - ./config:/config
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/authelia:/data
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing - HTTP (local)
+      - traefik.enable=true
+      - traefik.http.routers.authelia.rule=Host(`auth.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.authelia.entrypoints=web
+      - traefik.http.services.authelia.loadbalancer.server.port=9091
+      # Traefik routing - HTTPS (external)
+      - traefik.http.routers.authelia-secure.rule=Host(`auth.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.authelia-secure.entrypoints=websecure
+      - traefik.http.routers.authelia-secure.tls=true
+      - traefik.http.routers.authelia-secure.tls.certresolver=cloudflare
+      # Homepage
+      - homepage.group=Infrastructure
+      - homepage.name=Authelia
+      - homepage.icon=authelia
+      - homepage.href=https://auth.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=SSO Authentication
+
+networks:
+  traefik-net:
+    external: true

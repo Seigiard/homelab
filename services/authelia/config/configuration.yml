@@ -1,0 +1,86 @@
+---
+# Authelia Configuration
+# https://www.authelia.com/configuration/
+
+server:
+  address: 'tcp://:9091'
+
+log:
+  level: 'info'
+
+totp:
+  issuer: 'homelab.1218217.xyz'
+
+authentication_backend:
+  file:
+    path: '/config/users_database.yml'
+    password:
+      algorithm: 'argon2id'
+
+session:
+  cookies:
+    - domain: 'home.local'
+      authelia_url: 'http://auth.home.local'
+      default_redirection_url: 'http://home.local'
+    - domain: '1218217.xyz'
+      authelia_url: 'https://auth.1218217.xyz'
+      default_redirection_url: 'https://1218217.xyz'
+
+storage:
+  local:
+    path: '/data/db.sqlite3'
+
+notifier:
+  filesystem:
+    filename: '/data/notifications.txt'
+
+access_control:
+  default_policy: 'deny'
+  rules:
+    # Admin — full access to everything
+    - domain: '*.home.local'
+      subject: 'group:admins'
+      policy: 'one_factor'
+    - domain: '*.1218217.xyz'
+      subject: 'group:admins'
+      policy: 'one_factor'
+    - domain: 'home.local'
+      subject: 'group:admins'
+      policy: 'one_factor'
+    - domain: '1218217.xyz'
+      subject: 'group:admins'
+      policy: 'one_factor'
+
+    # Public services for all authenticated users
+    - domain:
+        - 'home.local'
+        - '1218217.xyz'
+        - 'home.home.local'
+        - 'home.1218217.xyz'
+        - 'movies.home.local'
+        - 'movies.1218217.xyz'
+        - 'opds.home.local'
+        - 'opds.1218217.xyz'
+        - 'files.home.local'
+        - 'files.1218217.xyz'
+        - 'prices.home.local'
+        - 'prices.1218217.xyz'
+      policy: 'one_factor'
+
+    # Andrew — personal resources + torrents
+    - domain:
+        - 'a.files.home.local'
+        - 'a.files.1218217.xyz'
+        - 'transmission.home.local'
+        - 'transmission.1218217.xyz'
+        - 'torrent.home.local'
+        - 'torrent.1218217.xyz'
+      subject: 'user:andrew'
+      policy: 'one_factor'
+
+    # Yuliia — personal files only
+    - domain:
+        - 'y.files.home.local'
+        - 'y.files.1218217.xyz'
+      subject: 'user:yuliia'
+      policy: 'one_factor'

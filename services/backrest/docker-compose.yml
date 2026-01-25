@@ -28,12 +28,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.backrest.rule=Host(`backup.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.backrest.entrypoints=web
+      - traefik.http.routers.backrest.middlewares=authelia@docker
       - traefik.http.services.backrest.loadbalancer.server.port=9898
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.backrest-secure.rule=Host(`backup.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.backrest-secure.entrypoints=websecure
       - traefik.http.routers.backrest-secure.tls=true
       - traefik.http.routers.backrest-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.backrest-secure.middlewares=authelia@docker
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Backrest

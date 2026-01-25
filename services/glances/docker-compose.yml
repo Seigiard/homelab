@@ -16,12 +16,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.glances.rule=Host(`glances.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.glances.entrypoints=web
+      - traefik.http.routers.glances.middlewares=authelia@docker
       - traefik.http.services.glances.loadbalancer.server.port=61208
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.glances-secure.rule=Host(`glances.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.glances-secure.entrypoints=websecure
       - traefik.http.routers.glances-secure.tls=true
       - traefik.http.routers.glances-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.glances-secure.middlewares=authelia@docker
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Glances

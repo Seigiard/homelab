@@ -26,12 +26,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.jellyfin.rule=Host(`movies.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.jellyfin.entrypoints=web
+      - traefik.http.routers.jellyfin.middlewares=authelia@docker
       - traefik.http.services.jellyfin.loadbalancer.server.port=8096
       # Traefik - HTTPS (local via split-DNS)
       - traefik.http.routers.jellyfin-secure.rule=Host(`movies.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.jellyfin-secure.entrypoints=websecure
       - traefik.http.routers.jellyfin-secure.tls=true
       - traefik.http.routers.jellyfin-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.jellyfin-secure.middlewares=authelia@docker
       # Homepage
       - homepage.group=Media
       - homepage.name=Jellyfin

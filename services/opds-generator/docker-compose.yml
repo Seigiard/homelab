@@ -17,12 +17,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.opds.rule=Host(`opds.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.opds.entrypoints=web
+      - traefik.http.routers.opds.middlewares=authelia@docker
       - traefik.http.services.opds.loadbalancer.server.port=80
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.opds-secure.rule=Host(`opds.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.opds-secure.entrypoints=websecure
       - traefik.http.routers.opds-secure.tls=true
       - traefik.http.routers.opds-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.opds-secure.middlewares=authelia@docker
       # Homepage
       - homepage.group=Media
       - homepage.name=OPDS Catalog
