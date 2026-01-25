@@ -11,8 +11,8 @@ services:
       # Config (SSD)
       - ${APPDATA_PATH:-/opt/homelab/appdata}/transmission:/config
       # Data (HDD) - public folder + personal downloads
-      - ${DATA_PATH:-/mnt/data}/public:/data/public
-      - ${DATA_PATH:-/mnt/data}/users/andrew:/data/andrew
+      - ${DATA_PATH:-/mnt/data}/public:/public
+      - ${DATA_PATH:-/mnt/data}/users/andrew:/andrew
     ports:
       - 51413:51413      # BitTorrent TCP
       - 51413:51413/udp  # BitTorrent UDP
