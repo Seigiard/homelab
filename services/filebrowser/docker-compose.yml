@@ -23,6 +23,7 @@ services:
       - traefik.http.routers.filebrowser-public-secure.entrypoints=websecure
       - traefik.http.routers.filebrowser-public-secure.tls=true
       - traefik.http.routers.filebrowser-public-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.filebrowser-public-secure.service=filebrowser-public
       # Homepage
       - homepage.group=Files
       - homepage.name=Public Files
@@ -54,6 +55,7 @@ services:
       - traefik.http.routers.filebrowser-andrew-secure.entrypoints=websecure
       - traefik.http.routers.filebrowser-andrew-secure.tls=true
       - traefik.http.routers.filebrowser-andrew-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.filebrowser-andrew-secure.service=filebrowser-andrew
 
   filebrowser-yuliia:
     image: filebrowser/filebrowser
@@ -79,6 +81,7 @@ services:
       - traefik.http.routers.filebrowser-yuliia-secure.entrypoints=websecure
       - traefik.http.routers.filebrowser-yuliia-secure.tls=true
       - traefik.http.routers.filebrowser-yuliia-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.filebrowser-yuliia-secure.service=filebrowser-yuliia
 
 networks:
   traefik-net:

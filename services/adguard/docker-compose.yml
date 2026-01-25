@@ -25,6 +25,7 @@ services:
       - traefik.http.routers.adguard-secure.entrypoints=websecure
       - traefik.http.routers.adguard-secure.tls=true
       - traefik.http.routers.adguard-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.adguard-secure.service=adguard
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=AdGuard Home

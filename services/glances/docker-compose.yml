@@ -22,6 +22,7 @@ services:
       - traefik.http.routers.glances-secure.entrypoints=websecure
       - traefik.http.routers.glances-secure.tls=true
       - traefik.http.routers.glances-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.glances-secure.service=glances
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Glances

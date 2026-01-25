@@ -34,6 +34,7 @@ services:
       - traefik.http.routers.backrest-secure.entrypoints=websecure
       - traefik.http.routers.backrest-secure.tls=true
       - traefik.http.routers.backrest-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.backrest-secure.service=backrest
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Backrest

@@ -30,6 +30,7 @@ services:
       - traefik.http.routers.pricebuddy-secure.entrypoints=websecure
       - traefik.http.routers.pricebuddy-secure.tls=true
       - traefik.http.routers.pricebuddy-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.pricebuddy-secure.service=pricebuddy
       # Homepage
       - homepage.group=Tools
       - homepage.name=PriceBuddy

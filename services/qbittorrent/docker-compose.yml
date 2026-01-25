@@ -29,6 +29,7 @@ services:
       - traefik.http.routers.qbittorrent-secure.entrypoints=websecure
       - traefik.http.routers.qbittorrent-secure.tls=true
       - traefik.http.routers.qbittorrent-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.qbittorrent-secure.service=qbittorrent
       # Homepage
       - homepage.group=Media
       - homepage.name=Torrent
