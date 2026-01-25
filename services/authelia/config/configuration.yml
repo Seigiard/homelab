@@ -18,6 +18,9 @@ authentication_backend:
       algorithm: 'argon2id'
 
 session:
+  expiration: 1h
+  inactivity: 15m
+  remember_me: 1M
   cookies:
     - domain: '1218217.xyz'
       authelia_url: 'https://auth.1218217.xyz'
