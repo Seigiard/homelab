@@ -14,6 +14,8 @@ services:
     networks:
       - traefik-net
     labels:
+      # Docker network for Traefik
+      - traefik.docker.network=traefik-net
       # Traefik routing - HTTP (local)
       - traefik.enable=true
       - traefik.http.routers.authelia.rule=Host(`auth.${LOCAL_DOMAIN:-home.local}`)
