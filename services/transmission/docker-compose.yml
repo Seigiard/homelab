@@ -1,0 +1,36 @@
+services:
+  transmission:
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Bratislava}
+    volumes:
+      # Config (SSD)
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/transmission:/config
+      # Data (HDD) - public folder + personal downloads
+      - ${DATA_PATH:-/mnt/data}/public:/data/public
+      - ${DATA_PATH:-/mnt/data}/users/andrew:/data/andrew
+    ports:
+      - 51413:51413      # BitTorrent TCP
+      - 51413:51413/udp  # BitTorrent UDP
+    networks:
+      - traefik-net
+    labels:
+      # Traefik
+      - traefik.enable=true
+      - traefik.http.routers.transmission.rule=Host(`torrent.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.transmission.entrypoints=web
+      - traefik.http.services.transmission.loadbalancer.server.port=9091
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Transmission
+      - homepage.icon=transmission
+      - homepage.href=http://torrent.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=Torrent client
+
+networks:
+  traefik-net:
+    external: true

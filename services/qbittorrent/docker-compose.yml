@@ -22,14 +22,14 @@ services:
     labels:
       # Traefik
       - traefik.enable=true
-      - traefik.http.routers.qbittorrent.rule=Host(`torrent.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.qbittorrent.rule=Host(`qtorrent.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.qbittorrent.entrypoints=web
       - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
       # Homepage
       - homepage.group=Media
       - homepage.name=qBittorrent
       - homepage.icon=qbittorrent
-      - homepage.href=http://torrent.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=http://qtorrent.${LOCAL_DOMAIN:-home.local}
       - homepage.description=Torrent client
 
 networks:
