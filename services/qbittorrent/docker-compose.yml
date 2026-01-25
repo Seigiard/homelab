@@ -28,7 +28,7 @@ services:
       - homepage.group=Media
       - homepage.name=Torrent
       - homepage.icon=qbittorrent
-      - homepage.href=http://qtorrent.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=http://torrent.${LOCAL_DOMAIN:-home.local}
       - homepage.description=Torrent client
 
 networks:

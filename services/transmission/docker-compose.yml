@@ -20,14 +20,14 @@ services:
     labels:
       # Traefik
       - traefik.enable=true
-      - traefik.http.routers.transmission.rule=Host(`torrenta.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.transmission.rule=Host(`transmission.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.transmission.entrypoints=web
       - traefik.http.services.transmission.loadbalancer.server.port=9091
       # Homepage
       - homepage.group=Media
       - homepage.name=Torrent OMG
       - homepage.icon=transmission
-      - homepage.href=http://torrent.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=http://transmission.${LOCAL_DOMAIN:-home.local}
       - homepage.description=Torrent client
 
 networks:
