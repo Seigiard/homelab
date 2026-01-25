@@ -23,6 +23,7 @@ services:
       - "traefik.http.routers.homepage-secure.entrypoints=websecure"
       - "traefik.http.routers.homepage-secure.tls=true"
       - "traefik.http.routers.homepage-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.homepage-secure.service=homepage"
 
 networks:
   traefik-net:
