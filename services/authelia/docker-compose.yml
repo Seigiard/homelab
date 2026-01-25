@@ -3,6 +3,8 @@ services:
     image: authelia/authelia:latest
     container_name: authelia
     restart: unless-stopped
+    depends_on:
+      - authelia-redis
     environment:
       - TZ=${TZ:-Europe/Bratislava}
       - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET=${AUTHELIA_JWT_SECRET}
@@ -33,6 +35,15 @@ services:
       - homepage.icon=authelia
       - homepage.href=https://auth.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=SSO Authentication
+
+  authelia-redis:
+    image: redis:alpine
+    container_name: authelia-redis
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/authelia/redis:/data
+    networks:
+      - traefik-net
 
 networks:
   traefik-net:
