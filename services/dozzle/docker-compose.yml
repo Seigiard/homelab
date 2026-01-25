@@ -13,16 +13,21 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik routing (local only - no external access until auth is configured)
+      # Traefik routing - HTTP (local)
       - traefik.enable=true
       - traefik.http.routers.dozzle.rule=Host(`dozzle.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.dozzle.entrypoints=web
       - traefik.http.services.dozzle.loadbalancer.server.port=8080
+      # Traefik routing - HTTPS (local via split-DNS)
+      - traefik.http.routers.dozzle-secure.rule=Host(`dozzle.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.dozzle-secure.entrypoints=websecure
+      - traefik.http.routers.dozzle-secure.tls=true
+      - traefik.http.routers.dozzle-secure.tls.certresolver=cloudflare
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Dozzle
       - homepage.icon=dozzle
-      - homepage.href=http://dozzle.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=https://dozzle.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=Docker Logs Viewer
 
 networks:

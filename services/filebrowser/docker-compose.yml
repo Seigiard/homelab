@@ -13,16 +13,21 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik routing
+      # Traefik routing - HTTP (local)
       - traefik.enable=true
-      - traefik.http.routers.filebrowser-public.rule=Host(`files.${LOCAL_DOMAIN:-home.local}`) || Host(`files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-public.rule=Host(`files.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.filebrowser-public.entrypoints=web
       - traefik.http.services.filebrowser-public.loadbalancer.server.port=80
+      # Traefik routing - HTTPS (local via split-DNS)
+      - traefik.http.routers.filebrowser-public-secure.rule=Host(`files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-public-secure.entrypoints=websecure
+      - traefik.http.routers.filebrowser-public-secure.tls=true
+      - traefik.http.routers.filebrowser-public-secure.tls.certresolver=cloudflare
       # Homepage
       - homepage.group=Files
       - homepage.name=Public Files
       - homepage.icon=filebrowser
-      - homepage.href=http://files.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=https://files.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=Shared files (public)
 
   filebrowser-andrew:
@@ -39,11 +44,16 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik routing (local + external, auth via Authelia later)
+      # Traefik routing - HTTP (local)
       - traefik.enable=true
-      - traefik.http.routers.filebrowser-andrew.rule=Host(`a.files.${LOCAL_DOMAIN:-home.local}`) || Host(`a.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-andrew.rule=Host(`a.files.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.filebrowser-andrew.entrypoints=web
       - traefik.http.services.filebrowser-andrew.loadbalancer.server.port=80
+      # Traefik routing - HTTPS (local via split-DNS)
+      - traefik.http.routers.filebrowser-andrew-secure.rule=Host(`a.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-andrew-secure.entrypoints=websecure
+      - traefik.http.routers.filebrowser-andrew-secure.tls=true
+      - traefik.http.routers.filebrowser-andrew-secure.tls.certresolver=cloudflare
 
   filebrowser-yuliia:
     image: filebrowser/filebrowser
@@ -59,11 +69,16 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik routing (local + external, auth via Authelia later)
+      # Traefik routing - HTTP (local)
       - traefik.enable=true
-      - traefik.http.routers.filebrowser-yuliia.rule=Host(`y.files.${LOCAL_DOMAIN:-home.local}`) || Host(`y.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-yuliia.rule=Host(`y.files.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.filebrowser-yuliia.entrypoints=web
       - traefik.http.services.filebrowser-yuliia.loadbalancer.server.port=80
+      # Traefik routing - HTTPS (local via split-DNS)
+      - traefik.http.routers.filebrowser-yuliia-secure.rule=Host(`y.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-yuliia-secure.entrypoints=websecure
+      - traefik.http.routers.filebrowser-yuliia-secure.tls=true
+      - traefik.http.routers.filebrowser-yuliia-secure.tls.certresolver=cloudflare
 
 networks:
   traefik-net:

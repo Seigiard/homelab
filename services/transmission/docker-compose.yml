@@ -18,16 +18,21 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik
+      # Traefik - HTTP (local)
       - traefik.enable=true
       - traefik.http.routers.transmission.rule=Host(`transmission.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.transmission.entrypoints=web
       - traefik.http.services.transmission.loadbalancer.server.port=9091
+      # Traefik - HTTPS (local via split-DNS)
+      - traefik.http.routers.transmission-secure.rule=Host(`transmission.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.transmission-secure.entrypoints=websecure
+      - traefik.http.routers.transmission-secure.tls=true
+      - traefik.http.routers.transmission-secure.tls.certresolver=cloudflare
       # Homepage
       - homepage.group=Media
       - homepage.name=Torrent OMG
       - homepage.icon=transmission
-      - homepage.href=http://transmission.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=https://transmission.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=Torrent client
 
 networks:

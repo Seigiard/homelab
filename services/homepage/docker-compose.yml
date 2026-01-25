@@ -13,11 +13,16 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik routing (local + external)
+      # Traefik routing - HTTP (local)
       - "traefik.enable=true"
-      - "traefik.http.routers.homepage.rule=Host(`${LOCAL_DOMAIN:-home.local}`) || Host(`${EXTERNAL_DOMAIN:-1218217.xyz}`) || Host(`home.${EXTERNAL_DOMAIN:-1218217.xyz}`)"
+      - "traefik.http.routers.homepage.rule=Host(`${LOCAL_DOMAIN:-home.local}`)"
       - "traefik.http.routers.homepage.entrypoints=web"
       - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+      # Traefik routing - HTTPS (local via split-DNS)
+      - "traefik.http.routers.homepage-secure.rule=Host(`${EXTERNAL_DOMAIN:-1218217.xyz}`) || Host(`home.${EXTERNAL_DOMAIN:-1218217.xyz}`)"
+      - "traefik.http.routers.homepage-secure.entrypoints=websecure"
+      - "traefik.http.routers.homepage-secure.tls=true"
+      - "traefik.http.routers.homepage-secure.tls.certresolver=cloudflare"
 
 networks:
   traefik-net:

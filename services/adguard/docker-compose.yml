@@ -15,16 +15,21 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik routing (local only)
+      # Traefik routing - HTTP (local)
       - traefik.enable=true
       - traefik.http.routers.adguard.rule=Host(`dns.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.adguard.entrypoints=web
       - traefik.http.services.adguard.loadbalancer.server.port=80
+      # Traefik routing - HTTPS (local via split-DNS)
+      - traefik.http.routers.adguard-secure.rule=Host(`dns.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.adguard-secure.entrypoints=websecure
+      - traefik.http.routers.adguard-secure.tls=true
+      - traefik.http.routers.adguard-secure.tls.certresolver=cloudflare
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=AdGuard Home
       - homepage.icon=adguard-home
-      - homepage.href=http://dns.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=https://dns.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=DNS & Ad Blocker
 
 networks:

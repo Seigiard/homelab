@@ -19,16 +19,21 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik
+      # Traefik - HTTP (local)
       - traefik.enable=true
       - traefik.http.routers.qbittorrent.rule=Host(`torrent.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.qbittorrent.entrypoints=web
       - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
+      # Traefik - HTTPS (local via split-DNS)
+      - traefik.http.routers.qbittorrent-secure.rule=Host(`torrent.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.qbittorrent-secure.entrypoints=websecure
+      - traefik.http.routers.qbittorrent-secure.tls=true
+      - traefik.http.routers.qbittorrent-secure.tls.certresolver=cloudflare
       # Homepage
       - homepage.group=Media
       - homepage.name=Torrent
       - homepage.icon=qbittorrent
-      - homepage.href=http://torrent.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=https://torrent.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=Torrent client
 
 networks:

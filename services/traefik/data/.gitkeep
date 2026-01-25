@@ -1,0 +1,2 @@
+# acme.json will be created here with chmod 600
+# Do not commit acme.json to git - it contains private keys

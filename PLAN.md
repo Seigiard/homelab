@@ -23,16 +23,17 @@ Roadmap проекта и статус реализации.
 
 ### Фаза 2: Traefik + Cloudflare Tunnel ✅
 
-- [x] `services/traefik/` — reverse proxy (HTTP на порту 80)
-- [x] traefik-avahi-helper — автоматические mDNS записи (*.home.local)
-- [x] `services/cloudflared/` — внешний доступ (*.1218217.xyz)
+- [x] `services/traefik/` — reverse proxy (HTTP:80 + HTTPS:443)
+- [x] traefik-avahi-helper — автоматические mDNS записи (\*.home.local)
+- [x] `services/cloudflared/` — внешний доступ (\*.1218217.xyz)
+- [x] HTTPS для локального доступа (Let's Encrypt via Cloudflare DNS challenge)
 
-### Фаза 3: AdGuard Home — отложено
+### Фаза 3: AdGuard Home ✅
 
-> mDNS через traefik-avahi-helper решает задачу *.home.local.
+> mDNS через traefik-avahi-helper решает задачу \*.home.local.
 > AdGuard понадобится для блокировки рекламы.
 
-- [ ] `services/adguard/`
+- [x] `services/adguard/`
 
 ### Фаза 4: Samba ✅
 

@@ -25,3 +25,6 @@ temp/
 # Service runtime data (should be in appdata/)
 services/filebrowser/config/
 services/opds-generator/data/
+
+# SSL certificates (contain private keys)
+services/traefik/data/acme.json

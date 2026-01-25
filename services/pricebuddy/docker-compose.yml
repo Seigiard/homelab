@@ -8,8 +8,8 @@ services:
         condition: service_healthy
     environment:
       - TZ=${TZ:-Europe/Bratislava}
-      - APP_URL=http://prices.${LOCAL_DOMAIN:-home.local}
-      - ASSET_URL=http://prices.${LOCAL_DOMAIN:-home.local}
+      - APP_URL=https://prices.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - ASSET_URL=https://prices.${EXTERNAL_DOMAIN:-1218217.xyz}
       - DB_HOST=pricebuddy-db
       - DB_DATABASE=pricebuddy
       - DB_USERNAME=pricebuddy
@@ -20,16 +20,21 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik
+      # Traefik - HTTP (local)
       - traefik.enable=true
-      - traefik.http.routers.pricebuddy.rule=Host(`prices.${LOCAL_DOMAIN:-home.local}`) || Host(`prices.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.pricebuddy.rule=Host(`prices.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.pricebuddy.entrypoints=web
       - traefik.http.services.pricebuddy.loadbalancer.server.port=80
+      # Traefik - HTTPS (local via split-DNS)
+      - traefik.http.routers.pricebuddy-secure.rule=Host(`prices.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.pricebuddy-secure.entrypoints=websecure
+      - traefik.http.routers.pricebuddy-secure.tls=true
+      - traefik.http.routers.pricebuddy-secure.tls.certresolver=cloudflare
       # Homepage
       - homepage.group=Tools
       - homepage.name=PriceBuddy
       - homepage.icon=mdi-tag-outline
-      - homepage.href=http://prices.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=https://prices.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=Price Tracker
 
   pricebuddy-db:

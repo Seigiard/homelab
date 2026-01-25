@@ -13,16 +13,21 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik routing
+      # Traefik routing - HTTP (local)
       - traefik.enable=true
-      - traefik.http.routers.opds.rule=Host(`opds.${LOCAL_DOMAIN:-home.local}`) || Host(`opds.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.opds.rule=Host(`opds.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.opds.entrypoints=web
       - traefik.http.services.opds.loadbalancer.server.port=80
+      # Traefik routing - HTTPS (local via split-DNS)
+      - traefik.http.routers.opds-secure.rule=Host(`opds.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.opds-secure.entrypoints=websecure
+      - traefik.http.routers.opds-secure.tls=true
+      - traefik.http.routers.opds-secure.tls.certresolver=cloudflare
       # Homepage
       - homepage.group=Media
       - homepage.name=OPDS Catalog
       - homepage.icon=calibre
-      - homepage.href=http://opds.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=https://opds.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=E-book OPDS feed
 
 networks:

@@ -62,18 +62,24 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 
 ## Current Services
 
-| Service        | Local URL                 | External URL                | Description                          |
-| -------------- | ------------------------- | --------------------------- | ------------------------------------ |
-| Homepage       | http://home.local         | —                           | Dashboard with Docker auto-discovery |
-| Traefik        | http://traefik.home.local | —                           | Reverse proxy dashboard              |
-| Dozzle         | http://dozzle.home.local  | —                           | Docker logs viewer                   |
-| Glances        | http://glances.home.local | —                           | System monitoring                    |
-| FileBrowser    | http://files.home.local   | https://files.1218217.xyz   | Web file manager                     |
-| OPDS Generator | http://opds.home.local    | https://opds.1218217.xyz    | E-book OPDS catalog                  |
-| Calibre        | http://calibre.home.local | https://calibre.1218217.xyz | E-book library (CWA)                 |
-| Backrest       | http://backup.home.local  | —                           | Backup management (restic + rclone)  |
-| Cloudflared    | —                         | \*.1218217.xyz              | Cloudflare Tunnel (external access)  |
-| Samba          | —                         | —                           | SMB file shares (ports 139, 445)     |
+| Service        | Local HTTP (backup)       | Local HTTPS (primary)          | Description                          |
+| -------------- | ------------------------- | ------------------------------ | ------------------------------------ |
+| Homepage       | http://home.local         | https://1218217.xyz            | Dashboard with Docker auto-discovery |
+| Traefik        | http://traefik.home.local | https://traefik.1218217.xyz    | Reverse proxy dashboard              |
+| Dozzle         | http://dozzle.home.local  | https://dozzle.1218217.xyz     | Docker logs viewer                   |
+| Glances        | http://glances.home.local | https://glances.1218217.xyz    | System monitoring                    |
+| FileBrowser    | http://files.home.local   | https://files.1218217.xyz      | Web file manager                     |
+| OPDS Generator | http://opds.home.local    | https://opds.1218217.xyz       | E-book OPDS catalog                  |
+| Backrest       | http://backup.home.local  | https://backup.1218217.xyz     | Backup management (restic + rclone)  |
+| Jellyfin       | http://movies.home.local  | https://movies.1218217.xyz     | Media streaming server               |
+| AdGuard Home   | http://dns.home.local     | https://dns.1218217.xyz        | DNS & Ad Blocker                     |
+| Transmission   | http://transmission.home.local | https://transmission.1218217.xyz | Torrent client (OMG)           |
+| qBittorrent    | http://torrent.home.local | https://torrent.1218217.xyz    | Torrent client                       |
+| Cloudflared    | —                         | \*.1218217.xyz (external)      | Cloudflare Tunnel (external access)  |
+| Samba          | —                         | —                              | SMB file shares (ports 139, 445)     |
+
+> **Note:** Local HTTPS requires split-horizon DNS (AdGuard Home) to resolve `*.1218217.xyz` to local IP.
+> External access via Cloudflare Tunnel continues to work independently.
 
 ## Adding New Services
 
@@ -86,13 +92,21 @@ Example labels:
 
 ```yaml
 labels:
+  # Traefik - HTTP (local backup)
   - traefik.enable=true
-  - traefik.http.routers.myservice.rule=Host(`myservice.home.local`)
+  - traefik.http.routers.myservice.rule=Host(`myservice.${LOCAL_DOMAIN:-home.local}`)
   - traefik.http.routers.myservice.entrypoints=web
+  - traefik.http.services.myservice.loadbalancer.server.port=8080
+  # Traefik - HTTPS (local primary)
+  - traefik.http.routers.myservice-secure.rule=Host(`myservice.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+  - traefik.http.routers.myservice-secure.entrypoints=websecure
+  - traefik.http.routers.myservice-secure.tls=true
+  - traefik.http.routers.myservice-secure.tls.certresolver=cloudflare
+  # Homepage
   - homepage.group=Services
   - homepage.name=My Service
   - homepage.icon=myservice
-  - homepage.href=http://myservice.home.local
+  - homepage.href=https://myservice.${EXTERNAL_DOMAIN:-1218217.xyz}
 ```
 
 ## Healthcheck
@@ -195,3 +209,55 @@ After deploying Backrest (`./scripts/docker/deploy.sh backrest`):
 4. **Test**: Run backup manually, verify in Google Drive
 
 Backrest uses [restic](https://restic.net/) for encrypted, deduplicated backups.
+
+## SSL Setup (HTTPS for Local Access)
+
+For local HTTPS access to `*.1218217.xyz`, configure Let's Encrypt certificates via Cloudflare DNS challenge.
+
+### 1. Create Cloudflare API Token
+
+1. Go to Cloudflare Dashboard → My Profile → API Tokens
+2. Create Token with permissions: `Zone:DNS:Edit` for zone `1218217.xyz`
+3. Save the token
+
+### 2. Configure Environment Variables
+
+Add to your `.env`:
+
+```bash
+ACME_EMAIL=your-email@example.com
+CF_DNS_API_TOKEN=your-cloudflare-api-token
+```
+
+### 3. Create acme.json
+
+```bash
+touch services/traefik/data/acme.json
+chmod 600 services/traefik/data/acme.json
+```
+
+### 4. Rebuild Traefik
+
+```bash
+./scripts/docker/rebuild.sh traefik
+```
+
+### 5. Configure Split-Horizon DNS (AdGuard Home)
+
+In AdGuard Home (http://dns.home.local), add DNS rewrites:
+
+```
+*.1218217.xyz → 192.168.1.41  (your server IP)
+```
+
+This makes local devices resolve `*.1218217.xyz` to the local server while external access continues via Cloudflare Tunnel.
+
+### 6. Verify
+
+```bash
+# Check certificate issuance
+docker logs traefik 2>&1 | grep -i "acme\|certificate"
+
+# Test HTTPS locally
+curl -v https://traefik.1218217.xyz
+```

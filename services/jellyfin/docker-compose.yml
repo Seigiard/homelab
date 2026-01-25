@@ -8,7 +8,7 @@ services:
       - "${RENDER_GROUP_ID:-104}"
     environment:
       - TZ=${TZ:-Europe/Bratislava}
-      - JELLYFIN_PublishedServerUrl=http://movies.${LOCAL_DOMAIN:-home.local}
+      - JELLYFIN_PublishedServerUrl=https://movies.${EXTERNAL_DOMAIN:-1218217.xyz}
     volumes:
       # Config & cache (SSD)
       - ${APPDATA_PATH:-/opt/homelab/appdata}/jellyfin/config:/config
@@ -22,16 +22,21 @@ services:
     networks:
       - traefik-net
     labels:
-      # Traefik
+      # Traefik - HTTP (local)
       - traefik.enable=true
       - traefik.http.routers.jellyfin.rule=Host(`movies.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.jellyfin.entrypoints=web
       - traefik.http.services.jellyfin.loadbalancer.server.port=8096
+      # Traefik - HTTPS (local via split-DNS)
+      - traefik.http.routers.jellyfin-secure.rule=Host(`movies.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.jellyfin-secure.entrypoints=websecure
+      - traefik.http.routers.jellyfin-secure.tls=true
+      - traefik.http.routers.jellyfin-secure.tls.certresolver=cloudflare
       # Homepage
       - homepage.group=Media
       - homepage.name=Jellyfin
       - homepage.icon=jellyfin
-      - homepage.href=http://movies.${LOCAL_DOMAIN:-home.local}
+      - homepage.href=https://movies.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=Media streaming server
 
 networks:
