@@ -16,12 +16,17 @@ SERVICE_ORDER=(
     traefik
     homepage
     cloudflared
+    adguard
     glances
     dozzle
     samba
     filebrowser
     opds-generator
-    # Add more services here in dependency order
+    jellyfin
+    qbittorrent
+    transmission
+    backrest
+    pricebuddy
 )
 
 # -------------------------------------------
