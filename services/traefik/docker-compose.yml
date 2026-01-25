@@ -23,6 +23,7 @@ services:
       - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/authz/forward-auth"
       - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Email,Remote-Name"
+      - "traefik.http.middlewares.authelia.forwardauth.authRequestHeaders=Cookie"
       # Traefik routing - HTTP (local)
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${LOCAL_DOMAIN:-home.local}`)"
