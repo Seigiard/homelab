@@ -13,21 +13,20 @@ services:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/qbittorrent:/config
       # Data (HDD) - public folder + personal downloads
       - ${DATA_PATH:-/mnt/data}/public:/data/public
-      - ${DATA_PATH:-/mnt/data}/users/andrew:/data/andrew
     ports:
-      - 6881:6881      # BitTorrent TCP
-      - 6881:6881/udp  # BitTorrent UDP
+      - 6881:6881 # BitTorrent TCP
+      - 6881:6881/udp # BitTorrent UDP
     networks:
       - traefik-net
     labels:
       # Traefik
       - traefik.enable=true
-      - traefik.http.routers.qbittorrent.rule=Host(`qtorrent.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.qbittorrent.rule=Host(`torrent.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.qbittorrent.entrypoints=web
       - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
       # Homepage
       - homepage.group=Media
-      - homepage.name=qBittorrent
+      - homepage.name=Torrent
       - homepage.icon=qbittorrent
       - homepage.href=http://qtorrent.${LOCAL_DOMAIN:-home.local}
       - homepage.description=Torrent client
