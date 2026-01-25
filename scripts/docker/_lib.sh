@@ -77,9 +77,35 @@ get_services_reversed() {
 # Service operations
 # -------------------------------------------
 
+# Creates directories from docker-compose volumes with correct ownership
+# This prevents Docker from creating them as root:root
+ensure_service_dirs() {
+    local compose_file="$1"
+
+    # Load environment variables
+    set -a
+    source "$PROJECT_DIR/.env"
+    set +a
+
+    # Extract host paths from volumes (format: ${VAR}/path:/container/path or /absolute/path:/container/path)
+    # Skip named volumes (no / at start after expansion)
+    grep -E '^\s*-\s*(\$\{|/)' "$compose_file" 2>/dev/null | \
+    sed -E 's/^\s*-\s*//; s/:.*$//' | \
+    envsubst | while read -r host_path; do
+        # Only process absolute paths that don't exist
+        if [[ -n "$host_path" && "$host_path" == /* && ! -e "$host_path" ]]; then
+            sudo install -d -m 755 -o "${PUID:-1000}" -g "${PGID:-1000}" "$host_path"
+            log_info "Created directory: $host_path"
+        fi
+    done
+}
+
 do_deploy() {
     local service="$1"
     validate_service "$service" || return 1
+
+    # Create directories BEFORE container starts to prevent root:root ownership
+    ensure_service_dirs "$SERVICES_DIR/$service/docker-compose.yml"
 
     log_step "Deploying $service..."
     docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" up -d
@@ -100,6 +126,9 @@ do_stop() {
 do_rebuild() {
     local service="$1"
     validate_service "$service" || return 1
+
+    # Ensure directories exist with correct ownership
+    ensure_service_dirs "$SERVICES_DIR/$service/docker-compose.yml"
 
     log_step "Rebuilding $service..."
     docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" down
