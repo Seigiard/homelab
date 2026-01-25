@@ -19,9 +19,6 @@ authentication_backend:
 
 session:
   cookies:
-    - domain: 'home.local'
-      authelia_url: 'http://auth.home.local'
-      default_redirection_url: 'http://home.local'
     - domain: '1218217.xyz'
       authelia_url: 'https://auth.1218217.xyz'
       default_redirection_url: 'https://1218217.xyz'
