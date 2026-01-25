@@ -24,6 +24,7 @@ services:
       - traefik.http.routers.authelia-secure.entrypoints=websecure
       - traefik.http.routers.authelia-secure.tls=true
       - traefik.http.routers.authelia-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.authelia-secure.service=authelia
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Authelia
