@@ -37,50 +37,27 @@ notifier:
 access_control:
   default_policy: 'deny'
   rules:
-    # Admin — full access to everything
-    - domain: '*.home.local'
-      subject: 'group:admins'
-      policy: 'one_factor'
-    - domain: '*.1218217.xyz'
-      subject: 'group:admins'
-      policy: 'one_factor'
-    - domain: 'home.local'
-      subject: 'group:admins'
-      policy: 'one_factor'
-    - domain: '1218217.xyz'
-      subject: 'group:admins'
-      policy: 'one_factor'
+    # Local network - no auth (trusted)
+    - domain: ['*.home.local', 'home.local']
+      policy: 'bypass'
 
-    # Public services for all authenticated users
-    - domain:
-        - 'home.local'
-        - '1218217.xyz'
-        - 'home.home.local'
-        - 'home.1218217.xyz'
-        - 'movies.home.local'
-        - 'movies.1218217.xyz'
-        - 'opds.home.local'
-        - 'opds.1218217.xyz'
-        - 'files.home.local'
-        - 'files.1218217.xyz'
-        - 'prices.home.local'
-        - 'prices.1218217.xyz'
-      policy: 'one_factor'
+    # Authelia login page - bypass
+    - domain: 'auth.1218217.xyz'
+      policy: 'bypass'
 
-    # Andrew — personal resources + torrents
-    - domain:
-        - 'a.files.home.local'
-        - 'a.files.1218217.xyz'
-        - 'transmission.home.local'
-        - 'transmission.1218217.xyz'
-        - 'torrent.home.local'
-        - 'torrent.1218217.xyz'
-      subject: 'user:andrew'
+    # Personal files - owner + admin only (must be before wildcard)
+    - domain: 'a.files.1218217.xyz'
+      subject: ['user:andrew', 'group:admins']
       policy: 'one_factor'
+    - domain: 'a.files.1218217.xyz'
+      policy: 'deny'
 
-    # Yuliia — personal files only
-    - domain:
-        - 'y.files.home.local'
-        - 'y.files.1218217.xyz'
-      subject: 'user:yuliia'
+    - domain: 'y.files.1218217.xyz'
+      subject: ['user:yuliia', 'group:admins']
+      policy: 'one_factor'
+    - domain: 'y.files.1218217.xyz'
+      policy: 'deny'
+
+    # Everything else - any authenticated user
+    - domain: ['*.1218217.xyz', '1218217.xyz']
       policy: 'one_factor'

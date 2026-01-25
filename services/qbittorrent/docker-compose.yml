@@ -23,7 +23,6 @@ services:
       - traefik.enable=true
       - traefik.http.routers.qbittorrent.rule=Host(`torrent.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.qbittorrent.entrypoints=web
-      - traefik.http.routers.qbittorrent.middlewares=authelia@docker
       - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
       # Traefik - HTTPS (local via split-DNS)
       - traefik.http.routers.qbittorrent-secure.rule=Host(`torrent.${EXTERNAL_DOMAIN:-1218217.xyz}`)

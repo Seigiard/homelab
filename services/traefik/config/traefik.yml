@@ -24,7 +24,6 @@ accessLog: {}
 certificatesResolvers:
   cloudflare:
     acme:
-      email: "andrejborisenko@fastmail.com"
       storage: /acme.json
       dnsChallenge:
         provider: cloudflare

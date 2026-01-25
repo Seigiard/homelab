@@ -17,7 +17,6 @@ services:
       - traefik.enable=true
       - traefik.http.routers.filebrowser-public.rule=Host(`files.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.filebrowser-public.entrypoints=web
-      - traefik.http.routers.filebrowser-public.middlewares=authelia@docker
       - traefik.http.services.filebrowser-public.loadbalancer.server.port=80
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.filebrowser-public-secure.rule=Host(`files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
@@ -51,7 +50,6 @@ services:
       - traefik.enable=true
       - traefik.http.routers.filebrowser-andrew.rule=Host(`a.files.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.filebrowser-andrew.entrypoints=web
-      - traefik.http.routers.filebrowser-andrew.middlewares=authelia@docker
       - traefik.http.services.filebrowser-andrew.loadbalancer.server.port=80
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.filebrowser-andrew-secure.rule=Host(`a.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
@@ -79,7 +77,6 @@ services:
       - traefik.enable=true
       - traefik.http.routers.filebrowser-yuliia.rule=Host(`y.files.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.filebrowser-yuliia.entrypoints=web
-      - traefik.http.routers.filebrowser-yuliia.middlewares=authelia@docker
       - traefik.http.services.filebrowser-yuliia.loadbalancer.server.port=80
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.filebrowser-yuliia-secure.rule=Host(`y.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)

@@ -11,6 +11,7 @@ services:
       - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
     command:
       - --configFile=/etc/traefik/traefik.yml
+      - --certificatesresolvers.cloudflare.acme.email=${ACME_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
@@ -27,7 +28,6 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${LOCAL_DOMAIN:-home.local}`)"
       - "traefik.http.routers.dashboard.entrypoints=web"
       - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.middlewares=authelia@docker"
       # Traefik routing - HTTPS (local via split-DNS)
       - "traefik.http.routers.dashboard-secure.rule=Host(`traefik.${EXTERNAL_DOMAIN:-1218217.xyz}`)"
       - "traefik.http.routers.dashboard-secure.entrypoints=websecure"

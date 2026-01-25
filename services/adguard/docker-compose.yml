@@ -19,7 +19,6 @@ services:
       - traefik.enable=true
       - traefik.http.routers.adguard.rule=Host(`dns.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.adguard.entrypoints=web
-      - traefik.http.routers.adguard.middlewares=authelia@docker
       - traefik.http.services.adguard.loadbalancer.server.port=80
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.adguard-secure.rule=Host(`dns.${EXTERNAL_DOMAIN:-1218217.xyz}`)

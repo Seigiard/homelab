@@ -24,7 +24,6 @@ services:
       - traefik.enable=true
       - traefik.http.routers.pricebuddy.rule=Host(`prices.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.pricebuddy.entrypoints=web
-      - traefik.http.routers.pricebuddy.middlewares=authelia@docker
       - traefik.http.services.pricebuddy.loadbalancer.server.port=80
       # Traefik - HTTPS (local via split-DNS)
       - traefik.http.routers.pricebuddy-secure.rule=Host(`prices.${EXTERNAL_DOMAIN:-1218217.xyz}`)
