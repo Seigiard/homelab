@@ -15,6 +15,7 @@ source "$PROJECT_DIR/scripts/lib/tui.sh"
 # Other services are auto-discovered from services/*/docker-compose.yml
 SERVICE_ORDER=(
     traefik      # Must be first - reverse proxy for all services
+    authelia     # SSO - must be up before services that use auth middleware
     cloudflared  # Depends on traefik network
 )
 
