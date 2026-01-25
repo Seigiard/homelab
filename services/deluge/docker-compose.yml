@@ -1,0 +1,36 @@
+services:
+  deluge:
+    image: linuxserver/deluge:latest
+    container_name: deluge
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Bratislava}
+    volumes:
+      # Config (SSD)
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/deluge:/config
+      # Data (HDD) - public folder + personal downloads
+      - ${DATA_PATH:-/mnt/data}/public:/public
+      - ${DATA_PATH:-/mnt/data}/users/andrew:/andrew
+    ports:
+      - 6882:6881      # BitTorrent TCP
+      - 6882:6881/udp  # BitTorrent UDP
+    networks:
+      - traefik-net
+    labels:
+      # Traefik
+      - traefik.enable=true
+      - traefik.http.routers.deluge.rule=Host(`deluge.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.deluge.entrypoints=web
+      - traefik.http.services.deluge.loadbalancer.server.port=8112
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Deluge
+      - homepage.icon=deluge
+      - homepage.href=http://deluge.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=Torrent client
+
+networks:
+  traefik-net:
+    external: true
