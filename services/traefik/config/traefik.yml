@@ -17,6 +17,17 @@ providers:
     network: traefik-net
 
 log:
-  level: INFO
+  level: DEBUG
 
 accessLog: {}
+
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: "andrejborisenko@fastmail.com"
+      storage: /acme.json
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
