@@ -25,6 +25,7 @@ services:
       - traefik.http.routers.opds-secure.tls=true
       - traefik.http.routers.opds-secure.tls.certresolver=cloudflare
       - traefik.http.routers.opds-secure.middlewares=authelia@docker
+      - traefik.http.routers.opds-secure.service=opds
       # Homepage
       - homepage.group=Media
       - homepage.name=OPDS Catalog

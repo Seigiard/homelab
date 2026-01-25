@@ -25,6 +25,7 @@ services:
       - traefik.http.routers.dozzle-secure.tls=true
       - traefik.http.routers.dozzle-secure.tls.certresolver=cloudflare
       - traefik.http.routers.dozzle-secure.middlewares=authelia@docker
+      - traefik.http.routers.dozzle-secure.service=dozzle
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Dozzle

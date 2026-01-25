@@ -11,22 +11,22 @@ SERVICES_DIR="$PROJECT_DIR/services"
 # Source TUI library
 source "$PROJECT_DIR/scripts/lib/tui.sh"
 
-# Service order (dependencies first)
+# Service order (only services with dependencies)
+# Other services are auto-discovered from services/*/docker-compose.yml
 SERVICE_ORDER=(
-    traefik
-    homepage
-    cloudflared
-    glances
-    dozzle
-    samba
-    filebrowser
-    opds-generator
-    # Add more services here in dependency order
+    traefik      # Must be first - reverse proxy for all services
+    cloudflared  # Depends on traefik network
 )
 
 # -------------------------------------------
 # Helper functions
 # -------------------------------------------
+
+# Auto-discover all services with docker-compose.yml
+discover_services() {
+    find "$SERVICES_DIR" -maxdepth 2 -name "docker-compose.yml" -exec dirname {} \; | \
+        xargs -n1 basename | sort -u
+}
 
 check_env() {
     if [[ ! -f "$PROJECT_DIR/.env" ]]; then
@@ -55,12 +55,41 @@ validate_service() {
 
 # Get services to operate on (from args or all)
 # Usage: services=($(get_services "$@"))
+# Returns: SERVICE_ORDER first, then auto-discovered services (alphabetically)
 get_services() {
-    if [[ $# -eq 0 ]]; then
-        echo "${SERVICE_ORDER[@]}"
-    else
+    if [[ $# -gt 0 ]]; then
         echo "$@"
+        return
     fi
+
+    local all_services=($(discover_services))
+    local result=()
+
+    # First: services from SERVICE_ORDER (preserving order)
+    for ordered in "${SERVICE_ORDER[@]}"; do
+        for svc in "${all_services[@]}"; do
+            if [[ "$svc" == "$ordered" ]]; then
+                result+=("$svc")
+                break
+            fi
+        done
+    done
+
+    # Then: remaining services (not in SERVICE_ORDER)
+    for svc in "${all_services[@]}"; do
+        local in_order=false
+        for ordered in "${SERVICE_ORDER[@]}"; do
+            if [[ "$svc" == "$ordered" ]]; then
+                in_order=true
+                break
+            fi
+        done
+        if [[ "$in_order" == "false" ]]; then
+            result+=("$svc")
+        fi
+    done
+
+    echo "${result[@]}"
 }
 
 # Get services in reverse order (for stopping)

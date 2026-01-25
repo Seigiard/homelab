@@ -36,6 +36,7 @@ services:
       - traefik.http.routers.backrest-secure.tls=true
       - traefik.http.routers.backrest-secure.tls.certresolver=cloudflare
       - traefik.http.routers.backrest-secure.middlewares=authelia@docker
+      - traefik.http.routers.backrest-secure.service=backrest
       # Homepage
       - homepage.group=Infrastructure
       - homepage.name=Backrest

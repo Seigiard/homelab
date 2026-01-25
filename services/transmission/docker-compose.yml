@@ -30,6 +30,7 @@ services:
       - traefik.http.routers.transmission-secure.tls=true
       - traefik.http.routers.transmission-secure.tls.certresolver=cloudflare
       - traefik.http.routers.transmission-secure.middlewares=authelia@docker
+      - traefik.http.routers.transmission-secure.service=transmission
       # Homepage
       - homepage.group=Media
       - homepage.name=Torrent OMG

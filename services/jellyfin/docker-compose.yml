@@ -34,6 +34,7 @@ services:
       - traefik.http.routers.jellyfin-secure.tls=true
       - traefik.http.routers.jellyfin-secure.tls.certresolver=cloudflare
       - traefik.http.routers.jellyfin-secure.middlewares=authelia@docker
+      - traefik.http.routers.jellyfin-secure.service=jellyfin
       # Homepage
       - homepage.group=Media
       - homepage.name=Jellyfin
