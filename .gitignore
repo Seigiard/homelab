@@ -28,3 +28,7 @@ services/opds-generator/data/
 
 # SSL certificates (contain private keys)
 services/traefik/data/acme.json
+
+appdata
+
+services/authelia/config/users_database.yml
