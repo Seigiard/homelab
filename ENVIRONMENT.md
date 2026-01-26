@@ -10,10 +10,14 @@
 // Папка для настроек контейнеров (SSD)
 // Sync with github repo
 appdata/
-  qbittorrent/
+  traefik/
+  authelia/
+  adguard/
+  homepage/
   jellyfin/
-  homeassistant/
-  pihole/
+  qbittorrent/
+  transmission/
+  backrest/
   ...
 ```
 
@@ -60,17 +64,46 @@ backups/                  <-- Бэкапы контейнеров и баз да
 
 ## Сервисы
 
+### Инфраструктура
+
 | Сервис | Статус | Описание |
 |--------|--------|----------|
-| traefik-avahi-helper | ✅ | mDNS CNAME для *.home.local |
+| Traefik | ✅ | Reverse proxy с Docker auto-discovery |
+| Authelia | ✅ | SSO аутентификация (forwardAuth middleware) |
+| Cloudflared | ✅ | Cloudflare Tunnel для внешнего доступа |
+| AdGuard Home | ✅ | DNS + блокировка рекламы + split-horizon DNS |
+| Avahi | ✅ | mDNS для *.home.local (системный сервис, не Docker) |
+
+### Мониторинг и управление
+
+| Сервис | Статус | Описание |
+|--------|--------|----------|
 | Homepage | ✅ | Dashboard с Docker auto-discovery |
-| Cloudflared | ✅ | Туннель для внешнего доступа |
 | Glances | ✅ | System monitoring |
-| Dozzle | ✅ | Docker logs viewer (local only) |
+| Dozzle | ✅ | Docker logs viewer |
+| Backrest | ✅ | Backup management (restic + rclone) |
+
+### Файлы и медиа
+
+| Сервис | Статус | Описание |
+|--------|--------|----------|
 | Samba | ✅ | SMB file shares (public, andrew, yuliia) |
-| FileBrowser | ✅ | Web file manager (files.home.local) |
-| OPDS Generator | ✅ | E-book OPDS catalog (opds.home.local) |
-| AdGuard | ⏳ | DNS + блокировка рекламы |
+| FileBrowser | ✅ | Web file manager (3 инстанса: public, andrew, yuliia) |
+| OPDS Generator | ✅ | E-book OPDS catalog |
+| Jellyfin | ✅ | Media streaming server |
+| qBittorrent | ✅ | Torrent client |
+| Transmission | ✅ | Torrent client (альтернативный) |
+
+### Утилиты
+
+| Сервис | Статус | Описание |
+|--------|--------|----------|
+| PriceBuddy | ✅ | Price tracker (MySQL + scraper) |
+
+### Планируемые
+
+| Сервис | Статус | Описание |
+|--------|--------|----------|
 | Syncthing | ⏳ | Синхронизация файлов |
 | Immich | ⏳ | Фото-библиотека |
-| Authelia | ⏳ | SSO аутентификация для внешнего доступа |
+| Paperless | ⏳ | Document management |

@@ -12,7 +12,6 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 
 - `README.md` — пользовательская документация (EN)
 - `PLAN.md` — roadmap проекта, статус реализации
-- `TESTING.md` — Docker-тестирование скриптов
 - `.env.example` — шаблон переменных окружения
 
 ## Ключевые файлы для понимания проекта
@@ -63,7 +62,6 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 ### Добавить пакет в установку
 Обновить массивы в `scripts/lib/config.sh`:
 - `APT_PACKAGES` — apt пакеты
-- `SNAP_PACKAGES` — snap пакеты
 - `CARGO_PACKAGES` — cargo пакеты
 
 ### Добавить dotfile

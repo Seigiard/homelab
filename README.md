@@ -45,7 +45,7 @@ homelab/
 ├── services/                  # Docker services
 │   ├── traefik/               # Reverse proxy + avahi-helper (*.home.local)
 │   └── homepage/              # Dashboard with Docker auto-discovery
-└── tests/                     # Docker testing (see TESTING.md)
+└── tests/                     # Docker testing
 ```
 
 ## Running Services
@@ -62,21 +62,23 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 
 ## Current Services
 
-| Service        | Local HTTP (backup)       | Local HTTPS (primary)          | Description                          |
-| -------------- | ------------------------- | ------------------------------ | ------------------------------------ |
-| Homepage       | http://home.local         | https://1218217.xyz            | Dashboard with Docker auto-discovery |
-| Traefik        | http://traefik.home.local | https://traefik.1218217.xyz    | Reverse proxy dashboard              |
-| Dozzle         | http://dozzle.home.local  | https://dozzle.1218217.xyz     | Docker logs viewer                   |
-| Glances        | http://glances.home.local | https://glances.1218217.xyz    | System monitoring                    |
-| FileBrowser    | http://files.home.local   | https://files.1218217.xyz      | Web file manager                     |
-| OPDS Generator | http://opds.home.local    | https://opds.1218217.xyz       | E-book OPDS catalog                  |
-| Backrest       | http://backup.home.local  | https://backup.1218217.xyz     | Backup management (restic + rclone)  |
-| Jellyfin       | http://movies.home.local  | https://movies.1218217.xyz     | Media streaming server               |
-| AdGuard Home   | http://dns.home.local     | https://dns.1218217.xyz        | DNS & Ad Blocker                     |
-| Transmission   | http://transmission.home.local | https://transmission.1218217.xyz | Torrent client (OMG)           |
-| qBittorrent    | http://torrent.home.local | https://torrent.1218217.xyz    | Torrent client                       |
-| Cloudflared    | —                         | \*.1218217.xyz (external)      | Cloudflare Tunnel (external access)  |
-| Samba          | —                         | —                              | SMB file shares (ports 139, 445)     |
+| Service        | Local HTTP (backup)            | Local HTTPS (primary)            | Description                          |
+| -------------- | ------------------------------ | -------------------------------- | ------------------------------------ |
+| Homepage       | http://home.local              | https://1218217.xyz              | Dashboard with Docker auto-discovery |
+| Traefik        | http://traefik.home.local      | https://traefik.1218217.xyz      | Reverse proxy dashboard              |
+| Authelia       | http://auth.home.local         | https://auth.1218217.xyz         | SSO authentication (forwardAuth)     |
+| Dozzle         | http://dozzle.home.local       | https://dozzle.1218217.xyz       | Docker logs viewer                   |
+| Glances        | http://glances.home.local      | https://glances.1218217.xyz      | System monitoring                    |
+| FileBrowser    | http://files.home.local        | https://files.1218217.xyz        | Web file manager                     |
+| OPDS Generator | http://opds.home.local         | https://opds.1218217.xyz         | E-book OPDS catalog                  |
+| Backrest       | http://backup.home.local       | https://backup.1218217.xyz       | Backup management (restic + rclone)  |
+| Jellyfin       | http://movies.home.local       | https://movies.1218217.xyz       | Media streaming server               |
+| AdGuard Home   | http://dns.home.local          | https://dns.1218217.xyz          | DNS & Ad Blocker                     |
+| Transmission   | http://transmission.home.local | https://transmission.1218217.xyz | Torrent client (OMG)                 |
+| qBittorrent    | http://torrent.home.local      | https://torrent.1218217.xyz      | Torrent client                       |
+| PriceBuddy     | http://prices.home.local       | https://prices.1218217.xyz       | Price tracker                        |
+| Cloudflared    | —                              | \*.1218217.xyz (external)        | Cloudflare Tunnel (external access)  |
+| Samba          | —                              | —                                | SMB file shares (ports 139, 445)     |
 
 > **Note:** Local HTTPS requires split-horizon DNS (AdGuard Home) to resolve `*.1218217.xyz` to local IP.
 > External access via Cloudflare Tunnel continues to work independently.
@@ -102,6 +104,8 @@ labels:
   - traefik.http.routers.myservice-secure.entrypoints=websecure
   - traefik.http.routers.myservice-secure.tls=true
   - traefik.http.routers.myservice-secure.tls.certresolver=cloudflare
+  # Authelia protection (optional - for services requiring auth)
+  - traefik.http.routers.myservice-secure.middlewares=authelia@docker
   # Homepage
   - homepage.group=Services
   - homepage.name=My Service

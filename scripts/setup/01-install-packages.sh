@@ -28,25 +28,6 @@ done
 log_info "APT packages installed"
 
 # -------------------------------------------
-# Snap packages
-# -------------------------------------------
-
-for pkg in "${SNAP_PACKAGES[@]}"; do
-    if ! command -v "$pkg" &> /dev/null; then
-        if [[ "${TEST_MODE:-0}" == "1" ]]; then
-            log_info "[TEST] Skipping $pkg snap install"
-        else
-            log_step "Installing $pkg via snap..."
-            sudo snap install "$pkg" --classic
-            require_command "$pkg"
-            log_info "$pkg installed"
-        fi
-    else
-        log_info "$pkg already installed"
-    fi
-done
-
-# -------------------------------------------
 # Lazygit (from GitHub releases)
 # -------------------------------------------
 
