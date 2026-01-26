@@ -1,0 +1,41 @@
+services:
+  stash:
+    image: stashapp/stash:latest
+    container_name: stash
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+    volumes:
+      # Config & generated (SSD)
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/stash/config:/root/.stash
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/stash/generated:/generated
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/stash/metadata:/metadata
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/stash/cache:/cache
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/stash/blobs:/blobs
+      # Media (HDD)
+      - ${DATA_PATH:-/mnt/data}/users/andrew/OMG:/data
+    networks:
+      - traefik-net
+    labels:
+      # Traefik - HTTP (local)
+      - traefik.enable=true
+      - traefik.http.routers.stash.rule=Host(`stash.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.stash.entrypoints=web
+      - traefik.http.services.stash.loadbalancer.server.port=9999
+      # Traefik - HTTPS (external via split-DNS)
+      - traefik.http.routers.stash-secure.rule=Host(`stash.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.stash-secure.entrypoints=websecure
+      - traefik.http.routers.stash-secure.tls=true
+      - traefik.http.routers.stash-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.stash-secure.middlewares=authelia@docker
+      - traefik.http.routers.stash-secure.service=stash
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Stash
+      - homepage.icon=stash
+      - homepage.href=https://stash.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Media organizer
+
+networks:
+  traefik-net:
+    external: true
