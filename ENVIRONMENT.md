@@ -15,7 +15,6 @@ appdata/
   adguard/
   homepage/
   jellyfin/
-  qbittorrent/
   transmission/
   backrest/
   ...
@@ -91,7 +90,6 @@ backups/                  <-- Бэкапы контейнеров и баз да
 | FileBrowser | ✅ | Web file manager (3 инстанса: public, andrew, yuliia) |
 | OPDS Generator | ✅ | E-book OPDS catalog |
 | Jellyfin | ✅ | Media streaming server |
-| qBittorrent | ✅ | Torrent client |
 | Transmission | ✅ | Torrent client (альтернативный) |
 
 ### Утилиты

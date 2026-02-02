@@ -153,6 +153,45 @@ do_stop() {
     fi
 }
 
+do_remove() {
+    local service="$1"
+    local service_dir="$SERVICES_DIR/$service"
+    local compose_file="$service_dir/docker-compose.yml"
+
+    if [[ -f "$compose_file" ]]; then
+        log_step "Removing $service (down + image cleanup)..."
+        docker compose -f "$compose_file" --env-file "$PROJECT_DIR/.env" down --rmi all 2>/dev/null
+    else
+        log_step "Removing $service containers and images..."
+        docker rm -f "$service" 2>/dev/null
+        docker image rm "$(docker images --filter "reference=*$service*" -q)" 2>/dev/null
+    fi
+    log_info "$service removed"
+}
+
+do_purge() {
+    local service="$1"
+
+    set -a
+    source "$PROJECT_DIR/.env"
+    set +a
+
+    local appdata_dir="${APPDATA_PATH:-/opt/homelab/appdata}/$service"
+
+    if [[ ! -d "$appdata_dir" ]]; then
+        log_warn "No appdata directory for $service ($appdata_dir)"
+        return 0
+    fi
+
+    log_warn "Will delete: $appdata_dir"
+    if confirm "Delete appdata for $service?" "n"; then
+        sudo rm -rf "$appdata_dir"
+        log_info "$service appdata purged"
+    else
+        log_info "Skipped appdata deletion for $service"
+    fi
+}
+
 do_rebuild() {
     local service="$1"
     validate_service "$service" || return 1

@@ -75,7 +75,6 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 | Jellyfin       | http://movies.home.local       | https://movies.1218217.xyz       | Media streaming server               |
 | AdGuard Home   | http://dns.home.local          | https://dns.1218217.xyz          | DNS & Ad Blocker                     |
 | Transmission   | http://transmission.home.local | https://transmission.1218217.xyz | Torrent client (OMG)                 |
-| qBittorrent    | http://torrent.home.local      | https://torrent.1218217.xyz      | Torrent client                       |
 | PriceBuddy     | http://prices.home.local       | https://prices.1218217.xyz       | Price tracker                        |
 | Cloudflared    | —                              | \*.1218217.xyz (external)        | Cloudflare Tunnel (external access)  |
 | Samba          | —                              | —                                | SMB file shares (ports 139, 445)     |
