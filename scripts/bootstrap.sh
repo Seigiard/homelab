@@ -211,6 +211,12 @@ configure_firewall() {
     ufw allow 139/tcp
     ufw allow 445/tcp
 
+    # Torrent (Transmission peer ports)
+    ufw allow 51413/tcp
+    ufw allow 51413/udp
+    ufw allow 51414/tcp
+    ufw allow 51414/udp
+
     # Enable firewall (non-interactive)
     echo "y" | ufw enable
 

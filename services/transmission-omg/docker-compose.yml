@@ -7,6 +7,7 @@ services:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
       - TZ=${TZ:-Europe/Bratislava}
+      - TRANSMISSION_LPD_ENABLED=true
       - PEERPORT=51414
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/transmission-omg:/config
