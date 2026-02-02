@@ -74,7 +74,8 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 | Backrest       | http://backup.home.local       | https://backup.1218217.xyz       | Backup management (restic + rclone)  |
 | Jellyfin       | http://movies.home.local       | https://movies.1218217.xyz       | Media streaming server               |
 | AdGuard Home   | http://dns.home.local          | https://dns.1218217.xyz          | DNS & Ad Blocker                     |
-| Transmission   | http://transmission.home.local | https://transmission.1218217.xyz | Torrent client (OMG)                 |
+| Transmission   | http://torrent.home.local      | https://torrent.1218217.xyz      | Public torrent client                |
+| Transmission OMG | http://ptorrent.home.local   | https://ptorrent.1218217.xyz     | Private torrent client               |
 | PriceBuddy     | http://prices.home.local       | https://prices.1218217.xyz       | Price tracker                        |
 | Cloudflared    | —                              | \*.1218217.xyz (external)        | Cloudflare Tunnel (external access)  |
 | Samba          | —                              | —                                | SMB file shares (ports 139, 445)     |

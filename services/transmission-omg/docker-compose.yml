@@ -1,0 +1,41 @@
+services:
+  transmission-omg:
+    image: linuxserver/transmission:latest
+    container_name: transmission-omg
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Bratislava}
+      - PEERPORT=51414
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/transmission-omg:/config
+      - ${DATA_PATH:-/mnt/data}/users/andrew/OMG:/downloads
+    ports:
+      - 51414:51414
+      - 51414:51414/udp
+    networks:
+      - traefik-net
+    labels:
+      # Traefik - HTTP (local)
+      - traefik.enable=true
+      - traefik.http.routers.transmission-omg.rule=Host(`ptorrent.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.transmission-omg.entrypoints=web
+      - traefik.http.services.transmission-omg.loadbalancer.server.port=9091
+      # Traefik - HTTPS (local via split-DNS)
+      - traefik.http.routers.transmission-omg-secure.rule=Host(`ptorrent.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.transmission-omg-secure.entrypoints=websecure
+      - traefik.http.routers.transmission-omg-secure.tls=true
+      - traefik.http.routers.transmission-omg-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.transmission-omg-secure.middlewares=authelia@docker
+      - traefik.http.routers.transmission-omg-secure.service=transmission-omg
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Torrent OMG
+      - homepage.icon=transmission
+      - homepage.href=https://ptorrent.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Private torrent client
+
+networks:
+  traefik-net:
+    external: true

@@ -8,23 +8,21 @@ services:
       - PGID=${PGID:-1000}
       - TZ=${TZ:-Europe/Bratislava}
     volumes:
-      # Config (SSD)
       - ${APPDATA_PATH:-/opt/homelab/appdata}/transmission:/config
-      # Data (HDD) - public folder + personal downloads
-      - ${DATA_PATH:-/mnt/data}/users/andrew/OMG:/downloads
+      - ${DATA_PATH:-/mnt/data}/public/downloads:/downloads
     ports:
-      - 51413:51413 # BitTorrent TCP
-      - 51413:51413/udp # BitTorrent UDP
+      - 51413:51413
+      - 51413:51413/udp
     networks:
       - traefik-net
     labels:
       # Traefik - HTTP (local)
       - traefik.enable=true
-      - traefik.http.routers.transmission.rule=Host(`transmission.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.transmission.rule=Host(`torrent.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.transmission.entrypoints=web
       - traefik.http.services.transmission.loadbalancer.server.port=9091
       # Traefik - HTTPS (local via split-DNS)
-      - traefik.http.routers.transmission-secure.rule=Host(`transmission.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.transmission-secure.rule=Host(`torrent.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.transmission-secure.entrypoints=websecure
       - traefik.http.routers.transmission-secure.tls=true
       - traefik.http.routers.transmission-secure.tls.certresolver=cloudflare
@@ -32,10 +30,10 @@ services:
       - traefik.http.routers.transmission-secure.service=transmission
       # Homepage
       - homepage.group=Media
-      - homepage.name=Torrent OMG
+      - homepage.name=Torrent
       - homepage.icon=transmission
-      - homepage.href=https://transmission.${EXTERNAL_DOMAIN:-1218217.xyz}
-      - homepage.description=Torrent client
+      - homepage.href=https://torrent.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Public torrent client
 
 networks:
   traefik-net:

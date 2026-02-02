@@ -16,6 +16,7 @@ appdata/
   homepage/
   jellyfin/
   transmission/
+  transmission-omg/
   backrest/
   ...
 ```
@@ -90,7 +91,8 @@ backups/                  <-- Бэкапы контейнеров и баз да
 | FileBrowser | ✅ | Web file manager (3 инстанса: public, andrew, yuliia) |
 | OPDS Generator | ✅ | E-book OPDS catalog |
 | Jellyfin | ✅ | Media streaming server |
-| Transmission | ✅ | Torrent client (альтернативный) |
+| Transmission | ✅ | Public torrent client (public/downloads) |
+| Transmission OMG | ✅ | Private torrent client (users/andrew/OMG) |
 
 ### Утилиты
 
