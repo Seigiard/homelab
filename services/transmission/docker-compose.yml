@@ -10,7 +10,7 @@ services:
       - TRANSMISSION_LPD_ENABLED=true
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/transmission:/config
-      - ${DATA_PATH:-/mnt/data}/public/downloads:/downloads
+      - ${DATA_PATH:-/mnt/data}/public:/downloads
     ports:
       - 51413:51413
       - 51413:51413/udp
