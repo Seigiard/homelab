@@ -177,6 +177,67 @@ create_docker_network() {
 }
 
 # -------------------------------------------
+# Configure static network
+# -------------------------------------------
+
+configure_network() {
+    if [[ "${TEST_MODE:-0}" == "1" ]]; then
+        log_info "[TEST] Skipping network configuration"
+        return 0
+    fi
+
+    source "$PROJECT_DIR/scripts/lib/config.sh"
+
+    NETPLAN_FILE="/etc/netplan/01-netcfg.yaml"
+
+    log_step "Configuring static IP ${NET_IP} on ${NET_INTERFACE}..."
+
+    cat > "$NETPLAN_FILE" << EOF
+network:
+  version: 2
+  ethernets:
+    ${NET_INTERFACE}:
+      addresses:
+        - ${NET_IP}
+      routes:
+        - to: default
+          via: ${NET_GATEWAY}
+      nameservers:
+        addresses:
+          - ${NET_DNS_PRIMARY}
+          - ${NET_DNS_FALLBACK}
+EOF
+
+    chmod 600 "$NETPLAN_FILE"
+    netplan apply
+
+    log_info "Static IP configured: ${NET_IP} via ${NET_GATEWAY}"
+
+    log_step "Disabling NIC energy-efficient ethernet..."
+
+    cat > /etc/systemd/system/nic-tuning.service << EOF
+[Unit]
+Description=Disable EEE on ${NET_INTERFACE}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/ethtool --set-eee ${NET_INTERFACE} eee off
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    systemctl daemon-reload
+    systemctl enable nic-tuning.service
+    ethtool --set-eee "${NET_INTERFACE}" eee off 2>/dev/null || log_warn "EEE not supported on ${NET_INTERFACE}, skipping"
+
+    log_info "NIC tuning configured"
+}
+
+# -------------------------------------------
 # Configure firewall
 # -------------------------------------------
 
@@ -267,6 +328,9 @@ main() {
 
     print_header "Creating Docker network"
     create_docker_network
+
+    print_header "Configuring network"
+    configure_network
 
     print_header "Configuring firewall"
     configure_firewall

@@ -28,6 +28,16 @@ export INSTALL_PATH="/opt/homelab"
 export HOSTNAME="home"
 
 # -------------------------------------------
+# Network (static IP)
+# -------------------------------------------
+
+export NET_INTERFACE="eno1"
+export NET_IP="192.168.1.41/24"
+export NET_GATEWAY="192.168.1.1"
+export NET_DNS_PRIMARY="127.0.0.1"
+export NET_DNS_FALLBACK="1.1.1.1"
+
+# -------------------------------------------
 # Packages
 # -------------------------------------------
 
@@ -49,6 +59,7 @@ APT_PACKAGES=(
     ripgrep    # fast grep alternative
     fzf        # fuzzy finder
     # Network
+    ethtool
     openssh-server
     avahi-daemon
     avahi-utils
