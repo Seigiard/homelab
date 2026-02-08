@@ -190,7 +190,8 @@ configure_network() {
 
     NETPLAN_FILE="/etc/netplan/01-netcfg.yaml"
 
-    log_step "Removing cloud-init netplan if present..."
+    log_step "Disabling cloud-init..."
+    touch /etc/cloud/cloud-init.disabled
     rm -f /etc/netplan/50-cloud-init.yaml
 
     log_step "Configuring static IP ${NET_IP} on ${NET_INTERFACE}..."
