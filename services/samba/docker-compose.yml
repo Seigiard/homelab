@@ -18,6 +18,11 @@ services:
     ports:
       - "139:139"
       - "445:445"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
     networks:
       - traefik-net
     labels:

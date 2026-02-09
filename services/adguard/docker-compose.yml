@@ -12,6 +12,11 @@ services:
     volumes:
       - ${APPDATA_PATH:-./appdata}/adguard/work:/opt/adguardhome/work
       - ${APPDATA_PATH:-./appdata}/adguard/conf:/opt/adguardhome/conf
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
     networks:
       - traefik-net
     labels:

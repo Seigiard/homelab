@@ -3,6 +3,11 @@ services:
     image: jez500/pricebuddy:latest
     container_name: pricebuddy
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
     depends_on:
       pricebuddy-db:
         condition: service_healthy
@@ -43,6 +48,11 @@ services:
     image: mysql:8.2
     container_name: pricebuddy-db
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
     command: --skip-log-bin
     environment:
       - MYSQL_ROOT_PASSWORD=pricebuddy
@@ -63,6 +73,11 @@ services:
     image: jez500/seleniumbase-scrapper:latest
     container_name: pricebuddy-scraper
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
     networks:
       - traefik-net
 

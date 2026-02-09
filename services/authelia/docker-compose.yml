@@ -5,6 +5,11 @@ services:
     restart: unless-stopped
     depends_on:
       - authelia-redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
     environment:
       - TZ=${TZ:-Europe/Bratislava}
       - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET=${AUTHELIA_JWT_SECRET}
@@ -40,6 +45,11 @@ services:
     image: redis:alpine
     container_name: authelia-redis
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 64M
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/authelia/redis:/data
     networks:

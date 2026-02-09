@@ -19,6 +19,11 @@ services:
       # Intel QuickSync / VAAPI
       - /dev/dri/renderD128:/dev/dri/renderD128
       - /dev/dri/card0:/dev/dri/card0
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 2G
     networks:
       - traefik-net
     labels:

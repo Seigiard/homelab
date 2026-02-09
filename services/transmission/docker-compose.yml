@@ -14,6 +14,11 @@ services:
     ports:
       - 51413:51413
       - 51413:51413/udp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
     networks:
       - traefik-net
     labels:

@@ -10,6 +10,11 @@ services:
     volumes:
       - ${DATA_PATH:-/mnt/data}/public/library:/books:ro
       - ${APPDATA_PATH:-/opt/homelab/appdata}/opds-generator:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
     networks:
       - traefik-net
     labels:

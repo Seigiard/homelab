@@ -14,6 +14,11 @@ services:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/stash/blobs:/blobs
       # Media (HDD)
       - ${DATA_PATH:-/mnt/data}/users/andrew/OMG:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1G
     networks:
       - traefik-net
     labels:

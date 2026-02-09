@@ -21,6 +21,11 @@ services:
       # Directories to backup (read-only)
       - ${APPDATA_PATH:-/opt/homelab/appdata}:/backup/appdata:ro
       - ${DATA_PATH:-/mnt/data}/users:/backup/users:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
     networks:
       - traefik-net
     labels:

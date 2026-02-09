@@ -3,6 +3,11 @@ services:
     image: filebrowser/filebrowser
     container_name: filebrowser-public
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
     environment:
       - TZ=${TZ:-Europe/Bratislava}
       - FB_NOAUTH=true
@@ -36,6 +41,11 @@ services:
     image: filebrowser/filebrowser
     container_name: filebrowser-andrew
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
     environment:
       - TZ=${TZ:-Europe/Bratislava}
       - FB_NOAUTH=true
@@ -63,6 +73,11 @@ services:
     image: filebrowser/filebrowser
     container_name: filebrowser-yuliia
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
     environment:
       - TZ=${TZ:-Europe/Bratislava}
       - FB_NOAUTH=true
