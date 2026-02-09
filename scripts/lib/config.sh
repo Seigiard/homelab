@@ -26,6 +26,7 @@ export INSTALL_PATH="/opt/homelab"
 # -------------------------------------------
 
 export HOSTNAME="home"
+export TIMEZONE="Europe/Bratislava"
 
 # -------------------------------------------
 # Network (static IP)
