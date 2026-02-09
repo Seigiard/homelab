@@ -2,6 +2,9 @@
 # Authelia Configuration
 # https://www.authelia.com/configuration/
 
+ntp:
+  disable_failure: true
+
 server:
   address: 'tcp://:9091'
 
