@@ -6,7 +6,7 @@ server:
   address: 'tcp://:9091'
 
 log:
-  level: 'info'
+  level: 'debug'
 
 totp:
   issuer: 'homelab.1218217.xyz'
