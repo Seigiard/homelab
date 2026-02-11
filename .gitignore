@@ -33,3 +33,8 @@ services/opds-generator/data/
 services/traefik/data/acme.json
 
 services/authelia/config/users_database.yml
+services/authelia/config/configuration.yml
+services/authelia/config/users_database.yml
+
+services/backrest/gdrive-sa.json
+gdrive-sa.json
