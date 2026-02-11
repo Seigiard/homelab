@@ -22,7 +22,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.00'
+          cpus: '3.00'
           memory: 2G
     networks:
       - traefik-net

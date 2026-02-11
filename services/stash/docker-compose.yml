@@ -17,7 +17,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.00'
+          cpus: "3.00"
           memory: 1G
     networks:
       - traefik-net
