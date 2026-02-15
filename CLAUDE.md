@@ -59,6 +59,16 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 2. Добавить Traefik + Homepage labels (см. существующие сервисы как пример)
 3. `./scripts/docker/deploy.sh myservice`
 
+### Управление несколькими сервисами
+```bash
+./scripts/docker/deploy.sh svc1 svc2 svc3   # деплой нескольких
+./scripts/docker/deploy.sh                    # деплой ВСЕХ
+./scripts/docker/stop.sh svc1 svc2            # остановка нескольких
+./scripts/docker/rebuild.sh svc1              # pull + restart
+./scripts/docker/status.sh                    # статус всех
+```
+Все скрипты в `scripts/docker/` принимают список сервисов через пробел. Без аргументов — работают со всеми.
+
 ### Добавить пакет в установку
 Обновить массивы в `scripts/lib/config.sh`:
 - `APT_PACKAGES` — apt пакеты
@@ -76,6 +86,7 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 
 ## Важные заметки
 
+- **Claude Code работает на локальной машине (macOS), НЕ на сервере.** Docker-контейнеры, логи, `docker ps` — всё это на удалённом сервере Ubuntu. НЕ пытайся запускать `docker` команды локально — они не сработают. Когда пользователь показывает вывод `docker ps`/`docker logs` — это с сервера.
 - Все сервисы используют Docker сеть `traefik-net`
 - Traefik подхватывает сервисы через Docker labels автоматически
 - Homepage + Docker socket требует `user: root`
