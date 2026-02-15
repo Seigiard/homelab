@@ -1,0 +1,41 @@
+services:
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
+    restart: unless-stopped
+    user: ${PUID:-1000}:${PGID:-1000}
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/navidrome:/data
+      - ${DATA_PATH:-/mnt/data}/public/music:/music:ro
+    networks:
+      - traefik-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-net
+      # Local
+      - traefik.http.routers.navidrome.rule=Host(`navidrome.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.navidrome.entrypoints=web
+      - traefik.http.services.navidrome.loadbalancer.server.port=4533
+      # External
+      - traefik.http.routers.navidrome-secure.rule=Host(`navidrome.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.navidrome-secure.entrypoints=websecure
+      - traefik.http.routers.navidrome-secure.tls=true
+      - traefik.http.routers.navidrome-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.navidrome-secure.service=navidrome
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Navidrome
+      - homepage.icon=navidrome
+      - homepage.href=https://navidrome.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Music streaming
+
+networks:
+  traefik-net:
+    external: true

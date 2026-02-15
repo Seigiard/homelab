@@ -9,6 +9,7 @@ Roadmap проекта и статус реализации.
 ### Сервисы
 
 - [ ] `services/immich/` — фотки
-- [ ] `services/syncthing/` — синхронизация файлов
+- [x] `services/syncthing/` — синхронизация файлов
 - [ ] Paperless или [Papra](https://github.com/papra-hq/papra?tab=readme-ov-file) (документы)
-- [ ] https://www.navidrome.org/ + https://www.symfonium.app/#download
+- [x] `services/navidrome/` — музыкальный стриминг (Subsonic API)
+- [x] `services/audiobookshelf/` — аудиокниги и подкасты
