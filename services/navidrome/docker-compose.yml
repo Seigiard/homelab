@@ -20,11 +20,11 @@ services:
       - traefik.enable=true
       - traefik.docker.network=traefik-net
       # Local
-      - traefik.http.routers.navidrome.rule=Host(`navidrome.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.navidrome.rule=Host(`music.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.navidrome.entrypoints=web
       - traefik.http.services.navidrome.loadbalancer.server.port=4533
       # External
-      - traefik.http.routers.navidrome-secure.rule=Host(`navidrome.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.navidrome-secure.rule=Host(`music.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.navidrome-secure.entrypoints=websecure
       - traefik.http.routers.navidrome-secure.tls=true
       - traefik.http.routers.navidrome-secure.tls.certresolver=cloudflare
@@ -33,7 +33,7 @@ services:
       - homepage.group=Media
       - homepage.name=Navidrome
       - homepage.icon=navidrome
-      - homepage.href=https://navidrome.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.href=https://music.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=Music streaming
 
 networks:

@@ -25,11 +25,11 @@ services:
       - traefik.enable=true
       - traefik.docker.network=traefik-net
       # Local
-      - traefik.http.routers.syncthing.rule=Host(`syncthing.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.syncthing.rule=Host(`sync.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.syncthing.entrypoints=web
       - traefik.http.services.syncthing.loadbalancer.server.port=8384
       # External
-      - traefik.http.routers.syncthing-secure.rule=Host(`syncthing.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.syncthing-secure.rule=Host(`sync.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.syncthing-secure.entrypoints=websecure
       - traefik.http.routers.syncthing-secure.tls=true
       - traefik.http.routers.syncthing-secure.tls.certresolver=cloudflare
@@ -38,7 +38,7 @@ services:
       - homepage.group=Files
       - homepage.name=Syncthing
       - homepage.icon=syncthing
-      - homepage.href=https://syncthing.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.href=https://sync.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=File synchronization
 
 networks:
