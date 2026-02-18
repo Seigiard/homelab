@@ -12,7 +12,7 @@ The script will:
 
 1. Install git and clone repository to `/opt/homelab`
 2. Update system (apt update/upgrade)
-3. Install packages (zsh, micro, zoxide, htop, mc, jq, etc.)
+3. Install packages (zsh, micro, zoxide, htop, mc, jq, ffmpeg, mediainfo, chafa, etc.)
 4. Setup Oh-My-Zsh with plugins
 5. Configure git
 6. Setup Avahi (mDNS)
