@@ -63,6 +63,7 @@ APT_PACKAGES=(
     ffmpeg
     mediainfo
     imagemagick
+    chafa      # terminal image viewer (fallback for non-Kitty terminals)
     # Network
     ethtool
     openssh-server
