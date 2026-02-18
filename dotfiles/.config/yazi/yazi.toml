@@ -10,11 +10,11 @@ extract = [
 
 [plugin]
 prepend_preloaders = [
-	{ mime = "{audio,video,image}/*", run = "mediainfo" },
+	{ mime = "{audio,video}/*", run = "mediainfo" },
 ]
 prepend_previewers = [
-	# Media files — mediainfo plugin
-	{ mime = "{audio,video,image}/*", run = "mediainfo" },
+	# Audio/video — mediainfo plugin (images use built-in preview)
+	{ mime = "{audio,video}/*", run = "mediainfo" },
 	# Archives — ouch plugin
 	{ mime = "application/*zip", run = "ouch" },
 	{ mime = "application/x-tar", run = "ouch" },
