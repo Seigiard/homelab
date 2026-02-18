@@ -8,6 +8,9 @@ use = "ndtoan96/ouch"
 rev = "cfb9140"
 hash = "b5067143415bd2d46c0dfa57319ddcef"
 
+[[plugin.deps]]
+use = "boydaihungst/mediainfo"
+
 [[flavor.deps]]
 use = "gosxrgxx/flexoki-light"
 rev = "45eb0a0"

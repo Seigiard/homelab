@@ -9,7 +9,13 @@ extract = [
 ]
 
 [plugin]
+prepend_preloaders = [
+	{ mime = "{audio,video,image}/*", run = "mediainfo" },
+]
 prepend_previewers = [
+	# Media files — mediainfo plugin
+	{ mime = "{audio,video,image}/*", run = "mediainfo" },
+	# Archives — ouch plugin
 	{ mime = "application/*zip", run = "ouch" },
 	{ mime = "application/x-tar", run = "ouch" },
 	{ mime = "application/x-bzip2", run = "ouch" },

@@ -59,6 +59,10 @@ APT_PACKAGES=(
     fd-find    # fast find alternative
     ripgrep    # fast grep alternative
     fzf        # fuzzy finder
+    # Media
+    ffmpeg
+    mediainfo
+    imagemagick
     # Network
     ethtool
     openssh-server
