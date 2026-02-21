@@ -43,7 +43,7 @@ backups/                  <-- Бэкапы контейнеров и баз да
 
 |                        | Samba              | Domain               | Service     | Auth  |
 | ---------------------- | ------------------ | -------------------- | ----------- | ----- |
-| public/                | files.home.local   | files.home.local     | filemanager | guest |
+| public/                | files.home.local   | files.home.local     | FBQ         | guest |
 | public/movies/         |                    |                      |             |       |
 | public/tv/             |                    |                      |             |       |
 | public/music/          |                    |                      |             |       |
@@ -52,13 +52,13 @@ backups/                  <-- Бэкапы контейнеров и баз да
 | data/                  |                    |                      |             |       |
 | data/paperless         |                    | paperless.home.local | paperless   | auth  |
 |                        |                    |                      |             |       |
-| users/                 |                    |                      |             |       |
-| users/andrew/          | a.files.home.local | a.files.home.local   | filemanager | auth  |
+| users/                 |                    | files.home.local     | FBQ         | auth  |
+| users/andrew/          | a.files.home.local |                      |             |       |
 | users/andrew/files/    |                    |                      |             |       |
 | users/andrew/photos/   |                    | a.photos.home.local  | immich      | auth  |
 | users/andrew/sync/     |                    |                      |             |       |
 |                        |                    |                      |             |       |
-| users/yuliia/          | y.files.home.local | y.files.home.local   |             | auth  |
+| users/yuliia/          | y.files.home.local |                      |             |       |
 | users/yuliia/files/    |                    |                      |             |       |
 | users/yuliia/photos/   |                    | y.photos.home.local  | immich      | auth  |
 
@@ -88,7 +88,7 @@ backups/                  <-- Бэкапы контейнеров и баз да
 | Сервис | Статус | Описание |
 |--------|--------|----------|
 | Samba | ✅ | SMB file shares (public, andrew, yuliia) |
-| FileBrowser | ✅ | Web file manager (3 инстанса: public, andrew, yuliia) |
+| FileBrowser Quantum | ✅ | Web file manager (single instance, proxy auth via Authelia, multi-source) |
 | OPDS Generator | ✅ | E-book OPDS catalog |
 | Jellyfin | ✅ | Media streaming server |
 | Transmission | ✅ | Public torrent client (public/downloads) |
@@ -104,6 +104,6 @@ backups/                  <-- Бэкапы контейнеров и баз да
 
 | Сервис | Статус | Описание |
 |--------|--------|----------|
-| Syncthing | ⏳ | Синхронизация файлов |
+| Syncthing | ✅ | Синхронизация файлов |
 | Immich | ⏳ | Фото-библиотека |
 | Paperless | ⏳ | Document management |
