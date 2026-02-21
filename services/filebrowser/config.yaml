@@ -1,0 +1,22 @@
+server:
+  port: 80
+  sources:
+    - path: /srv/public
+      name: "Public Files"
+      config:
+        defaultEnabled: true
+    - path: /srv/users
+      name: "My Files"
+      config:
+        defaultEnabled: true
+        createUserDir: true
+
+auth:
+  adminUsername: admin
+  methods:
+    proxy:
+      enabled: true
+      header: "Remote-User"
+      createUser: true
+    password:
+      enabled: false

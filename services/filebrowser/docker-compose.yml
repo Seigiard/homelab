@@ -1,105 +1,42 @@
 services:
-  filebrowser-public:
-    image: filebrowser/filebrowser
-    container_name: filebrowser-public
+  filebrowser:
+    image: gtstef/filebrowser:stable
+    container_name: filebrowser
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 128M
-    environment:
-      - TZ=${TZ:-Europe/Bratislava}
-      - FB_NOAUTH=true
-      - FB_DATABASE=/database/filebrowser.db
+          cpus: '0.50'
+          memory: 256M
     volumes:
-      - ${DATA_PATH:-/mnt/data}/public:/srv
-      - ${APPDATA_PATH:-/opt/homelab/appdata}/filebrowser/public:/database
+      - ./config.yaml:/home/filebrowser/config.yaml:ro
+      - ${DATA_PATH:-/mnt/data}/public:/srv/public
+      - ${DATA_PATH:-/mnt/data}/users:/srv/users
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/filebrowser/data:/home/filebrowser/data
     networks:
       - traefik-net
     labels:
-      # Traefik routing - HTTP (local)
       - traefik.enable=true
-      - traefik.http.routers.filebrowser-public.rule=Host(`files.${LOCAL_DOMAIN:-home.local}`)
-      - traefik.http.routers.filebrowser-public.entrypoints=web
-      - traefik.http.services.filebrowser-public.loadbalancer.server.port=80
-      # Traefik routing - HTTPS (local via split-DNS)
-      - traefik.http.routers.filebrowser-public-secure.rule=Host(`files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
-      - traefik.http.routers.filebrowser-public-secure.entrypoints=websecure
-      - traefik.http.routers.filebrowser-public-secure.tls=true
-      - traefik.http.routers.filebrowser-public-secure.tls.certresolver=cloudflare
-      - traefik.http.routers.filebrowser-public-secure.middlewares=authelia@docker
-      - traefik.http.routers.filebrowser-public-secure.service=filebrowser-public
-      # Homepage
+      # --- HTTP (local) — auto-admin via header middleware ---
+      - traefik.http.routers.filebrowser.rule=Host(`files.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.filebrowser.entrypoints=web
+      - traefik.http.routers.filebrowser.middlewares=filebrowser-local-admin@docker
+      - traefik.http.services.filebrowser.loadbalancer.server.port=80
+      # Middleware: inject Remote-User=admin for local access
+      - traefik.http.middlewares.filebrowser-local-admin.headers.customrequestheaders.Remote-User=admin
+      # --- HTTPS (external) — Authelia proxy auth ---
+      - traefik.http.routers.filebrowser-secure.rule=Host(`files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.filebrowser-secure.entrypoints=websecure
+      - traefik.http.routers.filebrowser-secure.tls=true
+      - traefik.http.routers.filebrowser-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.filebrowser-secure.middlewares=authelia@docker
+      - traefik.http.routers.filebrowser-secure.service=filebrowser
+      # --- Homepage ---
       - homepage.group=Files
-      - homepage.name=Public Files
+      - homepage.name=Files
       - homepage.icon=filebrowser
       - homepage.href=https://files.${EXTERNAL_DOMAIN:-1218217.xyz}
-      - homepage.description=Shared files (public)
-
-  filebrowser-andrew:
-    image: filebrowser/filebrowser
-    container_name: filebrowser-andrew
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 128M
-    environment:
-      - TZ=${TZ:-Europe/Bratislava}
-      - FB_NOAUTH=true
-      - FB_DATABASE=/database/filebrowser.db
-    volumes:
-      - ${DATA_PATH:-/mnt/data}/users/andrew:/srv
-      - ${APPDATA_PATH:-/opt/homelab/appdata}/filebrowser/andrew:/database
-    networks:
-      - traefik-net
-    labels:
-      # Traefik routing - HTTP (local)
-      - traefik.enable=true
-      - traefik.http.routers.filebrowser-andrew.rule=Host(`a.files.${LOCAL_DOMAIN:-home.local}`)
-      - traefik.http.routers.filebrowser-andrew.entrypoints=web
-      - traefik.http.services.filebrowser-andrew.loadbalancer.server.port=80
-      # Traefik routing - HTTPS (local via split-DNS)
-      - traefik.http.routers.filebrowser-andrew-secure.rule=Host(`a.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
-      - traefik.http.routers.filebrowser-andrew-secure.entrypoints=websecure
-      - traefik.http.routers.filebrowser-andrew-secure.tls=true
-      - traefik.http.routers.filebrowser-andrew-secure.tls.certresolver=cloudflare
-      - traefik.http.routers.filebrowser-andrew-secure.middlewares=authelia@docker
-      - traefik.http.routers.filebrowser-andrew-secure.service=filebrowser-andrew
-
-  filebrowser-yuliia:
-    image: filebrowser/filebrowser
-    container_name: filebrowser-yuliia
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 128M
-    environment:
-      - TZ=${TZ:-Europe/Bratislava}
-      - FB_NOAUTH=true
-      - FB_DATABASE=/database/filebrowser.db
-    volumes:
-      - ${DATA_PATH:-/mnt/data}/users/yuliia:/srv
-      - ${APPDATA_PATH:-/opt/homelab/appdata}/filebrowser/yuliia:/database
-    networks:
-      - traefik-net
-    labels:
-      # Traefik routing - HTTP (local)
-      - traefik.enable=true
-      - traefik.http.routers.filebrowser-yuliia.rule=Host(`y.files.${LOCAL_DOMAIN:-home.local}`)
-      - traefik.http.routers.filebrowser-yuliia.entrypoints=web
-      - traefik.http.services.filebrowser-yuliia.loadbalancer.server.port=80
-      # Traefik routing - HTTPS (local via split-DNS)
-      - traefik.http.routers.filebrowser-yuliia-secure.rule=Host(`y.files.${EXTERNAL_DOMAIN:-1218217.xyz}`)
-      - traefik.http.routers.filebrowser-yuliia-secure.entrypoints=websecure
-      - traefik.http.routers.filebrowser-yuliia-secure.tls=true
-      - traefik.http.routers.filebrowser-yuliia-secure.tls.certresolver=cloudflare
-      - traefik.http.routers.filebrowser-yuliia-secure.middlewares=authelia@docker
-      - traefik.http.routers.filebrowser-yuliia-secure.service=filebrowser-yuliia
+      - homepage.description=File manager (Quantum)
 
 networks:
   traefik-net:
