@@ -10,6 +10,7 @@ services:
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/syncthing:/var/syncthing
       - ${DATA_PATH:-/mnt/data}/users/andrew/sync:/data
+      - ${DATA_PATH:-/mnt/data}/public:/public
     ports:
       - "22000:22000/tcp"
       - "22000:22000/udp"
