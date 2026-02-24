@@ -13,6 +13,21 @@ services:
       -s "public;/data/public;yes;no;yes;all"
       -s "andrew;/data/users/andrew;yes;no;no;${SAMBA_USER_ANDREW}"
       -s "yuliia;/data/users/yuliia;yes;no;no;${SAMBA_USER_YULIIA}"
+      -g "store dos attributes = no"
+      -g "ea support = no"
+      -g "map archive = no"
+      -g "map hidden = no"
+      -g "map system = no"
+      -g "map readonly = no"
+      -g "getwd cache = yes"
+      -g "socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=131072 SO_SNDBUF=131072"
+      -g "write cache size = 2097152"
+      -g "min receivefile size = 16384"
+      -g "aio read size = 16384"
+      -g "aio write size = 16384"
+      -g "vfs objects = catia fruit streams_xattr"
+      -g "fruit:metadata = stream"
+      -g "fruit:model = MacSamba"
     volumes:
       - ${DATA_PATH:-/mnt/data}:/data
     ports:
@@ -21,8 +36,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 256M
+          cpus: '1.00'
+          memory: 512M
     networks:
       - traefik-net
     labels:
