@@ -344,6 +344,11 @@ EOF
 
     systemctl restart smartd
     log_info "smartd configured: monitoring HDD only, NVMe excluded"
+
+    log_step "Disabling udisks2 (not needed on headless server, generates NVMe errors)..."
+    systemctl stop udisks2 2>/dev/null || true
+    systemctl mask udisks2
+    log_info "udisks2 disabled"
 }
 
 # -------------------------------------------
