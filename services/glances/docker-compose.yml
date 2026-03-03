@@ -4,6 +4,7 @@ services:
     container_name: glances
     restart: unless-stopped
     pid: host
+    hostname: Homelab
     environment:
       - TZ=${TZ:-Europe/Bratislava}
       - GLANCES_OPT=-w -C /glances/conf/glances.conf
@@ -15,7 +16,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: "0.50"
           memory: 256M
     networks:
       - traefik-net
