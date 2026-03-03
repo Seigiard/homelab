@@ -8,7 +8,9 @@ services:
       - TZ=${TZ:-Europe/Bratislava}
       - GLANCES_OPT=-w
     volumes:
+      - /:/rootfs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
       - ./glances.conf:/glances/conf/glances.conf:ro
     deploy:
       resources:
