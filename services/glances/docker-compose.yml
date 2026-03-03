@@ -6,7 +6,7 @@ services:
     pid: host
     environment:
       - TZ=${TZ:-Europe/Bratislava}
-      - GLANCES_OPT=-w
+      - GLANCES_OPT=-w -C /glances/conf/glances.conf
     volumes:
       - /:/rootfs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
