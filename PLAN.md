@@ -1,16 +1,19 @@
-# План развёртывания Homelab
+# Roadmap
 
-Roadmap проекта и статус реализации.
+Планы развития homelab. Работающие сервисы: `ls services/`.
 
-> Описание проекта и структуру см. в `README.md` и `CLAUDE.md`
+## Планируемые сервисы
 
----
+- [ ] **Immich** — фото-библиотека (директория `services/immich/` подготовлена)
+- [ ] **Paperless** или [Papra](https://github.com/papra-hq/papra) — управление документами
 
-### Сервисы
+## Идеи
 
-- [ ] `services/immich/` — фотки
-- [x] `services/syncthing/` — синхронизация файлов
-- [ ] Paperless или [Papra](https://github.com/papra-hq/papra?tab=readme-ov-file) (документы)
-- [x] `services/navidrome/` — музыкальный стриминг (Subsonic API)
-- [x] `services/audiobookshelf/` — аудиокниги и подкасты
-- [x] `services/filebrowser/` — Filebrowser Quantum (proxy auth, multi-source)
+_(пока пусто)_
+
+## Реализованные планы
+
+Детали принятых решений в `docs/plans/`:
+
+- [Syncthing + Navidrome + Audiobookshelf](docs/plans/2026-02-15-syncthing-navidrome-audiobookshelf.md)
+- [FileBrowser Quantum миграция](docs/plans/2026-02-21-filebrowser-quantum-migration.md)
