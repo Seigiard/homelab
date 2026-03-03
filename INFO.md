@@ -7,8 +7,13 @@ HP ProDesk 600 G3 SFF:
 
 - Intel Quad-Core i5-6400 CPU @ 2.70GHz
 - RAM 16 GB DDR4 (+ empty 2 slots)
-- SSD Crucial 256 GB
+- NVMe Kingston SEDC2000BM8240G 240 GB (system drive, PCI-E adapter)
+- HDD Seagate ST6000VN006 6 TB (data drive)
 - Intel HD Graphics 530
+
+### Known hardware quirks
+
+- **Kingston DC2000B NVMe**: прошивка (EIEK51.3) генерирует ложные ошибки `Invalid Field in Command` при любом SMART-запросе. `smartctl` непригоден — использовать `nvme smart-log`. Sensor 2 (Temperature) зафиксирован на ~82°C — фейковый датчик прошивки, игнорировать. Workaround: smartd настроен мониторить только HDD, NVMe исключён (`/etc/smartd.conf`). Glances скрывает Sensor 2 (`services/glances/glances.conf`)
 - PCI Express x16 + PCI Express x4 sloty
 
 ### Future upgrades

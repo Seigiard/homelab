@@ -9,6 +9,7 @@ services:
       - GLANCES_OPT=-w
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./glances.conf:/glances/conf/glances.conf:ro
     deploy:
       resources:
         limits:

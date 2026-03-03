@@ -311,6 +311,42 @@ setup_docker_user() {
 }
 
 # -------------------------------------------
+# Configure SMART monitoring
+# -------------------------------------------
+
+configure_smartd() {
+    if [[ "${TEST_MODE:-0}" == "1" ]]; then
+        log_info "[TEST] Skipping smartd configuration"
+        return 0
+    fi
+
+    if ! has_command smartctl; then
+        log_warn "smartmontools not installed, skipping SMART configuration"
+        return 0
+    fi
+
+    log_step "Configuring SMART monitoring (smartd)..."
+
+    local SMARTD_CONF="/etc/smartd.conf"
+    local BACKUP="${SMARTD_CONF}.bak.$(date +%Y%m%d)"
+
+    if [[ -f "$SMARTD_CONF" ]]; then
+        cp "$SMARTD_CONF" "$BACKUP"
+        log_info "Backed up existing config to $BACKUP"
+    fi
+
+    cat > "$SMARTD_CONF" << 'EOF'
+# Homelab smartd configuration
+# NVMe (Kingston DC2000B) excluded: firmware generates false "Invalid Field in Command" errors
+# Only HDD is monitored explicitly — no DEVICESCAN
+/dev/sda -d removable -n standby -a -o on -S on -s (S/../.././02|L/../../6/03) -W 4,45,55 -m root -M exec /usr/share/smartmontools/smartd-runner
+EOF
+
+    systemctl restart smartd
+    log_info "smartd configured: monitoring HDD only, NVMe excluded"
+}
+
+# -------------------------------------------
 # Main
 # -------------------------------------------
 
@@ -341,6 +377,9 @@ main() {
 
     print_header "Setting up Docker user"
     setup_docker_user
+
+    print_header "Configuring SMART monitoring"
+    configure_smartd
 
     print_footer "Bootstrap completed!"
 

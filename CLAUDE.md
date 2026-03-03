@@ -24,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 1. `scripts/setup.sh` — точка входа (curl | bash)
 2. `scripts/setup/--init.sh` — оркестратор, запускает шаги 00-08
 3. `scripts/setup/0*.sh` — модульные шаги установки
-4. `scripts/bootstrap.sh` — Docker, папки, права, firewall
+4. `scripts/bootstrap.sh` — Docker, папки, права, firewall, smartd
 
 ### Управление сервисами
 - `scripts/docker/deploy.sh` — деплой
@@ -91,4 +91,5 @@ curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup
 - Traefik подхватывает сервисы через Docker labels автоматически
 - Homepage + Docker socket требует `user: root`
 - Cloudflare: SSL mode = Flexible, Always Use HTTPS = OFF
+- **NVMe Kingston DC2000B**: не использовать `smartctl` — генерирует ложные ошибки. Для проверки здоровья: `nvme smart-log /dev/nvme0n1`. Sensor 2 (~82°C) — фейковый датчик прошивки, игнорировать. Подробности в `INFO.md`
 - После каждого этапа или завершённой задачи обновляй PLAN.md, README.md, ENVIRONMENT.md, CLAUDE.md ЕСЛИ НЕОБХОДИМО СОХРАНИТЬ ИНФОРМАЦИЮ В СООТВЕТСТВУЮЩЕМ ФАЙЛЕ

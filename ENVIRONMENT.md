@@ -79,7 +79,7 @@ backups/                  <-- Бэкапы контейнеров и баз да
 | Сервис | Статус | Описание |
 |--------|--------|----------|
 | Homepage | ✅ | Dashboard с Docker auto-discovery |
-| Glances | ✅ | System monitoring |
+| Glances | ✅ | System monitoring (Sensor 2 скрыт — фейковый датчик Kingston NVMe) |
 | Dozzle | ✅ | Docker logs viewer |
 | Backrest | ✅ | Backup management (restic + rclone) |
 
