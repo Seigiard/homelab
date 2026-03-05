@@ -48,6 +48,8 @@ sudo tee /etc/nut/upsd.users > /dev/null << EOF
 [upsmon]
   password = ${NUT_PASSWORD}
   upsmon master
+  actions = SET
+  instcmds = ALL
 EOF
 
 log_step "Writing /etc/nut/upsmon.conf"
@@ -61,11 +63,33 @@ EOF
 sudo chmod 640 /etc/nut/upsd.users /etc/nut/upsmon.conf
 sudo chown root:nut /etc/nut/upsd.users /etc/nut/upsmon.conf
 
+log_step "Opening firewall for Docker → NUT"
+sudo ufw allow from 172.16.0.0/12 to any port 3493 proto tcp comment "NUT from Docker" 2>/dev/null || true
+
 log_step "Enabling NUT services"
 sudo systemctl restart nut-driver 2>/dev/null || true
 sudo systemctl enable --now nut-server
 sudo systemctl enable --now nut-monitor
 
+APPDATA="${INSTALL_PATH}/appdata"
+PEANUT_CONFIG_DIR="${APPDATA}/peanut/config"
+
+log_step "Creating PeaNUT settings.yml"
+mkdir -p "${PEANUT_CONFIG_DIR}"
+cat > "${PEANUT_CONFIG_DIR}/settings.yml" << EOF
+NUT_SERVERS:
+  - HOST: host.docker.internal
+    PORT: 3493
+    USERNAME: upsmon
+    PASSWORD: ${NUT_PASSWORD}
+EOF
+chmod 777 "${PEANUT_CONFIG_DIR}"
+
+log_step "Disabling UPS beeper and setting shutdown delay"
+sudo upscmd -u upsmon -p "${NUT_PASSWORD}" eaton beeper.disable 2>/dev/null || true
+sudo upsrw -s ups.delay.shutdown=120 -u upsmon -p "${NUT_PASSWORD}" eaton 2>/dev/null || true
+
 log_info "NUT configured for Eaton Ellipse ECO 900"
 log_info "Password saved in /etc/nut/upsd.users"
+log_info "PeaNUT config: ${PEANUT_CONFIG_DIR}/settings.yml"
 log_info "Verify: sudo upsc eaton@localhost"
