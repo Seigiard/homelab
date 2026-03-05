@@ -18,6 +18,13 @@ print_header "Step 10/10: Configuring NUT (UPS monitoring)"
 
 NUT_PASSWORD=$(openssl rand -base64 16 | tr -d '/+=' | head -c 16)
 
+log_step "Setting USB permissions for NUT (udev rule)"
+sudo tee /etc/udev/rules.d/99-nut-ups.rules > /dev/null << 'EOF'
+SUBSYSTEM=="usb", ATTR{idVendor}=="0463", MODE="0660", GROUP="nut"
+EOF
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+
 log_step "Writing /etc/nut/nut.conf"
 sudo tee /etc/nut/nut.conf > /dev/null << 'EOF'
 MODE=standalone
@@ -55,6 +62,7 @@ sudo chmod 640 /etc/nut/upsd.users /etc/nut/upsmon.conf
 sudo chown root:nut /etc/nut/upsd.users /etc/nut/upsmon.conf
 
 log_step "Enabling NUT services"
+sudo systemctl restart nut-driver 2>/dev/null || true
 sudo systemctl enable --now nut-server
 sudo systemctl enable --now nut-monitor
 

@@ -22,7 +22,7 @@ services:
       - traefik.enable=true
       - traefik.http.routers.peanut.rule=Host(`ups.${LOCAL_DOMAIN:-home.local}`)
       - traefik.http.routers.peanut.entrypoints=web
-      - traefik.http.services.peanut.loadbalancer.server.port=3000
+      - traefik.http.services.peanut.loadbalancer.server.port=8080
       # Traefik routing - HTTPS (local via split-DNS)
       - traefik.http.routers.peanut-secure.rule=Host(`ups.${EXTERNAL_DOMAIN:-1218217.xyz}`)
       - traefik.http.routers.peanut-secure.entrypoints=websecure
