@@ -36,6 +36,9 @@ services:
       - homepage.icon=peanut
       - homepage.href=https://ups.${EXTERNAL_DOMAIN:-1218217.xyz}
       - homepage.description=UPS Monitoring (PeaNUT)
+      - homepage.widget.type=nut
+      - homepage.widget.url=http://host.docker.internal:3493
+      - homepage.widget.ups=eaton
 
 networks:
   traefik-net:
