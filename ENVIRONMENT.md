@@ -33,6 +33,30 @@
 
 6-pin разъём питания — проприетарный HP, порт называется "P160". Кабель для подключения доп. дисков: `m2-l20611` (eBay). Пока план: добавить M.2 SSD + один диск без решения вопроса питания.
 
+## UPS
+
+**Eaton Ellipse ECO 900 USB** — подключён по USB к серверу.
+
+| Параметр          | Значение                       |
+| ----------------- | ------------------------------ |
+| Модель            | Eaton Ellipse ECO 900          |
+| Подключение       | USB (usbhid-ups driver)        |
+| Мощность          | 900 VA / 500 W                 |
+| Мониторинг        | NUT на хосте (standalone mode) |
+| Web UI            | PeaNUT (Docker)                |
+| Auto-shutdown     | nut-monitor → shutdown при OB  |
+
+**Архитектура:** NUT (`nut-server` + `nut-monitor`) работает на хосте — Docker не может выключить хост. PeaNUT в Docker подключается к хосту через `host.docker.internal:3493`.
+
+**Конфигурация:** `/etc/nut/` (5 файлов, setup-скрипт `09-setup-nut.sh`)
+
+**Проверка:**
+```bash
+sudo upsc eaton@localhost              # все данные UPS
+sudo upsc eaton@localhost ups.status   # OL = online, OB = on battery
+sudo upsc eaton@localhost battery.charge
+```
+
 ## Хранилище
 
 Разделение по принципу **"Appdata vs Data"**:

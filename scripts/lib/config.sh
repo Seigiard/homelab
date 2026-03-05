@@ -64,6 +64,8 @@ APT_PACKAGES=(
     mediainfo
     imagemagick
     chafa      # terminal image viewer (fallback for non-Kitty terminals)
+    # UPS
+    nut
     # Network
     ethtool
     openssh-server

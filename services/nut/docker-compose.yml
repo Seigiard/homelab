@@ -1,0 +1,42 @@
+services:
+  peanut:
+    image: brandawg93/peanut:latest
+    container_name: peanut
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+      - WEB_HOST=0.0.0.0
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/peanut/config:/config
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing - HTTP (local)
+      - traefik.enable=true
+      - traefik.http.routers.peanut.rule=Host(`ups.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.peanut.entrypoints=web
+      - traefik.http.services.peanut.loadbalancer.server.port=3000
+      # Traefik routing - HTTPS (local via split-DNS)
+      - traefik.http.routers.peanut-secure.rule=Host(`ups.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.peanut-secure.entrypoints=websecure
+      - traefik.http.routers.peanut-secure.tls=true
+      - traefik.http.routers.peanut-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.peanut-secure.middlewares=authelia@docker
+      - traefik.http.routers.peanut-secure.service=peanut
+      # Homepage
+      - homepage.group=Infrastructure
+      - homepage.name=UPS
+      - homepage.icon=peanut
+      - homepage.href=https://ups.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=UPS Monitoring (PeaNUT)
+
+networks:
+  traefik-net:
+    external: true
