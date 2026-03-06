@@ -11,8 +11,7 @@ services:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
     volumes:
-      - ${DATA_PATH:-/mnt/data}/public/audiobooks:/podcasts/audiobooks:ro
-      - ${DATA_PATH:-/mnt/data}/public/podcasts:/podcasts/podcasts:ro
+      - ${DATA_PATH:-/mnt/data}/public/audiobooks:/podcasts:ro
     networks:
       - traefik-net
     deploy:
