@@ -12,6 +12,11 @@ services:
       - PGID=${PGID:-1000}
     volumes:
       - ${DATA_PATH:-/mnt/data}/public/audiobooks:/podcasts:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/podcasts"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks:
       - traefik-net
     deploy:
