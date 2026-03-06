@@ -1,0 +1,20 @@
+[server]
+port = 8080
+hostname = "https://podsync.1218217.xyz"
+
+[storage]
+type = "local"
+
+  [storage.local]
+  data_dir = "/app/data"
+
+[database]
+badger = { truncate = true, file_io = true }
+
+[downloader]
+self_update = true
+timeout = 15
+
+[tokens]
+
+[feeds]
