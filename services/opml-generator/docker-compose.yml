@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     environment:
       - TZ=${TZ:-Europe/Bratislava}
+      - ADMIN_USER=${OPDS_ADMIN_USER:-admin}
+      - ADMIN_TOKEN=${OPDS_ADMIN_TOKEN}
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/opml-generator/data:/data
       - ${DATA_PATH:-/mnt/data}/public/audiobooks:/audiobooks/audiobooks:ro
