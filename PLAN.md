@@ -17,4 +17,4 @@ _(пока пусто)_
 
 - [Syncthing + Navidrome + Audiobookshelf](docs/plans/2026-02-15-syncthing-navidrome-audiobookshelf.md)
 - [FileBrowser Quantum миграция](docs/plans/2026-02-21-filebrowser-quantum-migration.md)
-- [Folder2Podcast](docs/plans/2026-03-06-folder2podcast-design.md)
+- [Folder2Podcast](docs/plans/2026-03-06-folder2podcast-design.md) — replaced by opml-generator
