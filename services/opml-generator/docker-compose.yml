@@ -1,0 +1,41 @@
+services:
+  opml-generator:
+    image: ghcr.io/seigiard/opml-generator:latest
+    container_name: opml-generator
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/opml-generator/data:/data
+      - ${DATA_PATH:-/mnt/data}/public/audiobooks:/audiobooks/audiobooks:ro
+      - ${DATA_PATH:-/mnt/data}/public/podcasts:/audiobooks/podcasts:ro
+    networks:
+      - traefik-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-net
+      # Local
+      - traefik.http.routers.opml-generator.rule=Host(`opml.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.opml-generator.entrypoints=web
+      - traefik.http.services.opml-generator.loadbalancer.server.port=80
+      # External
+      - traefik.http.routers.opml-generator-secure.rule=Host(`opml.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.opml-generator-secure.entrypoints=websecure
+      - traefik.http.routers.opml-generator-secure.tls=true
+      - traefik.http.routers.opml-generator-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.opml-generator-secure.service=opml-generator
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=OPML Generator
+      - homepage.icon=podcast
+      - homepage.href=https://opml.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Podcast & audiobook OPML feeds
+
+networks:
+  traefik-net:
+    external: true
