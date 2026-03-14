@@ -118,5 +118,5 @@ sudo upsc eaton@localhost battery.charge
 ### Важные настройки
 
 - Все Docker-сервисы в сети `traefik-net`
-- Cloudflare: SSL mode = Flexible, Always Use HTTPS = OFF
+- Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON
 - Homepage + Docker socket требует `user: root`
