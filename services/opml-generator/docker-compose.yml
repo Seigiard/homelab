@@ -17,7 +17,7 @@ services:
       resources:
         limits:
           cpus: "0.25"
-          memory: 256M
+          memory: 384M
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-net
