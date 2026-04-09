@@ -9,6 +9,7 @@ services:
       - PGID=${PGID:-1000}
       - SILLYTAVERN_LISTEN=true
       - SILLYTAVERN_WHITELISTMODE=false
+      - SILLYTAVERN_SECURITYOVERRIDE=true
       - SILLYTAVERN_HEARTBEATINTERVAL=30
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/sillytavern/config:/home/node/app/config
