@@ -105,6 +105,12 @@ install_docker() {
     systemctl start docker
     systemctl enable docker
 
+    # Configure log rotation
+    cat > /etc/docker/daemon.json <<-'DAEMON'
+	{"log-driver":"json-file","log-opts":{"max-size":"50m","max-file":"3"}}
+	DAEMON
+    systemctl restart docker
+
     log_info "Docker installed successfully: $(docker --version)"
 }
 
