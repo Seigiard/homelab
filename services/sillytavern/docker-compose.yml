@@ -9,9 +9,6 @@ services:
       - PGID=${PGID:-1000}
       - SILLYTAVERN_LISTEN=true
       - SILLYTAVERN_WHITELISTMODE=false
-      - SILLYTAVERN_BASICAUTHMODE=true
-      - SILLYTAVERN_BASICAUTHUSER_USERNAME=${SILLYTAVERN_USER:-admin}
-      - SILLYTAVERN_BASICAUTHUSER_PASSWORD=${SILLYTAVERN_PASSWORD}
       - SILLYTAVERN_HEARTBEATINTERVAL=30
     volumes:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/sillytavern/config:/home/node/app/config
@@ -43,6 +40,7 @@ services:
       - traefik.http.routers.sillytavern-secure.entrypoints=websecure
       - traefik.http.routers.sillytavern-secure.tls=true
       - traefik.http.routers.sillytavern-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.sillytavern-secure.middlewares=authelia@docker
       - traefik.http.routers.sillytavern-secure.service=sillytavern
       # Homepage
       - homepage.group=AI
