@@ -1,0 +1,46 @@
+services:
+  kima:
+    image: chevron7locked/kima:latest
+    container_name: kima
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+      - SESSION_SECRET=${KIMA_SESSION_SECRET}
+      - SETTINGS_ENCRYPTION_KEY=${KIMA_SETTINGS_ENCRYPTION_KEY}
+      - NEXT_PUBLIC_API_URL=https://kima.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - ALLOWED_ORIGINS=http://kima.${LOCAL_DOMAIN:-home.local},https://kima.${EXTERNAL_DOMAIN:-1218217.xyz}
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/kima/data:/data
+      - ${DATA_PATH:-/mnt/data}/public/music:/music:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - traefik-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 2G
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-net
+      # Local
+      - traefik.http.routers.kima.rule=Host(`kima.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.kima.entrypoints=web
+      - traefik.http.services.kima.loadbalancer.server.port=3030
+      # External
+      - traefik.http.routers.kima-secure.rule=Host(`kima.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.kima-secure.entrypoints=websecure
+      - traefik.http.routers.kima-secure.tls=true
+      - traefik.http.routers.kima-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.kima-secure.service=kima
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Kima Hub
+      - homepage.icon=kima
+      - homepage.href=https://kima.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Music streaming
+
+networks:
+  traefik-net:
+    external: true
