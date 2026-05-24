@@ -1,0 +1,47 @@
+services:
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes
+    restart: unless-stopped
+    command: gateway run
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+      - HERMES_DASHBOARD=1
+      - HERMES_DASHBOARD_HOST=0.0.0.0
+      - HERMES_DASHBOARD_PORT=9119
+    volumes:
+      # Agent data (SSD) — config, memories, skills, sessions
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/hermes:/opt/data
+      # Obsidian vaults (HDD via Syncthing) — read-write
+      - ${DATA_PATH:-/mnt/data}/users/andrew/sync/knowledge-base:/data/knowledge-base
+      - ${DATA_PATH:-/mnt/data}/users/andrew/sync/ttrpg:/data/ttrpg
+    deploy:
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: 2G
+    networks:
+      - traefik-net
+    labels:
+      # Traefik - HTTP (local) — dashboard
+      - traefik.enable=true
+      - traefik.http.routers.hermes.rule=Host(`hermes.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.hermes.entrypoints=web
+      - traefik.http.services.hermes.loadbalancer.server.port=9119
+      # Traefik - HTTPS (external via split-DNS) — dashboard
+      - traefik.http.routers.hermes-secure.rule=Host(`hermes.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.hermes-secure.entrypoints=websecure
+      - traefik.http.routers.hermes-secure.tls=true
+      - traefik.http.routers.hermes-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.hermes-secure.middlewares=authelia@docker
+      - traefik.http.routers.hermes-secure.service=hermes
+      # Homepage
+      - homepage.group=AI
+      - homepage.name=Hermes Agent
+      - homepage.icon=robot
+      - homepage.href=https://hermes.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Self-improving AI agent
+
+networks:
+  traefik-net:
+    external: true
