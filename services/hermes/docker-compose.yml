@@ -6,6 +6,8 @@ services:
     command: gateway run
     environment:
       - TZ=${TZ:-Europe/Bratislava}
+      - HERMES_UID=${PUID:-1000}
+      - HERMES_GID=${PGID:-1000}
       - HERMES_DASHBOARD=1
       - HERMES_DASHBOARD_HOST=0.0.0.0
       - HERMES_DASHBOARD_PORT=9119
