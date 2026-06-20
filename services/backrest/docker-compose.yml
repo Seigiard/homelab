@@ -1,3 +1,7 @@
+# Restic repos живут на удалённых хранилищах (через rclone, см. volume ниже):
+#   - FTP StorageBox 949745329.xyz (HostBrr, 1 TB)
+#   - Dropbox
+# Это путь восстановления данных при потере локального диска.
 services:
   backrest:
     image: garethgeorge/backrest:latest
