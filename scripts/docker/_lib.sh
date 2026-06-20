@@ -163,8 +163,12 @@ do_remove() {
         docker compose -f "$compose_file" --env-file "$PROJECT_DIR/.env" down --rmi all 2>/dev/null
     else
         log_step "Removing $service containers and images..."
-        docker rm -f "$service" 2>/dev/null
-        docker image rm "$(docker images --filter "reference=*$service*" -q)" 2>/dev/null
+        docker rm -f "$service" 2>/dev/null || true
+        local images
+        images=$(docker images --filter "reference=*$service*" -q)
+        if [[ -n "$images" ]]; then
+            docker image rm $images 2>/dev/null || true
+        fi
     fi
     log_info "$service removed"
 }
