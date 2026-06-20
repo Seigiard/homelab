@@ -17,7 +17,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./config/dynamic:/etc/traefik/dynamic:ro
       - ./data/acme.json:/acme.json
+    extra_hosts:
+      # Lets Traefik reach host-network services (e.g. Home Assistant on :8123)
+      - "host.docker.internal:host-gateway"
     deploy:
       resources:
         limits:

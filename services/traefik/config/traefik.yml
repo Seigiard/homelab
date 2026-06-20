@@ -15,6 +15,9 @@ providers:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     network: traefik-net
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
 
 log:
   level: DEBUG

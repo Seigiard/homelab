@@ -1,0 +1,30 @@
+# Home Assistant runs in network_mode: host, so it is not on traefik-net and
+# cannot be auto-discovered via Docker labels. This file provider config routes
+# Traefik to it through the host gateway (host.docker.internal:host-gateway is
+# added to the traefik container's extra_hosts).
+#
+# No Authelia middleware here on purpose: Authelia's SSO redirect breaks the
+# Home Assistant mobile app and API/webhook auth. HA uses its own login (enable
+# 2FA in HA for external exposure).
+http:
+  routers:
+    homeassistant:
+      rule: "Host(`ha.home.local`)"
+      entryPoints:
+        - web
+      service: homeassistant
+
+    homeassistant-secure:
+      rule: "Host(`ha.1218217.xyz`)"
+      entryPoints:
+        - websecure
+      service: homeassistant
+      tls:
+        certResolver: cloudflare
+
+  services:
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8123"
+        passHostHeader: true

@@ -1,0 +1,28 @@
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    # host networking is REQUIRED for LAN device discovery (mDNS/SSDP broadcast):
+    # WiFi bulbs, vacuums, air purifiers etc. are not discoverable over a docker bridge.
+    # Side effect: the container is not on traefik-net, so Traefik routing is configured
+    # via the file provider (services/traefik/config/dynamic/homeassistant.yml).
+    network_mode: host
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+    volumes:
+      - ${APPDATA_PATH:-./appdata}/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    labels:
+      # Homepage tile (discovered via docker socket; works for host-network containers).
+      # Traefik routing is NOT via labels here — see file provider dynamic config.
+      - homepage.group=Smart Home
+      - homepage.name=Home Assistant
+      - homepage.icon=home-assistant
+      - homepage.href=https://ha.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Home Automation
