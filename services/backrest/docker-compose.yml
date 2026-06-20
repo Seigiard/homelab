@@ -20,7 +20,8 @@ services:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/backrest/config:/config
       - ${APPDATA_PATH:-/opt/homelab/appdata}/backrest/cache:/cache
       - ${APPDATA_PATH:-/opt/homelab/appdata}/backrest/tmp:/tmp
-      # Rclone config from host
+      # Rclone config from host — НЕ бэкапится backrest'ом (лежит вне appdata/users).
+      # Копия в 1Password: "RClone conf". Нужен для доступа к удалённым restic-репо.
       - ${HOME}/.config/rclone:/root/.config/rclone:ro
       # Directories to backup (read-only)
       - ${APPDATA_PATH:-/opt/homelab/appdata}:/backup/appdata:ro
