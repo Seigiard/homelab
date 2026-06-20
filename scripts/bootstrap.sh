@@ -288,6 +288,9 @@ configure_firewall() {
     ufw allow 51414/tcp
     ufw allow 51414/udp
 
+    # Home Assistant (host networking, listens directly on LAN)
+    ufw allow 8123/tcp
+
     # Enable firewall (non-interactive)
     echo "y" | ufw enable
 

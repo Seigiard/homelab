@@ -20,6 +20,9 @@ not work over a docker bridge.
    http://<server-ip>:8123        # e.g. http://192.168.1.41:8123
    ```
 
+   Port 8123 must be open in the firewall (bootstrap.sh adds it). On an already
+   provisioned server run once: `sudo ufw allow 8123/tcp comment "Home Assistant"`
+
 2. **Enable reverse-proxy access** — by default HA rejects requests coming through
    a proxy with HTTP 400. Add this block to `appdata/homeassistant/configuration.yaml`
    on the server, then restart HA:
