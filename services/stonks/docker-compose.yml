@@ -1,0 +1,40 @@
+services:
+  stonks:
+    image: ghcr.io/quovibe-web/quovibe:latest
+    container_name: stonks
+    restart: unless-stopped
+    stop_grace_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/stonks/data:/app/data
+    networks:
+      - traefik-net
+    labels:
+      - traefik.enable=true
+      # --- HTTP (local) ---
+      - traefik.http.routers.stonks.rule=Host(`stonks.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.stonks.entrypoints=web
+      - traefik.http.services.stonks.loadbalancer.server.port=3000
+      # --- HTTPS (external) — Authelia proxy auth (quovibe has NO built-in auth) ---
+      - traefik.http.routers.stonks-secure.rule=Host(`stonks.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.stonks-secure.entrypoints=websecure
+      - traefik.http.routers.stonks-secure.tls=true
+      - traefik.http.routers.stonks-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.stonks-secure.middlewares=authelia@docker
+      - traefik.http.routers.stonks-secure.service=stonks
+      # --- Homepage ---
+      - homepage.group=Tools
+      - homepage.name=Stonks
+      - homepage.icon=mdi-chart-line
+      - homepage.href=https://stonks.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=Portfolio tracker
+
+networks:
+  traefik-net:
+    external: true
