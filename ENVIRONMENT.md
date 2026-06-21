@@ -97,6 +97,11 @@ sudo upsc eaton@localhost battery.charge
 | users/yuliia/       | y.files.home.local | files.home.local     | auth   |
 | users/yuliia/photos |                    | y.photos.home.local  | auth   |
 
+### Syncthing
+
+- **Receive Only папки должны иметь `Ignore Permissions = on`.** Файлы пишутся внутри контейнера от `root:root` (PUID/PGID из compose эта сборка не применяет), а permission-биты приходят с macOS-источника и не совпадают. Без Ignore Permissions Syncthing помечает каждый файл как «Locally Changed» (видно по сотням items с суммарным размером ~0 B) и в режиме Receive Only **застревает на полпути**, не докачивая остальное.
+- Фикс застрявшей папки: Edit → Advanced → `Ignore Permissions` → Save → **Revert Local Changes** → дождаться, пока Local State догонит Global State.
+
 ## Сеть
 
 ### Доменная модель
