@@ -1,0 +1,139 @@
+# Philips AC3737/10 — air purifier + humidifier automations
+#
+# Stored in git so the config can be restored. Loaded as a Home Assistant
+# "package" — see services/homeassistant/README.md for the one-time setup.
+#
+# Entities (verified against this install, device "Air Cleaner and Purifier"):
+#   fan.bedroom_air_cleaner_and_purifier                       preset_mode: auto | sleep | turbo
+#   sensor.bedroom_air_cleaner_and_purifier_pm2_5              µg/m³
+#   sensor.bedroom_air_cleaner_and_purifier_indoor_allergen_index  0–12 (IAI)
+#   sensor.bedroom_air_cleaner_and_purifier_humidity           %
+#   sensor.bedroom_air_cleaner_and_purifier_temperature        °C
+#   sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter HEPA filter life, % remaining
+#   sensor.bedroom_air_cleaner_and_purifier_pre_filter         pre-filter life, % remaining
+#   binary_sensor.bedroom_air_cleaner_and_purifier_water_tank  moisture: on = has water, off = empty
+#   humidifier.bedroom_air_cleaner_and_purifier                target humidity 40–70 %
+#   notify.nothingphone                                        push to phone (HA mobile app)
+
+automation:
+  - id: ac3737_night_sleep
+    alias: "AC3737 — тихий режим ночью + увлажнение 50%"
+    triggers:
+      - trigger: time
+        at: "22:00:00"
+    actions:
+      - action: fan.set_preset_mode
+        target:
+          entity_id: fan.bedroom_air_cleaner_and_purifier
+        data:
+          preset_mode: sleep
+      - action: humidifier.turn_on
+        target:
+          entity_id: humidifier.bedroom_air_cleaner_and_purifier
+      - action: humidifier.set_humidity
+        target:
+          entity_id: humidifier.bedroom_air_cleaner_and_purifier
+        data:
+          humidity: 50
+    mode: single
+
+  - id: ac3737_morning_auto
+    alias: "AC3737 — авто-режим утром + выключить увлажнение"
+    triggers:
+      - trigger: time
+        at: "08:00:00"
+    actions:
+      - action: fan.set_preset_mode
+        target:
+          entity_id: fan.bedroom_air_cleaner_and_purifier
+        data:
+          preset_mode: auto
+      - action: humidifier.turn_off
+        target:
+          entity_id: humidifier.bedroom_air_cleaner_and_purifier
+    mode: single
+
+  # Sudden pollution (cooking, etc.) overrides any mode → turbo, and notifies.
+  - id: ac3737_boost_on_pollution
+    alias: "AC3737 — разгон при сильном загрязнении"
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.bedroom_air_cleaner_and_purifier_pm2_5
+        above: 35
+        for: "00:05:00"
+    actions:
+      - action: fan.set_preset_mode
+        target:
+          entity_id: fan.bedroom_air_cleaner_and_purifier
+        data:
+          preset_mode: turbo
+      - action: notify.send_message
+        target:
+          entity_id: notify.nothingphone
+        data:
+          title: "Воздух загрязнён"
+          message: "PM2.5 = {{ states('sensor.bedroom_air_cleaner_and_purifier_pm2_5') }} µg/m³ — включил Turbo"
+    mode: single
+
+  # After air is clean again, restore the schedule's mode (sleep at night, else auto).
+  - id: ac3737_restore_after_clean
+    alias: "AC3737 — вернуть режим после очистки"
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.bedroom_air_cleaner_and_purifier_pm2_5
+        below: 20
+        for: "00:15:00"
+    actions:
+      - action: fan.set_preset_mode
+        target:
+          entity_id: fan.bedroom_air_cleaner_and_purifier
+        data:
+          preset_mode: >-
+            {{ 'sleep' if now().hour >= 22 or now().hour < 8 else 'auto' }}
+    mode: single
+
+  - id: ac3737_filter_hepa_low
+    alias: "AC3737 — пора менять HEPA-фильтр"
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
+        below: 10
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id: notify.nothingphone
+        data:
+          title: "AC3737: фильтр"
+          message: "Ресурс NanoProtect HEPA-фильтра {{ states('sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter') }}% — пора заказать новый"
+    mode: single
+
+  - id: ac3737_prefilter_low
+    alias: "AC3737 — почистить предфильтр"
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.bedroom_air_cleaner_and_purifier_pre_filter
+        below: 10
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id: notify.nothingphone
+        data:
+          title: "AC3737: предфильтр"
+          message: "Ресурс предфильтра {{ states('sensor.bedroom_air_cleaner_and_purifier_pre_filter') }}% — промой его водой"
+    mode: single
+
+  - id: ac3737_water_tank_empty
+    alias: "AC3737 — пустой бак воды"
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
+        to: "off"
+        for: "00:01:00"
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id: notify.nothingphone
+        data:
+          title: "AC3737: вода"
+          message: "Бак для воды пуст — увлажнение остановлено"
+    mode: single

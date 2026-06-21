@@ -44,6 +44,32 @@ not work over a docker bridge.
    - Local:    `http://ha.home.local`
    - External: `https://ha.1218217.xyz` (Cloudflare Tunnel)
 
+## Git-versioned automations (packages)
+
+Automations defined in code live in `config/packages/` (this repo) and are
+mounted read-only into the container at `/config/packages` — so they survive a
+fresh install and are restorable from git. The UI-managed `automations.yaml`
+(in appdata) is left untouched.
+
+Enable once: add to `appdata/homeassistant/configuration.yaml` on the server,
+then restart HA:
+
+```yaml
+homeassistant:
+  packages: !include_dir_named packages
+```
+
+```bash
+./scripts/docker/rebuild.sh homeassistant
+```
+
+Each `.yaml` under `config/packages/` is one package and may contain
+`automation:`, `sensor:`, `template:`, etc. Current packages:
+
+- `philips_ac3737.yaml` — Philips AC3737 air purifier (schedule, PM2.5 boost,
+  filter + water-tank notifications). Entity ids verified against this install;
+  push goes to `notify.nothingphone`.
+
 ## Notes
 
 - **No Authelia** in front of HA — its SSO redirect breaks the HA mobile app and

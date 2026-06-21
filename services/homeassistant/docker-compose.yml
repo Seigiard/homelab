@@ -12,6 +12,9 @@ services:
       - TZ=${TZ:-Europe/Bratislava}
     volumes:
       - ${APPDATA_PATH:-./appdata}/homeassistant:/config
+      # Git-versioned automations/packages, mounted read-only over /config.
+      # Enable once in configuration.yaml: `homeassistant: { packages: !include_dir_named packages }`
+      - ./config/packages:/config/packages:ro
       - /etc/localtime:/etc/localtime:ro
     deploy:
       resources:
