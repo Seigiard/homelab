@@ -61,6 +61,9 @@ views:
       # ─────────────────────────────────────────────────────────────────────
       # Bubble Card variant (Clooos/Bubble-Card v3.2.x, via HACS) — same
       # entities, kept below the stock cards for side-by-side comparison.
+      # Layout: control blocks (purifier, humidifier), then stat blocks (air,
+      # humidity), then filter blocks that appear ONLY when a filter needs
+      # service (< 10% life left).
       # Note: Bubble Card's slider does NOT support the humidifier domain, so
       # humidity uses one-tap presets (40/50/60%); hold the card → more-info
       # for fine control.
@@ -70,11 +73,12 @@ views:
         name: Спальня (Bubble Card)
         icon: mdi:air-purifier
 
+      # --- Управление ---
       - type: custom:bubble-card
         card_type: button
         button_type: state
         entity: fan.bedroom_air_cleaner_and_purifier
-        name: Очиститель
+        name: Очистка
         icon: mdi:air-purifier
         show_state: true
         sub_button:
@@ -120,6 +124,7 @@ views:
             action: more-info
         sub_button:
           - name: 40%
+            icon: mdi:water-outline
             tap_action:
               action: call-service
               service: humidifier.set_humidity
@@ -128,6 +133,7 @@ views:
               data:
                 humidity: 40
           - name: 50%
+            icon: mdi:water
             tap_action:
               action: call-service
               service: humidifier.set_humidity
@@ -136,6 +142,7 @@ views:
               data:
                 humidity: 50
           - name: 60%
+            icon: mdi:water-plus
             tap_action:
               action: call-service
               service: humidifier.set_humidity
@@ -144,6 +151,7 @@ views:
               data:
                 humidity: 60
 
+      # --- Статистика ---
       - type: custom:bubble-card
         card_type: button
         button_type: state
@@ -152,31 +160,52 @@ views:
         icon: mdi:blur
         show_state: true
         sub_button:
-          - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-            icon: mdi:water-percent
-            show_state: true
-            show_name: false
           - entity: sensor.bedroom_air_cleaner_and_purifier_temperature
             icon: mdi:thermometer
-            show_state: true
-            show_name: false
-          - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
-            icon: mdi:cup-water
             show_state: true
             show_name: false
 
       - type: custom:bubble-card
         card_type: button
         button_type: state
-        entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
-        name: HEPA фильтр
-        icon: mdi:air-filter
+        entity: sensor.bedroom_air_cleaner_and_purifier_humidity
+        name: Влажность
+        icon: mdi:water-percent
         show_state: true
         sub_button:
-          - entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
-            name: Предфильтр
-            icon: mdi:filter
+          - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
+            icon: mdi:cup-water
             show_state: true
+            show_name: false
+
+      # --- Фильтры: блок появляется только когда нужна замена (< 10%) ---
+      - type: conditional
+        conditions:
+          - condition: numeric_state
+            entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
+            below: 10
+        card:
+          type: custom:bubble-card
+          card_type: button
+          button_type: state
+          entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
+          name: Заменить HEPA-фильтр
+          icon: mdi:air-filter
+          show_state: true
+
+      - type: conditional
+        conditions:
+          - condition: numeric_state
+            entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
+            below: 10
+        card:
+          type: custom:bubble-card
+          card_type: button
+          button_type: state
+          entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
+          name: Промыть предфильтр
+          icon: mdi:filter
+          show_state: true
 
   # Lights and the robot vacuum land here once their integrations are added.
   # Add tiles with the real entity ids (Developer Tools → States):
