@@ -109,6 +109,13 @@ views:
                 entity_id: fan.bedroom_air_cleaner_and_purifier
               data:
                 preset_mode: turbo
+        # styles: is a JS template literal (not Jinja). Dim all mode buttons,
+        # highlight the one matching the current preset_mode.
+        styles: |
+          .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'auto' ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'turbo' ? `.bubble-sub-button-3 { opacity: 1; background: var(--accent-color) !important; }` : ''}
 
       - type: custom:bubble-card
         card_type: button
@@ -150,6 +157,12 @@ views:
                 entity_id: humidifier.bedroom_air_cleaner_and_purifier
               data:
                 humidity: 60
+        # Highlight the preset matching the current target humidity (40/50/60).
+        styles: |
+          .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }
+          ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 40 ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
+          ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 50 ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
+          ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 60 ? `.bubble-sub-button-3 { opacity: 1; background: var(--accent-color) !important; }` : ''}
 
       # --- Статистика ---
       - type: custom:bubble-card
