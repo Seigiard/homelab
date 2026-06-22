@@ -69,6 +69,14 @@ Each `.yaml` under `config/packages/` is one package and may contain
 - `philips_ac3737.yaml` — Philips AC3737 air purifier (schedule, PM2.5 boost,
   filter + water-tank notifications). Entity ids verified against this install;
   push goes to `notify.nothingphone`.
+  - Schedule: 22:00 → sleep mode + humidify to 50%; 08:00 → auto mode +
+    humidify to minimum 40%.
+  - The morning step lowers the humidity target instead of turning the
+    humidifier off. On the AC3737 the humidifier entity has
+    `supported_features: 0` and no separate function control, so
+    `humidifier.turn_off` powers off the **whole appliance**, not just
+    humidification — same reason the dashboard humidification button uses
+    `button_type: state` rather than a power toggle.
 
 ## Git-versioned dashboard
 
