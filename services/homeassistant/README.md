@@ -100,7 +100,10 @@ lovelace:
   the default dashboard, open "Edit → Show code editor", and copy the YAML in.
 - Edits to `home.yaml` are picked up by a **browser refresh** (F5) — no HA restart.
 - `home.yaml` currently covers the Bedroom ("Спальня") view (AC3737 controls + air/
-  filter sensors). Lights and the robot vacuum get tiles there once their entity ids exist.
+  filter sensors) in two styles for comparison: stock HA cards on top, a Bubble Card
+  variant below. The Bubble Card block needs Bubble Card installed via HACS, otherwise
+  those cards render an error. Lights and the robot vacuum get tiles there once their
+  entity ids exist.
 
 ## Notes
 
