@@ -3,17 +3,37 @@
 # Stored in git so the config can be restored. Loaded as a Home Assistant
 # "package" — see services/homeassistant/README.md for the one-time setup.
 #
-# Entities (verified against this install, device "Air Cleaner and Purifier"):
-#   fan.bedroom_air_cleaner_and_purifier                       preset_mode: auto | sleep | turbo
+# Integration: philips_airpurifier_coap (HACS, CoAP). Model AC3737/10, fw 1.0.4.
+#
+# Entities (verified against this install via Developer Tools → States, device
+# "Air Cleaner and Purifier"):
+#   fan.bedroom_air_cleaner_and_purifier                       preset_mode: auto | sleep | turbo; also error_code, runtime
+#   humidifier.bedroom_air_cleaner_and_purifier                target humidity 40–70 %; supported_features: 0 (только on/off + set_humidity), action: idle | humidifying
+#   binary_sensor.bedroom_air_cleaner_and_purifier_humidification  on = модуль увлажнения вставлен и функция задействована; off = модуль СНЯТ (или режим «только очистка»)
+#   binary_sensor.bedroom_air_cleaner_and_purifier_water_tank  moisture: on = есть вода, off = пусто — НО при снятом модуле ложно показывает on, поэтому ненадёжен для детекта снятия
+#   light.bedroom_air_cleaner_and_purifier_display_backlight   подсветка дисплея
+#   switch.bedroom_air_cleaner_and_purifier_child_lock         блокировка от детей
 #   sensor.bedroom_air_cleaner_and_purifier_pm2_5              µg/m³
 #   sensor.bedroom_air_cleaner_and_purifier_indoor_allergen_index  0–12 (IAI)
 #   sensor.bedroom_air_cleaner_and_purifier_humidity           %
 #   sensor.bedroom_air_cleaner_and_purifier_temperature        °C
 #   sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter HEPA filter life, % remaining
 #   sensor.bedroom_air_cleaner_and_purifier_pre_filter         pre-filter life, % remaining
-#   binary_sensor.bedroom_air_cleaner_and_purifier_water_tank  moisture: on = has water, off = empty
-#   humidifier.bedroom_air_cleaner_and_purifier                target humidity 40–70 %
+#   sensor.bedroom_air_cleaner_and_purifier_rssi               WiFi signal, dBm
 #   notify.nothingphone                                        push to phone (HA mobile app)
+#
+# Детект снятого модуля: humidifier = on, НО humidification = off (A/B-проверено —
+# при action: idle и без воды humidification = on, пока модуль на месте; уходит в
+# off ровно при снятии). water_tank для этого непригоден: при снятом модуле = on.
+
+template:
+  - binary_sensor:
+      - name: "AC3737 humidifier module removed"
+        unique_id: ac3737_humidifier_module_removed
+        icon: mdi:air-humidifier-off
+        state: >
+          {{ is_state('humidifier.bedroom_air_cleaner_and_purifier', 'on')
+             and is_state('binary_sensor.bedroom_air_cleaner_and_purifier_humidification', 'off') }}
 
 automation:
   - id: ac3737_night_sleep

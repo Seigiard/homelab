@@ -77,6 +77,13 @@ Each `.yaml` under `config/packages/` is one package and may contain
     `humidifier.turn_off` powers off the **whole appliance**, not just
     humidification — same reason the dashboard humidification button uses
     `button_type: state` rather than a power toggle.
+  - Defines a template `binary_sensor.ac3737_humidifier_module_removed`
+    (humidifier `on` + `binary_sensor…_humidification` `off`) — the only
+    reliable signal that the humidification module is physically out. The
+    `water_tank` sensor is unreliable for this: it falsely reads `on` when the
+    module is removed (verified by swapping the module in/out). The dashboard
+    uses this template sensor to hide the humidification tiles when the module
+    is gone. Full entity inventory + the A/B findings live in the file header.
 
 ## Git-versioned dashboard
 
@@ -109,9 +116,18 @@ lovelace:
 - Edits to `home.yaml` are picked up by a **browser refresh** (F5) — no HA restart.
 - `home.yaml` currently covers the Bedroom ("Спальня") view (AC3737 controls + air/
   filter sensors) in two styles for comparison: stock HA cards on top, a Bubble Card
-  variant below. The Bubble Card block needs Bubble Card installed via HACS, otherwise
-  those cards render an error. Lights and the robot vacuum get tiles there once their
-  entity ids exist.
+  variant below. Both follow the same order — Очистка → Воздух → Увлажнение → Влажность
+  — and hide the Увлажнение/Влажность tiles (showing a single "Увлажнитель снят"
+  warning instead) when `binary_sensor.ac3737_humidifier_module_removed` is on.
+  The Bubble Card block needs Bubble Card installed via HACS, otherwise those cards
+  render an error. Lights and the robot vacuum get tiles there once their entity
+  ids exist.
+- Known limitation: the AC3737's active fan mode (auto/sleep/turbo) cannot be
+  highlighted reliably while humidifying. The `philips_airpurifier_coap`
+  integration reports `fan.preset_mode: null` whenever humidification is active
+  (device field `D0310A=4` breaks its preset match — upstream bug
+  [kongo09/philips-airpurifier-coap#356](https://github.com/kongo09/philips-airpurifier-coap/issues/356)),
+  and the real mode field is not exposed to HA.
 
 ## Notes
 

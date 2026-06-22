@@ -25,7 +25,7 @@ views:
     cards:
       - type: tile
         entity: fan.bedroom_air_cleaner_and_purifier
-        name: Очиститель
+        name: Очистка
         features:
           - type: fan-preset-modes
             style: icons
@@ -34,21 +34,49 @@ views:
               - sleep
               - turbo
 
-      - type: humidifier
-        entity: humidifier.bedroom_air_cleaner_and_purifier
-        name: Увлажнение
-
       - type: glance
         title: Воздух
         entities:
           - entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
             name: PM2.5
-          - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-            name: Влажность
           - entity: sensor.bedroom_air_cleaner_and_purifier_temperature
             name: Темп.
-          - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
-            name: Бак
+
+      # Модуль снят → предупреждение вместо управления увлажнением и влажности.
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.ac3737_humidifier_module_removed
+            state: "on"
+        card:
+          type: tile
+          entity: binary_sensor.ac3737_humidifier_module_removed
+          name: Увлажнитель снят
+          icon: mdi:air-humidifier-off
+
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.ac3737_humidifier_module_removed
+            state: "off"
+        card:
+          type: humidifier
+          entity: humidifier.bedroom_air_cleaner_and_purifier
+          name: Увлажнение
+
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.ac3737_humidifier_module_removed
+            state: "off"
+        card:
+          type: glance
+          title: Влажность
+          entities:
+            - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
+              name: Влажность
+            - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
+              name: Бак
 
       - type: glance
         title: Фильтры
@@ -117,58 +145,7 @@ views:
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'turbo' ? `.bubble-sub-button-3 { opacity: 1; background: var(--accent-color) !important; }` : ''}
 
-      # button_type: state (not switch). On the AC3737 a humidifier toggle would
-      # call humidifier.turn_off, which powers off the WHOLE appliance — there is
-      # no separate humidification control. So the main tap opens more-info and
-      # humidity is set only via the 40/50/60 sub-buttons below.
-      - type: custom:bubble-card
-        card_type: button
-        button_type: state
-        entity: humidifier.bedroom_air_cleaner_and_purifier
-        name: Увлажнение
-        icon: mdi:air-humidifier
-        show_state: true
-        show_attribute: true
-        attribute: humidity
-        button_action:
-          tap_action:
-            action: more-info
-        sub_button:
-          - name: 40%
-            icon: mdi:water-outline
-            tap_action:
-              action: call-service
-              service: humidifier.set_humidity
-              target:
-                entity_id: humidifier.bedroom_air_cleaner_and_purifier
-              data:
-                humidity: 40
-          - name: 50%
-            icon: mdi:water
-            tap_action:
-              action: call-service
-              service: humidifier.set_humidity
-              target:
-                entity_id: humidifier.bedroom_air_cleaner_and_purifier
-              data:
-                humidity: 50
-          - name: 60%
-            icon: mdi:water-plus
-            tap_action:
-              action: call-service
-              service: humidifier.set_humidity
-              target:
-                entity_id: humidifier.bedroom_air_cleaner_and_purifier
-              data:
-                humidity: 60
-        # Highlight the preset matching the current target humidity (40/50/60).
-        styles: |
-          .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }
-          ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 40 ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
-          ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 50 ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
-          ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 60 ? `.bubble-sub-button-3 { opacity: 1; background: var(--accent-color) !important; }` : ''}
-
-      # --- Статистика ---
+      # --- Воздух ---
       - type: custom:bubble-card
         card_type: button
         button_type: state
@@ -182,18 +159,100 @@ views:
             show_state: true
             show_name: false
 
-      - type: custom:bubble-card
-        card_type: button
-        button_type: state
-        entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-        name: Влажность
-        icon: mdi:water-percent
-        show_state: true
-        sub_button:
-          - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
-            icon: mdi:cup-water
-            show_state: true
-            show_name: false
+      # --- Увлажнение ---
+      # Модуль снят (template binary_sensor из config/packages/philips_ac3737.yaml:
+      # humidifier on + humidification off) → показываем только предупреждение.
+      # Модуль на месте → показываем управление увлажнением и плитку влажности.
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.ac3737_humidifier_module_removed
+            state: "on"
+        card:
+          type: custom:bubble-card
+          card_type: button
+          button_type: state
+          entity: binary_sensor.ac3737_humidifier_module_removed
+          name: Увлажнитель снят
+          icon: mdi:air-humidifier-off
+          show_state: false
+
+      # button_type: state (not switch). On the AC3737 a humidifier toggle would
+      # call humidifier.turn_off, which powers off the WHOLE appliance — there is
+      # no separate humidification control. So the main tap opens more-info and
+      # humidity is set only via the 40/50/60 sub-buttons below.
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.ac3737_humidifier_module_removed
+            state: "off"
+        card:
+          type: custom:bubble-card
+          card_type: button
+          button_type: state
+          entity: humidifier.bedroom_air_cleaner_and_purifier
+          name: Увлажнение
+          icon: mdi:air-humidifier
+          show_state: true
+          show_attribute: true
+          attribute: humidity
+          button_action:
+            tap_action:
+              action: more-info
+          sub_button:
+            - name: 40%
+              icon: mdi:water-outline
+              tap_action:
+                action: call-service
+                service: humidifier.set_humidity
+                target:
+                  entity_id: humidifier.bedroom_air_cleaner_and_purifier
+                data:
+                  humidity: 40
+            - name: 50%
+              icon: mdi:water
+              tap_action:
+                action: call-service
+                service: humidifier.set_humidity
+                target:
+                  entity_id: humidifier.bedroom_air_cleaner_and_purifier
+                data:
+                  humidity: 50
+            - name: 60%
+              icon: mdi:water-plus
+              tap_action:
+                action: call-service
+                service: humidifier.set_humidity
+                target:
+                  entity_id: humidifier.bedroom_air_cleaner_and_purifier
+                data:
+                  humidity: 60
+          # Highlight the preset matching the current target humidity (40/50/60).
+          styles: |
+            .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }
+            ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 40 ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
+            ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 50 ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
+            ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 60 ? `.bubble-sub-button-3 { opacity: 1; background: var(--accent-color) !important; }` : ''}
+
+      # --- Влажность ---
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.ac3737_humidifier_module_removed
+            state: "off"
+        card:
+          type: custom:bubble-card
+          card_type: button
+          button_type: state
+          entity: sensor.bedroom_air_cleaner_and_purifier_humidity
+          name: Влажность
+          icon: mdi:water-percent
+          show_state: true
+          sub_button:
+            - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
+              icon: mdi:cup-water
+              show_state: true
+              show_name: false
 
       # --- Фильтры: блок появляется только когда нужна замена (< 10%) ---
       - type: conditional
