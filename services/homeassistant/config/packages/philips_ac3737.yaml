@@ -37,8 +37,12 @@ automation:
           humidity: 50
     mode: single
 
+  # NB: humidifier.turn_off on the AC3737 powers off the WHOLE appliance, not
+  # just humidification (the humidifier entity has supported_features: 0 and no
+  # separate function/mode control). So "stop humidifying" in the morning is
+  # done by dropping the target to its minimum (40%) instead of turning it off.
   - id: ac3737_morning_auto
-    alias: "AC3737 — авто-режим утром + выключить увлажнение"
+    alias: "AC3737 — авто-режим утром + увлажнение на минимум 40%"
     triggers:
       - trigger: time
         at: "08:00:00"
@@ -48,9 +52,11 @@ automation:
           entity_id: fan.bedroom_air_cleaner_and_purifier
         data:
           preset_mode: auto
-      - action: humidifier.turn_off
+      - action: humidifier.set_humidity
         target:
           entity_id: humidifier.bedroom_air_cleaner_and_purifier
+        data:
+          humidity: 40
     mode: single
 
   # Sudden pollution (cooking, etc.) overrides any mode → turbo, and notifies.
