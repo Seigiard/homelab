@@ -15,6 +15,9 @@ services:
       # Git-versioned automations/packages, mounted read-only over /config.
       # Enable once in configuration.yaml: `homeassistant: { packages: !include_dir_named packages }`
       - ./config/packages:/config/packages:ro
+      # Git-versioned Lovelace dashboard (YAML mode), mounted read-only.
+      # Enable once in configuration.yaml: see README "Git-versioned dashboard".
+      - ./config/dashboards:/config/dashboards:ro
       - /etc/localtime:/etc/localtime:ro
     deploy:
       resources:

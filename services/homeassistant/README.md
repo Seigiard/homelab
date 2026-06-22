@@ -70,6 +70,38 @@ Each `.yaml` under `config/packages/` is one package and may contain
   filter + water-tank notifications). Entity ids verified against this install;
   push goes to `notify.nothingphone`.
 
+## Git-versioned dashboard
+
+The Lovelace dashboard in `config/dashboards/home.yaml` (this repo) is mounted
+read-only at `/config/dashboards` and added as a **YAML-mode dashboard** alongside
+the default UI-editable one — so the default dashboard stays clickable in the UI
+while this one is restorable from git.
+
+Enable once: add to `appdata/homeassistant/configuration.yaml` on the server,
+then restart HA:
+
+```yaml
+lovelace:
+  mode: storage          # default dashboard stays UI-editable
+  dashboards:
+    home-yaml:
+      mode: yaml
+      title: Дом
+      icon: mdi:home
+      show_in_sidebar: true
+      filename: dashboards/home.yaml
+```
+
+```bash
+./scripts/docker/rebuild.sh homeassistant
+```
+
+- YAML dashboards have **no visual editor**. To author a card visually, build it on
+  the default dashboard, open "Edit → Show code editor", and copy the YAML in.
+- Edits to `home.yaml` are picked up by a **browser refresh** (F5) — no HA restart.
+- `home.yaml` currently covers the Bedroom ("Спальня") view (AC3737 controls + air/
+  filter sensors). Lights and the robot vacuum get tiles there once their entity ids exist.
+
 ## Notes
 
 - **No Authelia** in front of HA — its SSO redirect breaks the HA mobile app and
