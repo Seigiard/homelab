@@ -137,13 +137,16 @@ views:
                 entity_id: fan.bedroom_air_cleaner_and_purifier
               data:
                 preset_mode: turbo
-        # styles: is a JS template literal (not Jinja). Dim all mode buttons,
-        # highlight the one matching the current preset_mode.
+        # styles: is a JS template literal (not Jinja).
+        # The AC3737 only reports a readable preset_mode when NOT humidifying;
+        # while humidifying (binary_sensor…_humidification = on) every mode reads
+        # null, so we can't tell them apart — leave buttons neutral (don't dim,
+        # don't highlight) instead of guessing. Turbo is never highlighted: it
+        # reads null even when dry, indistinguishable from a manual speed.
         styles: |
-          .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }
+          ${hass.states['binary_sensor.bedroom_air_cleaner_and_purifier_humidification']?.state === 'off' ? `.bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'auto' ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
-          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'turbo' ? `.bubble-sub-button-3 { opacity: 1; background: var(--accent-color) !important; }` : ''}
 
       # --- Воздух ---
       - type: custom:bubble-card

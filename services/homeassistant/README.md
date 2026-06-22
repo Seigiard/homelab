@@ -122,12 +122,17 @@ lovelace:
   The Bubble Card block needs Bubble Card installed via HACS, otherwise those cards
   render an error. Lights and the robot vacuum get tiles there once their entity
   ids exist.
-- Known limitation: the AC3737's active fan mode (auto/sleep/turbo) cannot be
-  highlighted reliably while humidifying. The `philips_airpurifier_coap`
-  integration reports `fan.preset_mode: null` whenever humidification is active
-  (device field `D0310A=4` breaks its preset match — upstream bug
+- Known limitation: the AC3737's active fan mode cannot be highlighted reliably
+  while humidifying. The `philips_airpurifier_coap` integration reports
+  `fan.preset_mode: null` whenever humidification is active (device field
+  `D0310A=4` breaks its preset match — upstream bug
   [kongo09/philips-airpurifier-coap#356](https://github.com/kongo09/philips-airpurifier-coap/issues/356)),
-  and the real mode field is not exposed to HA.
+  and the real mode field is not exposed to HA. Verified mode readback (module
+  out, no humidification): Auto→`preset_mode: auto`, Sleep→`sleep`,
+  Speed 1/2→`percentage: 50/75` (no `preset_mode`), Turbo→`null/null` (unreadable
+  even when dry). So the Bubble Card highlight lights **Auto/Sleep only when not
+  humidifying**; Turbo is never highlighted, and while humidifying the mode
+  buttons stay neutral (mode unknown) rather than guessing.
 
 ## Notes
 
