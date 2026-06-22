@@ -25,7 +25,7 @@ views:
     cards:
       - type: tile
         entity: fan.bedroom_air_cleaner_and_purifier
-        name: Очистка
+        name: Очищення
         features:
           - type: fan-preset-modes
             style: icons
@@ -35,7 +35,7 @@ views:
               - turbo
 
       - type: glance
-        title: Воздух
+        title: Повітря
         entities:
           - entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
             name: PM2.5
@@ -51,7 +51,7 @@ views:
         card:
           type: tile
           entity: binary_sensor.ac3737_humidifier_module_removed
-          name: Увлажнитель снят
+          name: Зволожувач знято
           icon: mdi:air-humidifier-off
 
       - type: conditional
@@ -62,7 +62,7 @@ views:
         card:
           type: humidifier
           entity: humidifier.bedroom_air_cleaner_and_purifier
-          name: Увлажнение
+          name: Зволоження
 
       - type: conditional
         conditions:
@@ -71,20 +71,20 @@ views:
             state: "off"
         card:
           type: glance
-          title: Влажность
+          title: Вологість
           entities:
             - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-              name: Влажность
+              name: Вологість
             - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
               name: Бак
 
       - type: glance
-        title: Фильтры
+        title: Фільтри
         entities:
           - entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
             name: HEPA
           - entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
-            name: Предфильтр
+            name: Префільтр
 
       # ─────────────────────────────────────────────────────────────────────
       # Bubble Card variant (Clooos/Bubble-Card v3.2.x, via HACS) — same
@@ -106,11 +106,11 @@ views:
         card_type: button
         button_type: state
         entity: fan.bedroom_air_cleaner_and_purifier
-        name: Очистка
+        name: Очищення
         icon: mdi:air-purifier
         show_state: true
         sub_button:
-          - name: Auto
+          - name: Авто
             icon: mdi:fan-auto
             tap_action:
               action: call-service
@@ -119,7 +119,7 @@ views:
                 entity_id: fan.bedroom_air_cleaner_and_purifier
               data:
                 preset_mode: auto
-          - name: Sleep
+          - name: Сон
             icon: mdi:power-sleep
             tap_action:
               action: call-service
@@ -128,7 +128,7 @@ views:
                 entity_id: fan.bedroom_air_cleaner_and_purifier
               data:
                 preset_mode: sleep
-          - name: Turbo
+          - name: Турбо
             icon: mdi:fan-speed-3
             tap_action:
               action: call-service
@@ -148,12 +148,12 @@ views:
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'auto' ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
 
-      # --- Воздух ---
+      # --- Повітря ---
       - type: custom:bubble-card
         card_type: button
         button_type: state
         entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
-        name: Воздух
+        name: Повітря
         icon: mdi:blur
         show_state: true
         sub_button:
@@ -162,10 +162,9 @@ views:
             show_state: true
             show_name: false
 
-      # --- Увлажнение ---
-      # Модуль снят (template binary_sensor из config/packages/philips_ac3737.yaml:
-      # humidifier on + humidification off) → показываем только предупреждение.
-      # Модуль на месте → показываем управление увлажнением и плитку влажности.
+      # --- Зволоження (увлажнение + влажность объединены в одну карточку) ---
+      # Модуль снят (template binary_sensor: humidifier on + humidification off) →
+      # одна плитка-предупреждение.
       - type: conditional
         conditions:
           - condition: state
@@ -176,29 +175,34 @@ views:
           card_type: button
           button_type: state
           entity: binary_sensor.ac3737_humidifier_module_removed
-          name: Увлажнитель снят
+          name: Зволожувач знято
           icon: mdi:air-humidifier-off
           show_state: false
 
-      # button_type: state (not switch). On the AC3737 a humidifier toggle would
-      # call humidifier.turn_off, which powers off the WHOLE appliance — there is
-      # no separate humidification control. So the main tap opens more-info and
-      # humidity is set only via the 40/50/60 sub-buttons below.
+      # Вторая строка карточки — «текущая % → целевая %» — собирается в styles:
+      # Bubble Card не поддерживает шаблоны в name/state, только правку .bubble-state
+      # из styles. show_state:false + show_attribute:true оставляют пустой
+      # .bubble-state, который мы заполняем. tap → more-info (на AC3737
+      # humidifier.turn_off гасит весь прибор, поэтому не toggle).
+      #
+      # Модуль на месте + есть вода → пресеты целевой влажности.
       - type: conditional
         conditions:
           - condition: state
             entity: binary_sensor.ac3737_humidifier_module_removed
             state: "off"
+          - condition: state
+            entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
+            state: "on"
         card:
           type: custom:bubble-card
           card_type: button
           button_type: state
           entity: humidifier.bedroom_air_cleaner_and_purifier
-          name: Увлажнение
+          name: Зволоження
           icon: mdi:air-humidifier
-          show_state: true
+          show_state: false
           show_attribute: true
-          attribute: humidity
           button_action:
             tap_action:
               action: more-info
@@ -230,32 +234,40 @@ views:
                   entity_id: humidifier.bedroom_air_cleaner_and_purifier
                 data:
                   humidity: 60
-          # Highlight the preset matching the current target humidity (40/50/60).
           styles: |
+            ${(() => { const t = hass.states['humidifier.bedroom_air_cleaner_and_purifier'].attributes.humidity; const c = hass.states['sensor.bedroom_air_cleaner_and_purifier_humidity'].state; const n = card.querySelector('.bubble-name'); const s = card.querySelector('.bubble-state'); if (n) n.innerText = `Зволоження, ${t}%`; if (s) s.innerText = `Поточна ${c}%`; return ''; })()}
             .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }
             ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 40 ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
             ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 50 ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
             ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 60 ? `.bubble-sub-button-3 { opacity: 1; background: var(--accent-color) !important; }` : ''}
 
-      # --- Влажность ---
+      # Модуль на месте, но воды нет → та же карточка, справа бэйдж «Немає води».
       - type: conditional
         conditions:
           - condition: state
             entity: binary_sensor.ac3737_humidifier_module_removed
             state: "off"
+          - condition: state
+            entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
+            state: "off"
         card:
           type: custom:bubble-card
           card_type: button
           button_type: state
-          entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-          name: Влажность
-          icon: mdi:water-percent
-          show_state: true
+          entity: humidifier.bedroom_air_cleaner_and_purifier
+          name: Зволоження
+          icon: mdi:air-humidifier
+          show_state: false
+          show_attribute: true
+          button_action:
+            tap_action:
+              action: more-info
           sub_button:
-            - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
-              icon: mdi:cup-water
-              show_state: true
-              show_name: false
+            - name: Немає води
+              icon: mdi:cup-off-outline
+          styles: |
+            ${(() => { const t = hass.states['humidifier.bedroom_air_cleaner_and_purifier'].attributes.humidity; const c = hass.states['sensor.bedroom_air_cleaner_and_purifier_humidity'].state; const n = card.querySelector('.bubble-name'); const s = card.querySelector('.bubble-state'); if (n) n.innerText = `Зволоження, ${t}%`; if (s) s.innerText = `Поточна ${c}%`; return ''; })()}
+            .bubble-sub-button-1 { background: var(--error-color) !important; }
 
       # --- Фильтры: блок появляется только когда нужна замена (< 10%) ---
       - type: conditional
@@ -268,7 +280,7 @@ views:
           card_type: button
           button_type: state
           entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
-          name: Заменить HEPA-фильтр
+          name: Замінити HEPA-фільтр
           icon: mdi:air-filter
           show_state: true
 
@@ -282,7 +294,7 @@ views:
           card_type: button
           button_type: state
           entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
-          name: Промыть предфильтр
+          name: Промити префільтр
           icon: mdi:filter
           show_state: true
 

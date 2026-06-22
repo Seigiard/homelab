@@ -116,9 +116,16 @@ lovelace:
 - Edits to `home.yaml` are picked up by a **browser refresh** (F5) — no HA restart.
 - `home.yaml` currently covers the Bedroom ("Спальня") view (AC3737 controls + air/
   filter sensors) in two styles for comparison: stock HA cards on top, a Bubble Card
-  variant below. Both follow the same order — Очистка → Воздух → Увлажнение → Влажность
-  — and hide the Увлажнение/Влажность tiles (showing a single "Увлажнитель снят"
-  warning instead) when `binary_sensor.ac3737_humidifier_module_removed` is on.
+  variant below. Labels are in Ukrainian. Order: Очищення → Повітря → Зволоження →
+  Фільтри. The humidification block reacts to two template/binary sensors:
+  - `binary_sensor.ac3737_humidifier_module_removed` on → a single "Зволожувач знято"
+    warning replaces the humidification card.
+  - module present: the Bubble Card merges humidification + humidity into ONE card.
+    Title shows `Зволоження, <target>%` and the subtitle `Поточна <current>%`, both
+    written into `.bubble-name`/`.bubble-state` from `styles` (Bubble Card has no
+    name/state templating). With water it shows the 40/50/60 presets; without water
+    (`…_water_tank` off) it shows a "Немає води" badge. The stock variant keeps a
+    separate humidifier card + humidity glance (it can't render the templated lines).
   The Bubble Card block needs Bubble Card installed via HACS, otherwise those cards
   render an error. Lights and the robot vacuum get tiles there once their entity
   ids exist.
