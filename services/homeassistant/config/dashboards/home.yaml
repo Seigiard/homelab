@@ -161,6 +161,10 @@ views:
             icon: mdi:thermometer
             show_state: true
             show_name: false
+          - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
+            icon: mdi:water-percent
+            show_state: true
+            show_name: false
 
       # --- Зволоження (увлажнение + влажность объединены в одну карточку) ---
       # Модуль снят (template binary_sensor: humidifier on + humidification off) →
