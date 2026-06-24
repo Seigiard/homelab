@@ -43,14 +43,17 @@ automation:
         at: "22:00:00"
     actions:
       - action: fan.set_preset_mode
+        continue_on_error: true
         target:
           entity_id: fan.bedroom_air_cleaner_and_purifier
         data:
           preset_mode: sleep
       - action: humidifier.turn_on
+        continue_on_error: true
         target:
           entity_id: humidifier.bedroom_air_cleaner_and_purifier
       - action: humidifier.set_humidity
+        continue_on_error: true
         target:
           entity_id: humidifier.bedroom_air_cleaner_and_purifier
         data:
@@ -68,15 +71,53 @@ automation:
         at: "08:00:00"
     actions:
       - action: fan.set_preset_mode
+        continue_on_error: true
         target:
           entity_id: fan.bedroom_air_cleaner_and_purifier
         data:
           preset_mode: auto
       - action: humidifier.set_humidity
+        continue_on_error: true
         target:
           entity_id: humidifier.bedroom_air_cleaner_and_purifier
         data:
           humidity: 40
+    mode: single
+
+  # A time trigger does not fire retroactively. If the device is unreachable at
+  # 22:00/08:00 (power cut → DHCP IP change → dead CoAP client), the scheduled
+  # mode is lost for the rest of the window. Re-apply the schedule's mode on HA
+  # start and whenever the fan returns from "unavailable". Retries because the
+  # device may reject the first command right after reconnecting.
+  - id: ac3737_reconcile_mode
+    alias: "AC3737 — восстановить режим при старте/реконнекте"
+    triggers:
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: fan.bedroom_air_cleaner_and_purifier
+        from: "unavailable"
+    variables:
+      desired_mode: "{{ 'sleep' if now().hour >= 22 or now().hour < 8 else 'auto' }}"
+    conditions:
+      - condition: template
+        value_template: "{{ has_value('fan.bedroom_air_cleaner_and_purifier') }}"
+    actions:
+      - repeat:
+          count: 3
+          sequence:
+            - action: fan.set_preset_mode
+              continue_on_error: true
+              target:
+                entity_id: fan.bedroom_air_cleaner_and_purifier
+              data:
+                preset_mode: "{{ desired_mode }}"
+            - if:
+                - condition: template
+                  value_template: "{{ state_attr('fan.bedroom_air_cleaner_and_purifier', 'preset_mode') == desired_mode }}"
+              then:
+                - stop: "режим установлен"
+            - delay: "00:00:05"
     mode: single
 
   # Sudden pollution (cooking, etc.) overrides any mode → turbo, and notifies.
