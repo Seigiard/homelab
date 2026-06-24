@@ -42,22 +42,36 @@ automation:
       - trigger: time
         at: "22:00:00"
     actions:
-      - action: fan.set_preset_mode
-        continue_on_error: true
-        target:
-          entity_id: fan.bedroom_air_cleaner_and_purifier
-        data:
-          preset_mode: sleep
-      - action: humidifier.turn_on
-        continue_on_error: true
-        target:
-          entity_id: humidifier.bedroom_air_cleaner_and_purifier
-      - action: humidifier.set_humidity
-        continue_on_error: true
-        target:
-          entity_id: humidifier.bedroom_air_cleaner_and_purifier
-        data:
-          humidity: 50
+      # Only send the command if the mode actually differs — the AC3737 beeps on
+      # every accepted command, so re-sending the current mode is a spurious beep.
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('fan.bedroom_air_cleaner_and_purifier', 'preset_mode') != 'sleep' }}"
+        then:
+          - action: fan.set_preset_mode
+            continue_on_error: true
+            target:
+              entity_id: fan.bedroom_air_cleaner_and_purifier
+            data:
+              preset_mode: sleep
+      - if:
+          - condition: template
+            value_template: "{{ is_state('humidifier.bedroom_air_cleaner_and_purifier', 'off') }}"
+        then:
+          - action: humidifier.turn_on
+            continue_on_error: true
+            target:
+              entity_id: humidifier.bedroom_air_cleaner_and_purifier
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('humidifier.bedroom_air_cleaner_and_purifier', 'humidity') != 50 }}"
+        then:
+          - action: humidifier.set_humidity
+            continue_on_error: true
+            target:
+              entity_id: humidifier.bedroom_air_cleaner_and_purifier
+            data:
+              humidity: 50
     mode: single
 
   # NB: humidifier.turn_off on the AC3737 powers off the WHOLE appliance, not
@@ -70,18 +84,26 @@ automation:
       - trigger: time
         at: "08:00:00"
     actions:
-      - action: fan.set_preset_mode
-        continue_on_error: true
-        target:
-          entity_id: fan.bedroom_air_cleaner_and_purifier
-        data:
-          preset_mode: auto
-      - action: humidifier.set_humidity
-        continue_on_error: true
-        target:
-          entity_id: humidifier.bedroom_air_cleaner_and_purifier
-        data:
-          humidity: 40
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('fan.bedroom_air_cleaner_and_purifier', 'preset_mode') != 'auto' }}"
+        then:
+          - action: fan.set_preset_mode
+            continue_on_error: true
+            target:
+              entity_id: fan.bedroom_air_cleaner_and_purifier
+            data:
+              preset_mode: auto
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('humidifier.bedroom_air_cleaner_and_purifier', 'humidity') != 40 }}"
+        then:
+          - action: humidifier.set_humidity
+            continue_on_error: true
+            target:
+              entity_id: humidifier.bedroom_air_cleaner_and_purifier
+            data:
+              humidity: 40
     mode: single
 
   # A time trigger does not fire retroactively. If the device is unreachable at
@@ -106,17 +128,19 @@ automation:
       - repeat:
           count: 3
           sequence:
+            # Already in the right mode → nothing to do, and skip the command so
+            # the device does not beep for a no-op.
+            - if:
+                - condition: template
+                  value_template: "{{ state_attr('fan.bedroom_air_cleaner_and_purifier', 'preset_mode') == desired_mode }}"
+              then:
+                - stop: "режим уже установлен"
             - action: fan.set_preset_mode
               continue_on_error: true
               target:
                 entity_id: fan.bedroom_air_cleaner_and_purifier
               data:
                 preset_mode: "{{ desired_mode }}"
-            - if:
-                - condition: template
-                  value_template: "{{ state_attr('fan.bedroom_air_cleaner_and_purifier', 'preset_mode') == desired_mode }}"
-              then:
-                - stop: "режим установлен"
             - delay: "00:00:05"
     mode: single
 
@@ -150,13 +174,19 @@ automation:
         entity_id: sensor.bedroom_air_cleaner_and_purifier_pm2_5
         below: 20
         for: "00:15:00"
+    variables:
+      desired_mode: "{{ 'sleep' if now().hour >= 22 or now().hour < 8 else 'auto' }}"
     actions:
-      - action: fan.set_preset_mode
-        target:
-          entity_id: fan.bedroom_air_cleaner_and_purifier
-        data:
-          preset_mode: >-
-            {{ 'sleep' if now().hour >= 22 or now().hour < 8 else 'auto' }}
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('fan.bedroom_air_cleaner_and_purifier', 'preset_mode') != desired_mode }}"
+        then:
+          - action: fan.set_preset_mode
+            continue_on_error: true
+            target:
+              entity_id: fan.bedroom_air_cleaner_and_purifier
+            data:
+              preset_mode: "{{ desired_mode }}"
     mode: single
 
   - id: ac3737_filter_hepa_low
