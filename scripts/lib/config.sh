@@ -35,8 +35,12 @@ export TIMEZONE="Europe/Bratislava"
 export NET_INTERFACE="eno1"
 export NET_IP="192.168.1.41/24"
 export NET_GATEWAY="192.168.1.1"
+# Единственный основной DNS хоста — локальный AdGuard. НЕ добавлять второй адрес
+# в nameservers: systemd-resolved ротирует список и уводит запросы мимо AdGuard
+# (ломается split-horizon). Резерв задаётся отдельно через FallbackDNS (см. ниже).
 export NET_DNS_PRIMARY="127.0.0.1"
-export NET_DNS_FALLBACK="1.1.1.1"
+# Строгий fallback в systemd-resolved — используется только когда AdGuard недоступен
+export NET_DNS_FALLBACK="1.1.1.1 1.0.0.1"
 
 # -------------------------------------------
 # Packages

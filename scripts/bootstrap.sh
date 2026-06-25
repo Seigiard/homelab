@@ -212,14 +212,22 @@ network:
       routes:
         - to: default
           via: ${NET_GATEWAY}
+      accept-ra: false
       nameservers:
         addresses:
           - ${NET_DNS_PRIMARY}
-          - ${NET_DNS_FALLBACK}
 EOF
 
     chmod 600 "$NETPLAN_FILE"
     netplan apply
+
+    log_step "Configuring DNS fallback (systemd-resolved)..."
+    mkdir -p /etc/systemd/resolved.conf.d
+    cat > /etc/systemd/resolved.conf.d/fallback.conf << EOF
+[Resolve]
+FallbackDNS=${NET_DNS_FALLBACK}
+EOF
+    systemctl restart systemd-resolved
 
     log_info "Static IP configured: ${NET_IP} via ${NET_GATEWAY}"
 

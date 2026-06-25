@@ -125,3 +125,37 @@ sudo upsc eaton@localhost battery.charge
 - Все Docker-сервисы в сети `traefik-net`
 - Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON
 - Homepage + Docker socket требует `user: root`
+
+### DNS хоста (netplan + systemd-resolved)
+
+Хост резолвит **только через локальный AdGuard Home** (`127.0.0.1:53`), иначе ломается split-horizon для `*.1218217.xyz` и запросы не попадают в фильтры/статистику AdGuard.
+
+`/etc/netplan/01-netcfg.yaml`:
+
+```yaml
+network:
+  version: 2
+  ethernets:
+    eno1:
+      addresses:
+        - 192.168.1.41/24
+      routes:
+        - to: default
+          via: 192.168.1.1
+      accept-ra: false        # отключает IPv6 RA-DNS от роутера (fe80::...) в обход AdGuard
+      nameservers:
+        addresses:
+          - 127.0.0.1         # единственный основной DNS — локальный AdGuard
+```
+
+`1.1.1.1` — строгий fallback (только когда AdGuard недоступен), задаётся через drop-in `/etc/systemd/resolved.conf.d/fallback.conf`:
+
+```ini
+[Resolve]
+FallbackDNS=1.1.1.1 1.0.0.1
+```
+
+- **Не добавлять `1.1.1.1` в `nameservers.addresses`** — systemd-resolved считает все адреса списка равноправными и ротирует их, из-за чего часть запросов уходит мимо AdGuard (split-horizon ломается непредсказуемо).
+- **`accept-ra: false`** убирает третий DNS-сервер (`fe80::...`), который роутер навязывает по IPv6 Router Advertisement. Без него `resolvectl status` показывает на интерфейсе 3 DNS вместо одного.
+- Применение: `sudo netplan apply && sudo systemctl restart systemd-resolved`.
+- Проверка: `resolvectl status` → на Link `eno1` должно быть `DNS Servers: 127.0.0.1`, в Global — `Fallback DNS Servers: 1.1.1.1 1.0.0.1`. `resolvectl query dns.1218217.xyz` должен вернуть локальный `192.168.1.41`.
