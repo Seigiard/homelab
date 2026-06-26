@@ -38,4 +38,3 @@ services/authelia/config/users_database.yml
 
 services/backrest/gdrive-sa.json
 gdrive-sa.json
-docs/plans
