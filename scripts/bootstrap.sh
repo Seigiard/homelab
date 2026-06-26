@@ -200,13 +200,15 @@ configure_network() {
     touch /etc/cloud/cloud-init.disabled
     rm -f /etc/netplan/50-cloud-init.yaml
 
-    log_step "Configuring static IP ${NET_IP} on ${NET_INTERFACE}..."
+    log_step "Configuring static IP ${NET_IP} (interface match: ${NET_INTERFACE_MATCH})..."
 
     cat > "$NETPLAN_FILE" << EOF
 network:
   version: 2
   ethernets:
-    ${NET_INTERFACE}:
+    lan:
+      match:
+        name: "${NET_INTERFACE_MATCH}"
       addresses:
         - ${NET_IP}
       routes:
@@ -233,15 +235,24 @@ EOF
 
     log_step "Disabling NIC energy-efficient ethernet..."
 
+    cat > /usr/local/sbin/homelab-nic-tuning << 'SCRIPT'
+#!/bin/sh
+# Отключает EEE на активном сетевом интерфейсе. Имя интерфейса резолвится в
+# рантайме по дефолтному маршруту — без привязки к железу (eno1, enpXsY и т.д.).
+IFACE=$(ip route show default | awk '{for (i = 1; i <= NF; i++) if ($i == "dev") { print $(i + 1); exit }}')
+[ -n "$IFACE" ] && exec /sbin/ethtool --set-eee "$IFACE" eee off
+SCRIPT
+    chmod +x /usr/local/sbin/homelab-nic-tuning
+
     cat > /etc/systemd/system/nic-tuning.service << EOF
 [Unit]
-Description=Disable EEE on ${NET_INTERFACE}
+Description=Disable EEE on the active network interface
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/sbin/ethtool --set-eee ${NET_INTERFACE} eee off
+ExecStart=/usr/local/sbin/homelab-nic-tuning
 RemainAfterExit=yes
 
 [Install]
@@ -250,7 +261,7 @@ EOF
 
     systemctl daemon-reload
     systemctl enable nic-tuning.service
-    ethtool --set-eee "${NET_INTERFACE}" eee off 2>/dev/null || log_warn "EEE not supported on ${NET_INTERFACE}, skipping"
+    /usr/local/sbin/homelab-nic-tuning 2>/dev/null || log_warn "EEE not supported on active interface, skipping"
 
     log_info "NIC tuning configured"
 }

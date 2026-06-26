@@ -32,7 +32,11 @@ export TIMEZONE="Europe/Bratislava"
 # Network (static IP)
 # -------------------------------------------
 
-export NET_INTERFACE="eno1"
+# Сетевой интерфейс задаётся glob-паттерном для netplan `match`, а не именем
+# устройства. Не зависит от железа (eno1, enpXsY и т.д.) — систему можно
+# перенести на другой NIC без правки конфигурации сети. nic-tuning резолвит
+# активный интерфейс в рантайме (см. bootstrap.sh), тоже без хардкода имени.
+export NET_INTERFACE_MATCH="en*"
 export NET_IP="192.168.1.41/24"
 export NET_GATEWAY="192.168.1.1"
 # Единственный основной DNS хоста — локальный AdGuard. НЕ добавлять второй адрес
