@@ -47,6 +47,34 @@ export NET_DNS_PRIMARY="127.0.0.1"
 export NET_DNS_FALLBACK="1.1.1.1 1.0.0.1"
 
 # -------------------------------------------
+# Tailscale (host-сервис — как NUT, не Docker)
+# -------------------------------------------
+
+# Имя ноды в tailnet. По умолчанию = system hostname.
+export TS_HOSTNAME="${HOSTNAME}"
+
+# accept-dns=false — НЕ позволяем Tailscale переписывать /etc/resolv.conf.
+# Иначе host начинает резолвить через MagicDNS (100.100.100.100) в обход
+# AdGuard, и ломается split-horizon для *.1218217.xyz (см. NET_DNS_PRIMARY).
+# Серверу MagicDNS не нужен — резолв остаётся через локальный AdGuard.
+export TS_ACCEPT_DNS="false"
+
+# Tailscale SSH — доступ к серверу по tailnet без проброса портов и SSH-ключей.
+export TS_SSH="true"
+
+# Exit node — гнать интернет-трафик клиентов через дом. Выключено.
+# При true шаг настраивает IP forwarding (/etc/sysctl.d/99-tailscale.conf);
+# дополнительно нужно одобрить exit-node в админке Tailscale (вручную).
+export TS_ADVERTISE_EXIT_NODE="false"
+
+# Subnet router — какие маршруты LAN анонсировать в tailnet. Нужно, чтобы
+# устройство «снаружи + Tailscale» дотягивалось до домашнего сервера напрямую
+# (в паре со split-DNS 1218217.xyz → AdGuard 100.78.130.93 в админке tailnet).
+# /32 (только сервер) безопаснее /24: нет конфликта с чужой сетью 192.168.1.0/24.
+# Пусто = не анонсировать. Анонс включает IP forwarding и требует approval в админке.
+export TS_ADVERTISE_ROUTES="192.168.1.41/32"
+
+# -------------------------------------------
 # Packages
 # -------------------------------------------
 
