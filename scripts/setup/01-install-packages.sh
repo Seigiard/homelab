@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 2/9: Installing packages"
+print_header "Step 2/11: Installing packages"
 
 # -------------------------------------------
 # APT packages

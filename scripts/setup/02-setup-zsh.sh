@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 3/9: Setting up Zsh + Oh-My-Zsh"
+print_header "Step 3/11: Setting up Zsh + Oh-My-Zsh"
 
 if [[ -d "$HOME/.oh-my-zsh" ]]; then
     log_warn "Oh-My-Zsh already installed, skipping"

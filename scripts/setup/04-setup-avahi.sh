@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 5/9: Configuring Avahi (mDNS)"
+print_header "Step 5/11: Configuring Avahi (mDNS)"
 
 # Set hostname
 log_step "Setting hostname to: $HOSTNAME"

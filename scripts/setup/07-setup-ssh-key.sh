@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 8/9: Setting up SSH key for GitHub"
+print_header "Step 8/11: Setting up SSH key for GitHub"
 
 SSH_KEY="$HOME/.ssh/id_ed25519"
 

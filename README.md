@@ -249,3 +249,33 @@ docker logs traefik 2>&1 | grep -i "acme\|certificate"
 # Test HTTPS locally
 curl -v https://traefik.1218217.xyz
 ```
+
+## Remote Access (Tailscale)
+
+Tailscale (mesh VPN) gives remote access over a private tailnet — no public port forwarding. Runs on the host (like NUT), not in Docker. Setup: `scripts/setup/10-setup-tailscale.sh` (interactive login on first run). Variables: `TS_*` in `scripts/lib/config.sh`.
+
+What it provides:
+
+- **Tailscale SSH** — `ssh seigiard@home` from any tailnet device, no SSH keys / port forwarding.
+- **Direct service access** — when Tailscale is up on a remote device, `*.1218217.xyz` resolves to the home server and connects directly, bypassing the Cloudflare Tunnel. It still hits the same Traefik HTTPS routers, so Authelia SSO applies exactly as it does for local HTTPS access. When Tailscale is off, it falls back to the public Cloudflare path automatically.
+
+The setup script prints the one-time manual steps (they can't be scripted) with the **actual** values for this host. The literals below (`home`, `192.168.1.41/32`, `100.78.130.93`) are this host's defaults — `TS_HOSTNAME` derives from `HOSTNAME`, `TS_ADVERTISE_ROUTES` from `NET_IP` (`scripts/lib/config.sh`), and the tailnet IP is whatever Tailscale assigned (`tailscale ip -4`). Use what the script prints. Summary:
+
+**Admin console** (https://login.tailscale.com/admin):
+
+1. Machines → `home` → Edit route settings → approve the advertised subnet (`192.168.1.41/32`).
+2. DNS → Nameservers → Custom: domain `1218217.xyz` → `100.78.130.93` (home AdGuard, split-DNS). Keep the global nameserver on a cloud resolver (e.g. NextDNS), **not** the home AdGuard.
+
+**Client devices:**
+
+- **macOS:** `sudo tailscale set --accept-routes` + enable "Use Tailscale DNS".
+- **Android:** Tailscale → "Use Tailscale DNS" = ON; system Settings → Private DNS → **Off** (it conflicts with MagicDNS).
+- **iOS:** enable subnet routes + "Use Tailscale DNS" in the Tailscale app.
+
+Verify from outside the home network:
+
+```bash
+curl -s https://dns.1218217.xyz -o /dev/null -w '%{remote_ip}\n'   # → 192.168.1.41
+```
+
+> `accept-dns=false` on the server is intentional — see `ENVIRONMENT.md` (it would otherwise break AdGuard split-horizon). Details and the DNS rationale are in `ENVIRONMENT.md` → "Tailscale".

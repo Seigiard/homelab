@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 7/9: Running bootstrap.sh"
+print_header "Step 7/11: Running bootstrap.sh"
 
 BOOTSTRAP="$INSTALL_PATH/scripts/bootstrap.sh"
 
