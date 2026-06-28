@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 1/9: Updating system"
+print_header "Step 1/11: Updating system"
 
 log_step "Setting timezone to ${TIMEZONE}..."
 sudo timedatectl set-timezone "$TIMEZONE"

@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 9/9: Setup Complete!"
+print_header "Step 9/11: Setup Complete!"
 
 log_info "Installed packages:"
 echo "      APT:   ${APT_PACKAGES[*]}"

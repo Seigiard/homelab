@@ -15,7 +15,7 @@ scripts/
   setup.sh              # Точка входа (curl | bash)
   bootstrap.sh          # Docker, папки, права, firewall, smartd
   healthcheck.sh        # Проверка состояния после установки
-  setup/                # Модульные шаги установки (00-09)
+  setup/                # Модульные шаги установки (00-10)
   docker/               # Управление сервисами (deploy/stop/rebuild/remove/status)
   lib/config.sh         # Все переменные (пользователи, пакеты, пути)
   lib/tui.sh            # TUI-библиотека

@@ -257,9 +257,9 @@ Tailscale (mesh VPN) gives remote access over a private tailnet — no public po
 What it provides:
 
 - **Tailscale SSH** — `ssh seigiard@home` from any tailnet device, no SSH keys / port forwarding.
-- **Direct service access** — when Tailscale is up on a remote device, `*.1218217.xyz` resolves to the home server and connects directly, bypassing Cloudflare/Authelia. When Tailscale is off, it falls back to the public Cloudflare path automatically.
+- **Direct service access** — when Tailscale is up on a remote device, `*.1218217.xyz` resolves to the home server and connects directly, bypassing the Cloudflare Tunnel. It still hits the same Traefik HTTPS routers, so Authelia SSO applies exactly as it does for local HTTPS access. When Tailscale is off, it falls back to the public Cloudflare path automatically.
 
-The setup script prints the one-time manual steps (they can't be scripted). Summary:
+The setup script prints the one-time manual steps (they can't be scripted) with the **actual** values for this host. The literals below (`home`, `192.168.1.41/32`, `100.78.130.93`) are this host's defaults — `TS_HOSTNAME` derives from `HOSTNAME`, `TS_ADVERTISE_ROUTES` from `NET_IP` (`scripts/lib/config.sh`), and the tailnet IP is whatever Tailscale assigned (`tailscale ip -4`). Use what the script prints. Summary:
 
 **Admin console** (https://login.tailscale.com/admin):
 

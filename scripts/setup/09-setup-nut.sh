@@ -14,7 +14,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 10/10: Configuring NUT (UPS monitoring)"
+print_header "Step 10/11: Configuring NUT (UPS monitoring)"
 
 NUT_PASSWORD=$(openssl rand -base64 16 | tr -d '/+=' | head -c 16)
 

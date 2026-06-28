@@ -111,7 +111,7 @@ sudo upsc eaton@localhost battery.charge
 | Локальный  | `*.home.local`     | HTTP     | mDNS через Avahi (системный)   |
 | Локальный  | `*.1218217.xyz`    | HTTPS    | Split-horizon DNS (AdGuard Home) + Let's Encrypt (Cloudflare DNS challenge) |
 | Внешний    | `*.1218217.xyz`    | HTTPS    | Cloudflare Tunnel → Authelia (когда Tailscale выключен) |
-| Внешний + Tailscale | `*.1218217.xyz` | HTTPS | Напрямую на сервер по tailnet, минуя Cloudflare/Authelia (см. раздел «Tailscale») |
+| Внешний + Tailscale | `*.1218217.xyz` | HTTPS | Напрямую на сервер по tailnet, минуя Cloudflare Tunnel (Authelia применяется как обычно — те же Traefik-роутеры; см. раздел «Tailscale») |
 
 ### Инфраструктурные компоненты
 
@@ -181,7 +181,7 @@ FallbackDNS=1.1.1.1 1.0.0.1
 
 #### Доступ к сервисам по tailnet (subnet router + split-DNS)
 
-Цель: устройство **вне дома с поднятым Tailscale** ходит на `*.1218217.xyz` **напрямую на домашний сервер**, минуя Cloudflare и Authelia. Переключение автоматическое — рулит DNS:
+Цель: устройство **вне дома с поднятым Tailscale** ходит на `*.1218217.xyz` **напрямую на домашний сервер**, минуя Cloudflare Tunnel. Запрос попадает на те же Traefik HTTPS-роутеры, поэтому **Authelia применяется как при локальном HTTPS-доступе** (обхода SSO здесь нет). Переключение автоматическое — рулит DNS:
 
 | Откуда | Tailscale | Путь |
 | ------ | --------- | ---- |

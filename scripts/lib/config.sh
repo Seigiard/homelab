@@ -69,10 +69,11 @@ export TS_ADVERTISE_EXIT_NODE="false"
 
 # Subnet router — какие маршруты LAN анонсировать в tailnet. Нужно, чтобы
 # устройство «снаружи + Tailscale» дотягивалось до домашнего сервера напрямую
-# (в паре со split-DNS 1218217.xyz → AdGuard 100.78.130.93 в админке tailnet).
+# (в паре со split-DNS 1218217.xyz → tailnet-IP сервера в админке tailnet).
 # /32 (только сервер) безопаснее /24: нет конфликта с чужой сетью 192.168.1.0/24.
+# Выводится из NET_IP — один источник правды для адреса сервера.
 # Пусто = не анонсировать. Анонс включает IP forwarding и требует approval в админке.
-export TS_ADVERTISE_ROUTES="192.168.1.41/32"
+export TS_ADVERTISE_ROUTES="${NET_IP%/*}/32"
 
 # -------------------------------------------
 # Packages
