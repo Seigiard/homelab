@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/../lib/tui.sh"
 
 # -------------------------------------------
 
-print_header "Step 6/9: Applying dotfiles"
+print_header "Step 6/11: Applying dotfiles"
 
 DOTFILES_DIR="$INSTALL_PATH/dotfiles"
 
