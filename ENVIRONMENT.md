@@ -110,8 +110,7 @@ sudo upsc eaton@localhost battery.charge
 | ---------- | ------------------ | -------- | ------------------------------ |
 | Локальный  | `*.home.local`     | HTTP     | mDNS через Avahi (системный)   |
 | Локальный  | `*.1218217.xyz`    | HTTPS    | Split-horizon DNS (AdGuard Home) + Let's Encrypt (Cloudflare DNS challenge) |
-| Внешний    | `*.1218217.xyz`    | HTTPS    | Cloudflare Tunnel → Authelia (когда Tailscale выключен) |
-| Внешний + Tailscale | `*.1218217.xyz` | HTTPS | Напрямую на сервер по tailnet, минуя Cloudflare Tunnel (Authelia применяется как обычно — те же Traefik-роутеры; см. раздел «Tailscale») |
+| Внешний    | `*.1218217.xyz`    | HTTPS    | Cloudflare Tunnel → Authelia    |
 
 ### Инфраструктурные компоненты
 
@@ -164,38 +163,25 @@ FallbackDNS=1.1.1.1 1.0.0.1
 
 ### Tailscale (mesh VPN)
 
-Удалённый доступ по приватной сети tailnet (WireGuard) без проброса портов наружу. Работает на хосте, не в Docker (как NUT). Setup: `scripts/setup/10-setup-tailscale.sh`, переменные — в `config.sh` (`TS_*`).
+**SSH к хосту и mesh между устройствами** по приватной сети tailnet (WireGuard), без проброса портов наружу. Работает на хосте, не в Docker (как NUT). Setup: `scripts/setup/10-setup-tailscale.sh`, переменные — в `config.sh` (`TS_*`). Роль — только SSH+mesh; удалённый доступ к сервисам — через Cloudflare (см. доменную таблицу).
 
 | Параметр       | Значение | Зачем |
 | -------------- | -------- | ----- |
 | Имя ноды       | `home` (`100.78.130.93`) | hostname в tailnet |
 | Tailscale SSH  | вкл (`--ssh`) | `tailscale ssh seigiard@home` — без проброса портов и SSH-ключей; доступ по tailnet-идентичности |
 | `accept-dns`   | **`false`** | критично, см. ниже |
-| Subnet router  | `--advertise-routes=192.168.1.41/32` | доступ к сервисам напрямую по tailnet, см. ниже |
-| Exit node      | выкл | `TS_ADVERTISE_EXIT_NODE=false`; машинерия (forwarding) готова, при true нужен approval в админке |
+| Subnet router  | **выкл** (`TS_ADVERTISE_ROUTES=""`) | НЕ анонсируем — см. Грабли |
+| Exit node      | выкл | `TS_ADVERTISE_EXIT_NODE=false` |
 
 - **`accept-dns=false` обязательно.** С `accept-dns=true` Tailscale перехватывает `/etc/resolv.conf` (`nameserver 100.100.100.100`, MagicDNS) и хост начинает резолвить в обход AdGuard → ломается split-horizon для `*.1218217.xyz` (всё, что читает resolv.conf напрямую — приложения, Docker-контейнеры — получает публичный IP вместо `192.168.1.41`). Серверу MagicDNS не нужен. При `false` `/etc/resolv.conf` остаётся managed by systemd-resolved (`nameserver 127.0.0.1`).
 - **Tailscale SSH и ACL.** Подключение управляется политикой tailnet (Access Controls), а не файлами на хосте. Дефолтная политика содержит `ssh` с `action: "check"` — при входе бывает разовая браузер-проверка. Если доступ отклоняется — нужно добавить `ssh`-правило в админке (https://login.tailscale.com/admin/acls); серверным скриптом это не воспроизводится.
 - **Аутентификация интерактивная** (без auth-key): при первом `tailscale up` печатается URL для входа в браузере. Auth-key намеренно не используем — нет секрета в репо и нечему протухать.
-- Проверка: `tailscale status`; `sudo tailscale debug prefs | grep -E '"RunSSH"|"CorpDNS"'` → `RunSSH: true`, `CorpDNS: false`.
+- Проверка: `tailscale status`; `sudo tailscale debug prefs | grep -E '"RunSSH"|"CorpDNS"|"AdvertiseRoutes"'` → `RunSSH: true`, `CorpDNS: false`, `AdvertiseRoutes: null`.
 
-#### Доступ к сервисам по tailnet (subnet router + split-DNS)
+**Граница доверия.** tailnet — single-user (только свои устройства, без shared nodes), это **доверенная зона**. Поэтому: SSH к `home` гарантируется членством в tailnet (не зависит от UFW `:22` key-auth); прямой доступ к Traefik по tailnet-IP `100.78.130.93` (включая `:80` без Authelia) приемлем как diagnostic/admin путь. Основной удалённый доступ к сервисам — через Cloudflare (`*.1218217.xyz`), не через tailnet.
 
-Цель: устройство **вне дома с поднятым Tailscale** ходит на `*.1218217.xyz` **напрямую на домашний сервер**, минуя Cloudflare Tunnel. Запрос попадает на те же Traefik HTTPS-роутеры, поэтому **Authelia применяется как при локальном HTTPS-доступе** (обхода SSO здесь нет). Переключение автоматическое — рулит DNS:
+**Грабли:**
 
-| Откуда | Tailscale | Путь |
-| ------ | --------- | ---- |
-| Дома (LAN) | — | напрямую → `192.168.1.41` |
-| Извне | выключен | Cloudflare → Authelia → сервер |
-| Извне | включён | напрямую на сервер по tailnet |
-
-Механика (две части — серверная воспроизводится скриптом, админская — вручную):
-
-1. **Subnet router (сервер).** `--advertise-routes=192.168.1.41/32` + IP forwarding (`/etc/sysctl.d/99-tailscale.conf`) — чтобы удалённый клиент дотягивался до `192.168.1.41` через tailnet. `/32` (только сервер), а не `/24`: иначе конфликт с чужой сетью `192.168.1.0/24`. Маршрут нужно **одобрить** в админке (Machines → `home` → Edit route settings).
-2. **Split-DNS (админка tailnet).** DNS → Nameservers → Custom: `1218217.xyz` → `100.78.130.93` (домашний AdGuard). Клиент с Tailscale шлёт запросы про этот домен в AdGuard, тот отдаёт split-horizon `192.168.1.41` — тот же ответ, что и дома. Сертификат валиден (Traefik отдаёт по Host-заголовку).
-3. **Клиент.** Нужен `accept-routes` (на маке `sudo tailscale set --accept-routes`; на телефоне — галка subnets) + включённый Tailscale DNS.
-
-Важно:
-- **Global nameserver оставлен NextDNS** (не домашний AdGuard). Причина — надёжность: если global = AdGuard, весь DNS роуминг-устройств зависит от аптайма дома (сервер упал → у телефона на улице нет интернета вообще). NextDNS — облачный, фильтрует рекламу, не зависит от дома. Домашний AdGuard через split-DNS получает только `1218217.xyz`.
-- **Android Private DNS (DoT) конфликтует с MagicDNS** — даёт «private DNS server cannot be accessed». Фикс: на телефоне Настройки → Private DNS → Off, затем включить Use Tailscale DNS.
-- Проверка с устройства вне дома: `curl -s https://dns.1218217.xyz -o /dev/null -w '%{remote_ip}\n'` → `192.168.1.41`. На Android `dig +short` **не показателен** — Termux dig ходит мимо системного резолвера; верный признак — `remote_ip` у curl или `dig @100.78.130.93`.
+- **НЕ анонсировать маршрут, содержащий собственный IP сервера** (`--advertise-routes=192.168.1.41/32` и т.п.). Самореферентный subnet-route: Tailscale на хосте перехватывает трафик к этому IP и **ломает локальный доступ LAN-клиентов** (TCP-коннект есть, ответы сервера не доходят — `:443` виснет на ServerHello). Доступ к серверу по tailnet берётся через его tailnet-IP напрямую — subnet-router для этого не нужен. Если когда-нибудь понадобится доступ к **другим** LAN-устройствам — анонсировать `192.168.1.0/24` (НЕ свой IP) и не принимать маршрут на домашних устройствах.
+- **macOS: `tailscale down` не выгружает сетевое расширение.** Остаточный extension может глотать входящий TLS к LAN-серверу (симптом: `:443` к `192.168.1.41` виснет на ServerHello, при этом `:80` и `ping` работают). Полный сброс — Quit приложения Tailscale + перезагрузка мака.
+- Терминология: «Tailscale split-DNS» (роутинг домена на nameserver в админке tailnet) ≠ «AdGuard split-horizon» (LAN-резолв `*.1218217.xyz` → `192.168.1.41`). Последний живёт в AdGuard и этим разделом не управляется.

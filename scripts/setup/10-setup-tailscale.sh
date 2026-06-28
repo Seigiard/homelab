@@ -5,6 +5,8 @@
 # Tailscale работает на хосте (как NUT), не в Docker.
 # Аутентификация интерактивная: при первом запуске печатает URL для входа.
 # DNS: accept-dns=false, чтобы не сломать split-horizon AdGuard (см. config.sh).
+# Роль — SSH + mesh. Subnet-router НЕ используем: анонс собственного IP сервера
+# самореферентен и ломает локальный доступ LAN-клиентов (см. ENVIRONMENT.md → Грабли).
 
 set -e
 
@@ -36,6 +38,22 @@ else
     rm -f "$TS_INSTALLER"
 fi
 
+# --- IP forwarding (нужно только для exit node / subnet router) ---
+# Делаем ДО login: ранний выход login не должен оставить persistent sysctl.
+SYSCTL_FILE="/etc/sysctl.d/99-tailscale.conf"
+if [[ "$TS_ADVERTISE_EXIT_NODE" == "true" || -n "$TS_ADVERTISE_ROUTES" ]]; then
+    log_step "Enabling persistent IP forwarding (exit node / subnet router)..."
+    sudo tee "$SYSCTL_FILE" > /dev/null << 'EOF'
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.forwarding = 1
+EOF
+    sudo sysctl -p "$SYSCTL_FILE" > /dev/null
+elif [[ -f "$SYSCTL_FILE" ]]; then
+    log_step "Removing stale Tailscale IP-forwarding config (no routes/exit-node)..."
+    sudo rm -f "$SYSCTL_FILE"
+    # Намеренно НЕ выставляем ip_forward=0 в рантайме: его использует Docker.
+fi
+
 # --- Bring up + login (interactive, only when not already running) ---
 ts_state() { tailscale status --json 2>/dev/null | jq -r '.BackendState // "NoState"'; }
 
@@ -55,21 +73,6 @@ if [[ "$(ts_state)" != "Running" ]]; then
     fi
 else
     log_info "Tailscale already up and running"
-fi
-
-# --- IP forwarding (нужно для exit node и subnet router) ---
-SYSCTL_FILE="/etc/sysctl.d/99-tailscale.conf"
-if [[ "$TS_ADVERTISE_EXIT_NODE" == "true" || -n "$TS_ADVERTISE_ROUTES" ]]; then
-    log_step "Enabling persistent IP forwarding (exit node / subnet router)..."
-    sudo tee "$SYSCTL_FILE" > /dev/null << 'EOF'
-net.ipv4.ip_forward = 1
-net.ipv6.conf.all.forwarding = 1
-EOF
-    sudo sysctl -p "$SYSCTL_FILE" > /dev/null
-elif [[ -f "$SYSCTL_FILE" ]]; then
-    log_step "Removing Tailscale IP-forwarding config (no routes/exit-node advertised)..."
-    sudo rm -f "$SYSCTL_FILE"
-    # Намеренно НЕ выставляем ip_forward=0 в рантайме: его использует Docker.
 fi
 
 # --- Enforce desired prefs (idempotent, surgical: не трогает прочие настройки) ---
@@ -93,30 +96,5 @@ TS_IP="$(tailscale ip -4 2>/dev/null | head -1)"
 
 log_info "Tailscale configured"
 [[ -n "$TS_IP" ]] && log_info "Tailnet IP: ${TS_IP}"
+log_info "SSH по tailnet: ssh ${USER}@${TS_HOSTNAME}"
 log_info "Verify: tailscale status"
-
-# --- Manual follow-up (не воспроизводится скриптом) ---
-print_header "Tailscale: ручные шаги (нужны один раз)"
-
-echo "SSH по tailnet (работает сразу):"
-echo "  ssh ${USER}@${TS_HOSTNAME}"
-
-if [[ -n "$TS_ADVERTISE_ROUTES" ]]; then
-    echo ""
-    echo "Чтобы *.1218217.xyz ходили напрямую домой при включённом Tailscale:"
-    echo ""
-    echo "1) Админка https://login.tailscale.com/admin :"
-    echo "   • Machines → ${TS_HOSTNAME} → Edit route settings → одобрить ${TS_ADVERTISE_ROUTES}"
-    echo "   • DNS → Nameservers → Custom: домен 1218217.xyz → ${TS_IP:-<tailnet-IP сервера>} (домашний AdGuard, split-DNS)"
-    echo "     Global nameserver НЕ менять на AdGuard — оставить облачный (NextDNS),"
-    echo "     иначе весь DNS роуминг-устройств зависит от аптайма дома."
-    echo ""
-    echo "2) Клиентские устройства:"
-    echo "   • macOS:   sudo tailscale set --accept-routes   (+ включить Use Tailscale DNS)"
-    echo "   • Android: Tailscale → Use Tailscale DNS = ON;"
-    echo "              системные Настройки → Private DNS → Off (конфликтует с MagicDNS)"
-    echo "   • iOS:     включить subnet routes + Use Tailscale DNS в приложении Tailscale"
-    echo ""
-    echo "Проверка вне дома (не dig — он на Android врёт):"
-    echo "   curl -s https://dns.1218217.xyz -o /dev/null -w '%{remote_ip}\\n'   → ${TS_ADVERTISE_ROUTES%/*}"
-fi
