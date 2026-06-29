@@ -77,6 +77,23 @@ export TS_ADVERTISE_EXIT_NODE="false"
 export TS_ADVERTISE_ROUTES=""
 
 # -------------------------------------------
+# Fan sensors (AOOSTAR WTR Pro — Super-I/O IT8613E)
+# -------------------------------------------
+
+# Плата AOOSTAR использует Super-I/O ITE IT8613E, который штатное ядро Ubuntu не
+# поддерживает (chip ID 0x8613 нет в in-kernel it87) — обороты вентиляторов не видны.
+# Ставим out-of-tree DKMS-драйвер frankcrawford/it87 ТОЛЬКО для чтения оборотов.
+# Управление вентилятором оставлено EC/BIOS (manual PWM не трогаем — если процесс
+# управления упадёт, обороты застынут). См. ENVIRONMENT.md → «Управление вентиляторами».
+# Шаг 11 hardware-guarded: на железе без IT8613E он no-op.
+export IT87_CHIP="IT8613E"                                    # строка детекта в sensors-detect
+export IT87_REPO="https://github.com/frankcrawford/it87.git"
+export IT87_COMMIT="20f2f2f4c92c14fcdd26f60d050e693ad2c30bf8" # пиннинг для детерминизма сборки
+export IT87_FORCE_ID="0x8613"                                 # автодетект не срабатывает
+# ignore_resource_conflict=1 — вместо системного acpi_enforce_resources=lax (тот ломает загрузку)
+export IT87_MODOPTS="force_id=${IT87_FORCE_ID} ignore_resource_conflict=1"
+
+# -------------------------------------------
 # Packages
 # -------------------------------------------
 
@@ -109,6 +126,9 @@ APT_PACKAGES=(
     openssh-server
     avahi-daemon
     avahi-utils
+    # Sensors / fan (IT8613E DKMS-драйвер собирается в 11-setup-fan-sensors.sh)
+    lm-sensors
+    dkms
     # Shell
     zsh
 )
