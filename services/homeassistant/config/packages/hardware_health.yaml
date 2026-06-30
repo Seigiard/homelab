@@ -9,7 +9,9 @@
 #   Fan2 (it8613)        : sensor.127_0_0_1_it8613_1_fan_speed   (~1000 RPM)
 #   Fan3 (it8613)        : sensor.127_0_0_1_it8613_2_fan_speed   — НЕ подключён, всегда 0 → в алерты НЕ берём
 #
-# Пуш — notify.nothingphone (как в philips_ac3737.yaml).
+# Пуш — notify.mobile_app_nothingphone (legacy mobile_app сервис: принимает
+#   data.priority/ttl для пробивных critical-пушей). philips_ac3737.yaml шлёт через
+#   notify.send_message → notify.nothingphone (только title+message, без приоритета).
 #
 # Заметки:
 # - Температуры it8613 (board) в HA отсутствуют: Glances отдаёт один лейбл "it8613 N"
@@ -32,7 +34,7 @@ automation:
         above: 85
         for: "00:10:00"
     action:
-      - service: notify.nothingphone
+      - service: notify.mobile_app_nothingphone
         data:
           title: "⚠️ Сервер: CPU греется"
           message: "CPU {{ states('sensor.127_0_0_1_tctl_temperature') }}°C (>85 уже 10 мин)."
@@ -46,7 +48,7 @@ automation:
         above: 95
         for: "00:01:00"
     action:
-      - service: notify.nothingphone
+      - service: notify.mobile_app_nothingphone
         data:
           title: "🚨 Сервер: CPU перегрев"
           message: "CPU {{ states('sensor.127_0_0_1_tctl_temperature') }}°C (>95). Проверь нагрузку/охлаждение."
@@ -63,7 +65,7 @@ automation:
         above: 75
         for: "00:10:00"
     action:
-      - service: notify.nothingphone
+      - service: notify.mobile_app_nothingphone
         data:
           title: "⚠️ Сервер: NVMe греется"
           message: "NVMe {{ states('sensor.127_0_0_1_nvme_ssd_temperature') }}°C (>75 уже 10 мин)."
@@ -77,7 +79,7 @@ automation:
         above: 82
         for: "00:02:00"
     action:
-      - service: notify.nothingphone
+      - service: notify.mobile_app_nothingphone
         data:
           title: "🚨 Сервер: NVMe перегрев"
           message: "NVMe {{ states('sensor.127_0_0_1_nvme_ssd_temperature') }}°C (>82, крит диска 88.8)."
@@ -96,7 +98,7 @@ automation:
         below: 1
         for: "00:02:00"
     action:
-      - service: notify.nothingphone
+      - service: notify.mobile_app_nothingphone
         data:
           title: "🚨 Сервер: вентилятор остановился"
           message: >-
