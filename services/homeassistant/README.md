@@ -85,6 +85,11 @@ Each `.yaml` under `config/packages/` is one package and may contain
     uses this template sensor to hide the humidification tiles when the module
     is gone. Full entity inventory + the A/B findings live in the file header.
 
+- `hardware_health.yaml` — server hardware alerts from Glances data (see
+  "Server hardware monitoring" below). CPU/NVMe overheat (warning + critical) and
+  fan-failure (`it8613` fan = 0 RPM) → push via `notify.mobile_app_nothingphone`.
+  Messages read values via `states()` (not `trigger.*`) so manual "Run" also works.
+
 ## Git-versioned dashboard
 
 The Lovelace dashboard in `config/dashboards/home.yaml` (this repo) is mounted
@@ -140,6 +145,28 @@ lovelace:
   even when dry). So the Bubble Card highlight lights **Auto/Sleep only when not
   humidifying**; Turbo is never highlighted, and while humidifying the mode
   buttons stay neutral (mode unknown) rather than guessing.
+
+## Server hardware monitoring (Glances)
+
+The server's hardware health (CPU/NVMe/GPU temperatures + IT8613E fan RPM) is
+surfaced in HA via the **Glances integration**, reusing the running Glances
+instance (`services/glances/`, REST API on the host's `127.0.0.1:61208` — that
+port is loopback-published in the Glances compose for this).
+
+Setup (one-time, UI): Settings → Devices & Services → Add → **Glances**, host
+`127.0.0.1`, port `61208`, API version `4`. Entities get a `127_0_0_1_` prefix,
+e.g. `sensor.127_0_0_1_tctl_temperature`, `sensor.127_0_0_1_it8613_0_fan_speed`.
+
+- **Alerts:** `config/packages/hardware_health.yaml` — CPU >85/95 °C, NVMe
+  >75/82 °C, fan-failure (`it8613 0/1` = 0 RPM for 2 min). Push via
+  `notify.mobile_app_nothingphone` (legacy mobile_app service — supports
+  `data.priority/ttl`, unlike the `notify.send_message` path philips uses).
+- **Dashboard:** the "Сервер" view in `config/dashboards/home.yaml` — current
+  temps/fans + 24 h history graphs.
+- **Board temps unavailable:** Glances reuses one label (`it8613 N`) for both a
+  temperature and a fan, so HA keeps only the fan entity per label. IT8613E board
+  temperatures are therefore not in HA; CPU/NVMe/GPU cover the thermal picture.
+  Fan `it8613 2` is unconnected (always 0, excluded from the alert).
 
 ## Notes
 

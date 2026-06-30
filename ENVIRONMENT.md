@@ -59,6 +59,7 @@ echo "it87" | sudo tee /etc/modules-load.d/it87.conf
 - `force_id=0x8613` обязателен (автодетект не срабатывает); `ignore_resource_conflict=1` — вместо системного `acpi_enforce_resources=lax` (тот ломает загрузку).
 - **Маппинг:** `fan2`/`pwm2` (≈CPU, низкий duty ~16%) и `fan3`/`pwm3` (≈HDD-корзина, ~51%); `fan4` не подключён. Оба `pwmX_enable = 2` (авто).
 - **Шум в `sensors` — игнорировать:** вольтажные `ALARM` (`in0`, `3VSB`…) и абсурдные пороги температур — мусорные дефолты generic-драйвера, не настоящие тревоги. Реальные данные — только `fanX` (RPM) и `temp2`/`temp3`. Прячется через `/etc/sensors.d/aoostar-it8613.conf` (`ignore` напряжений / `fan1,4,5` / `temp1` / `intrusion0`). После фильтра вывод `it8613` полностью чистый: `fan2`/`fan3` + `temp2`/`temp3`. Конфиг пишет шаг `11-setup-fan-sensors.sh`. _Две строки `temp3_min/max I/O error` в общем выводе `sensors` относятся к **NVMe Kingston** (фейковый Sensor 2), а не к it8613 — см. «Известные проблемы железа»._
+- **Мониторинг в Home Assistant:** температуры (CPU/NVMe/GPU) и обороты `it8613 0/1` выведены в HA через интеграцию Glances — графики + алерты (перегрев, отказ вентилятора). Подробности: `services/homeassistant/README.md` → «Server hardware monitoring». Board-температуры it8613 в HA недоступны (коллизия лейблов Glances).
 
 ### Планы по апгрейду
 
