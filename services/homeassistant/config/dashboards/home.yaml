@@ -23,97 +23,15 @@ views:
     path: bedroom
     icon: mdi:bed
     cards:
-      - type: tile
-        entity: fan.bedroom_air_cleaner_and_purifier
-        name: Очищення
-        features:
-          - type: fan-preset-modes
-            style: icons
-            preset_modes:
-              - auto
-              - sleep
-              - turbo
-
-      - type: glance
-        title: Повітря
-        entities:
-          - entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
-            name: PM2.5
-          - entity: sensor.bedroom_air_cleaner_and_purifier_temperature
-            name: Темп.
-          - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-            name: Вологість
-
-      # Модуль снят → предупреждение вместо управления увлажнением и влажности.
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: binary_sensor.ac3737_humidifier_module_removed
-            state: "on"
-        card:
-          type: tile
-          entity: binary_sensor.ac3737_humidifier_module_removed
-          name: Зволожувач знято
-          icon: mdi:air-humidifier-off
-
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: binary_sensor.ac3737_humidifier_module_removed
-            state: "off"
-        card:
-          type: humidifier
-          entity: humidifier.bedroom_air_cleaner_and_purifier
-          name: Зволоження
-
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: binary_sensor.ac3737_humidifier_module_removed
-            state: "off"
-        card:
-          type: glance
-          title: Вологість
-          entities:
-            - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-              name: Вологість
-            - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
-              name: Бак
-
-      # Фільтри — показываем, только если хоть один пора менять (< 10%).
-      # Иначе карточка бессмысленна (всегда «100%»).
-      - type: conditional
-        conditions:
-          - condition: or
-            conditions:
-              - condition: numeric_state
-                entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
-                below: 10
-              - condition: numeric_state
-                entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
-                below: 10
-        card:
-          type: glance
-          title: Фільтри
-          entities:
-            - entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
-              name: HEPA
-            - entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
-              name: Префільтр
-
-      # ─────────────────────────────────────────────────────────────────────
-      # Bubble Card variant (Clooos/Bubble-Card v3.2.x, via HACS) — same
-      # entities, kept below the stock cards for side-by-side comparison.
-      # Layout: control blocks (purifier, humidifier), then stat blocks (air,
-      # humidity), then filter blocks that appear ONLY when a filter needs
-      # service (< 10% life left).
-      # Note: Bubble Card's slider does NOT support the humidifier domain, so
-      # humidity uses one-tap presets (40/50/60%); hold the card → more-info
-      # for fine control.
-      # ─────────────────────────────────────────────────────────────────────
+      # Очисник (Bubble Card, Clooos/Bubble-Card v3.2.x via HACS).
+      # Блоки: управление (очиститель, увлажнение), статы (воздух), фильтры —
+      # появляются ТОЛЬКО когда фильтр пора менять (< 10% ресурса).
+      # Note: Bubble Card's slider не поддерживает домен humidifier, поэтому
+      # влажность — пресеты 40/50/60%; hold карточки → more-info.
+      # Лампы зала и робот-пылесос добавятся отдельными секциями ниже.
       - type: custom:bubble-card
         card_type: separator
-        name: Спальня (Bubble Card)
+        name: Очисник
         icon: mdi:air-purifier
 
       # --- Управление ---
