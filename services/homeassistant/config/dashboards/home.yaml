@@ -80,13 +80,26 @@ views:
             - entity: binary_sensor.bedroom_air_cleaner_and_purifier_water_tank
               name: Бак
 
-      - type: glance
-        title: Фільтри
-        entities:
-          - entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
-            name: HEPA
-          - entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
-            name: Префільтр
+      # Фільтри — показываем, только если хоть один пора менять (< 10%).
+      # Иначе карточка бессмысленна (всегда «100%»).
+      - type: conditional
+        conditions:
+          - condition: or
+            conditions:
+              - condition: numeric_state
+                entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
+                below: 10
+              - condition: numeric_state
+                entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
+                below: 10
+        card:
+          type: glance
+          title: Фільтри
+          entities:
+            - entity: sensor.bedroom_air_cleaner_and_purifier_nanoprotect_filter
+              name: HEPA
+            - entity: sensor.bedroom_air_cleaner_and_purifier_pre_filter
+              name: Префільтр
 
       # ─────────────────────────────────────────────────────────────────────
       # Bubble Card variant (Clooos/Bubble-Card v3.2.x, via HACS) — same
