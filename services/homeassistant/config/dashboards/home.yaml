@@ -47,6 +47,11 @@ views:
             icon: mdi:blur
             show_state: true
             show_name: false
+        # Приглушаем дефолтный ярко-синий фон pills до нейтрального серого.
+        styles: |
+          .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 {
+            background: rgba(var(--rgb-primary-text-color), 0.06) !important;
+          }
 
       # --- Управление ---
       - type: custom:bubble-card
