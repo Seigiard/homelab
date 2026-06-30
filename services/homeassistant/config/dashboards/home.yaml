@@ -19,9 +19,9 @@
 
 title: Дом
 views:
-  - title: Спальня
+  - title: Дім
     path: bedroom
-    icon: mdi:bed
+    icon: mdi:home
     cards:
       # Очисник (Bubble Card, Clooos/Bubble-Card v3.2.x via HACS).
       # Блоки: управление (очиститель, увлажнение), статы (воздух), фильтры —
