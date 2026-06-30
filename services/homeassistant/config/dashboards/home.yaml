@@ -41,6 +41,8 @@ views:
             name: PM2.5
           - entity: sensor.bedroom_air_cleaner_and_purifier_temperature
             name: Темп.
+          - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
+            name: Вологість
 
       # Модуль снят → предупреждение вместо управления увлажнением и влажности.
       - type: conditional
@@ -155,7 +157,7 @@ views:
         entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
         name: Повітря
         icon: mdi:blur
-        show_state: true
+        show_state: false        # PM2.5 теперь в pill справа, а не под заголовком
         sub_button:
           - entity: sensor.bedroom_air_cleaner_and_purifier_temperature
             icon: mdi:thermometer
@@ -163,6 +165,10 @@ views:
             show_name: false
           - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
             icon: mdi:water-percent
+            show_state: true
+            show_name: false
+          - entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
+            icon: mdi:blur
             show_state: true
             show_name: false
 
