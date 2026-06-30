@@ -8,6 +8,11 @@ services:
     environment:
       - TZ=${TZ:-Europe/Bratislava}
       - GLANCES_OPT=-w -C /glances/conf/glances.conf
+    # REST API на loopback хоста — Home Assistant (network_mode: host) читает
+    # 127.0.0.1:61208. Привязка к 127.0.0.1, а не 0.0.0.0: web-UI без аутентификации,
+    # светить его в LAN нельзя (наружу — только Traefik+Authelia ниже).
+    ports:
+      - "127.0.0.1:61208:61208"
     volumes:
       - /:/rootfs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
