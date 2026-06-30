@@ -310,3 +310,48 @@ views:
   #     entity: vacuum.<name>
   #     features:
   #       - type: vacuum-commands
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Сервер — здоровье железа (данные Glances). Entity ids проверены
+  # 2026-06-30. Board-температур it8613 в HA нет (коллизия лейблов temp/fan
+  # в Glances) — тепло по CPU/NVMe/GPU. Fan 3 (it8613 2) не подключён.
+  # Алерты — config/packages/hardware-health.yaml.
+  # ─────────────────────────────────────────────────────────────────────
+  - title: Сервер
+    path: server
+    icon: mdi:server
+    cards:
+      - type: glance
+        title: Сейчас
+        columns: 3
+        entities:
+          - entity: sensor.127_0_0_1_tctl_temperature
+            name: CPU
+          - entity: sensor.127_0_0_1_nvme_ssd_temperature
+            name: NVMe
+          - entity: sensor.127_0_0_1_edge_temperature
+            name: GPU
+          - entity: sensor.127_0_0_1_it8613_0_fan_speed
+            name: Fan 1
+          - entity: sensor.127_0_0_1_it8613_1_fan_speed
+            name: Fan 2
+
+      - type: history-graph
+        title: Температуры (24 ч)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.127_0_0_1_tctl_temperature
+            name: CPU
+          - entity: sensor.127_0_0_1_nvme_ssd_temperature
+            name: NVMe
+          - entity: sensor.127_0_0_1_edge_temperature
+            name: GPU
+
+      - type: history-graph
+        title: Обороты вентиляторов (24 ч)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.127_0_0_1_it8613_0_fan_speed
+            name: Fan 1
+          - entity: sensor.127_0_0_1_it8613_1_fan_speed
+            name: Fan 2

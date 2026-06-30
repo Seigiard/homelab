@@ -129,6 +129,13 @@ flowchart LR
 
 _Execution note: точные `entity_id` зависят от лейблов Glances и слугификации HA — определяются здесь и подставляются в U3/U4 вместо плейсхолдеров._
 
+**Status (2026-06-30): сделано.** API отдаёт и температуры, и `fan_speed` → **гейт U5 закрыт, fallback не нужен** (U5 → Deferred). Фактические `entity_id` (префикс по хосту `127.0.0.1`):
+
+- CPU `sensor.127_0_0_1_tctl_temperature`, NVMe `sensor.127_0_0_1_nvme_ssd_temperature`, GPU `sensor.127_0_0_1_edge_temperature`
+- Fans `sensor.127_0_0_1_it8613_0_fan_speed` / `_1_fan_speed`; `_2_fan_speed` = 0 (не подключён, в алерты не берётся)
+
+**Коллизия лейблов:** Glances отдаёт один лейбл `it8613 N` и для temperature, и для fan_speed → в HA по каждому лейблу выживает только одна сущность (fan). Board-температуры it8613 в HA **отсутствуют** — тепловую картину дают CPU/NVMe/GPU, потеря принята.
+
 ---
 
 ### U3. Git-версионируемые алерты (packages) с нотификацией в mobile app
@@ -148,8 +155,9 @@ _Execution note: точные `entity_id` зависят от лейблов Gla
   | Сенсор | Warning | Critical |
   | --- | --- | --- |
   | CPU `k10temp Tctl` | >85°C, 5 мин | >95°C |
-  | NVMe `Composite` | >70°C | >80°C (крит диска 88.8) |
-  | Board `it8613 temp3` | >65°C | >75°C |
+  | NVMe `Composite` | >75°C | >82°C (крит диска 88.8) |
+
+  _Пороги NVMe подняты против исходных 70/80: диск в простое уже 56–58°C, под нагрузкой штатно заходит за 70. Board `it8613 temp3` из таблицы убран — этой сущности в HA нет (коллизия лейблов, см. U2)._
 
 - Fan-failure: `fan2` ИЛИ `fan3` `== 0` RPM **И** CPU temp > ~50°C, `for: 2min` → critical-нотификация. Это ключевой алерт.
 - Действие — `notify.mobile_app_<device>` (точное имя сервиса зафиксировать из HA; вынести в плейсхолдер/переменную).
@@ -218,6 +226,8 @@ _Execution note: точные `entity_id` зависят от лейблов Gla
 
 _Этот юнит — no-op, если U2 подтвердил нативный `fan_speed`. Тогда он уходит в Deferred._
 
+**Status (2026-06-30): Deferred — не требуется.** U2 подтвердил нативный `fan_speed` от Glances (`it8613 0/1` отдают RPM). SSH-fallback не реализуется.
+
 ---
 
 ### U6. Документация
@@ -261,10 +271,11 @@ _Этот юнит — no-op, если U2 подтвердил нативный 
 
 ## Risks & Dependencies
 
-- **Glances-контейнер не видит hwmon it8613** → нет `fan_speed`. Mitigation: рестарт Glances (драйвер грузился позже старта контейнера); при провале — U5 (SSH-fallback). Проверяется в U2 до написания алертов.
+- **Glances-контейнер не видит hwmon it8613** → нет `fan_speed`. ~~Mitigation: рестарт Glances; при провале — U5.~~ **Снято (2026-06-30):** API отдаёт `fan_speed` для `it8613 0/1`, U5 не нужен.
+- **Коллизия лейблов Glances** (один `it8613 N` на temp+fan) → board-температуры it8613 в HA не создаются. Принято: тепло по CPU/NVMe/GPU; опора fan-failure — `Tctl`.
 - **Неаутентифицированный Glances на опубликованном порту** → mitigation: bind строго на `127.0.0.1`, проверка из LAN в U1.
 - **Точные `entity_id`** зависят от лейблов Glances/слугификации HA — определяются в U2, плейсхолдеры в U3/U4 заменяются фактическими.
-- **Имя сервиса `notify.mobile_app_<device>`** зависит от устройства — зафиксировать из конкретного HA при U3.
+- **Имя сервиса нотификации** — **зафиксировано (2026-06-30):** `notify.nothingphone` (из существующего `config/packages/philips_ac3737.yaml`).
 - **Включение packages/dashboard** требует разовой правки `configuration.yaml` в appdata (не git) — операционный шаг, отражён в U3/U4/U6.
 
 ---

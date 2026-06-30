@@ -1,0 +1,105 @@
+# Здоровье железа сервера — алерты по данным Glances (интеграция HA Glances).
+#
+# Источник: Glances REST API (127.0.0.1:61208), сенсоры lm-sensors хоста.
+# Entity ids проверены на этой установке (Developer Tools → States, 2026-06-30):
+#   CPU  (k10temp Tctl)  : sensor.127_0_0_1_tctl_temperature
+#   NVMe (Kingston Comp.): sensor.127_0_0_1_nvme_ssd_temperature
+#   GPU  (amdgpu edge)   : sensor.127_0_0_1_edge_temperature
+#   Fan1 (it8613)        : sensor.127_0_0_1_it8613_0_fan_speed   (~1000 RPM)
+#   Fan2 (it8613)        : sensor.127_0_0_1_it8613_1_fan_speed   (~1000 RPM)
+#   Fan3 (it8613)        : sensor.127_0_0_1_it8613_2_fan_speed   — НЕ подключён, всегда 0 → в алерты НЕ берём
+#
+# Пуш — notify.nothingphone (как в philips_ac3737.yaml).
+#
+# Заметки:
+# - Температуры it8613 (board) в HA отсутствуют: Glances отдаёт один лейбл "it8613 N"
+#   и для temp, и для fan → при импорте в HA выживают только fan. Board-температуру
+#   не мониторим; тепловую картину дают CPU/NVMe/GPU.
+# - Опорная температура для fan-failure — CPU (Tctl): при отказе вентилятора растёт.
+# - Пороги NVMe подняты против первоначального плана (70/80 → 75/82): диск в простое
+#   уже 56–58°C, под нагрузкой штатно заходит за 70 (крит самого диска 88.8°C).
+# - for: гасит кратковременные выбросы. mode: single — без штормов повторных пушей.
+
+automation:
+  - id: server_cpu_temp_warning
+    alias: "Сервер: CPU нагрев (warning)"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.127_0_0_1_tctl_temperature
+        above: 85
+        for: "00:10:00"
+    action:
+      - service: notify.nothingphone
+        data:
+          title: "⚠️ Сервер: CPU греется"
+          message: "CPU {{ trigger.to_state.state }}°C (>85 уже 10 мин)."
+
+  - id: server_cpu_temp_critical
+    alias: "Сервер: CPU перегрев (critical)"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.127_0_0_1_tctl_temperature
+        above: 95
+        for: "00:01:00"
+    action:
+      - service: notify.nothingphone
+        data:
+          title: "🚨 Сервер: CPU перегрев"
+          message: "CPU {{ trigger.to_state.state }}°C (>95). Проверь нагрузку/охлаждение."
+          data:
+            ttl: 0
+            priority: high
+
+  - id: server_nvme_temp_warning
+    alias: "Сервер: NVMe нагрев (warning)"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.127_0_0_1_nvme_ssd_temperature
+        above: 75
+        for: "00:10:00"
+    action:
+      - service: notify.nothingphone
+        data:
+          title: "⚠️ Сервер: NVMe греется"
+          message: "NVMe {{ trigger.to_state.state }}°C (>75 уже 10 мин)."
+
+  - id: server_nvme_temp_critical
+    alias: "Сервер: NVMe перегрев (critical)"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.127_0_0_1_nvme_ssd_temperature
+        above: 82
+        for: "00:02:00"
+    action:
+      - service: notify.nothingphone
+        data:
+          title: "🚨 Сервер: NVMe перегрев"
+          message: "NVMe {{ trigger.to_state.state }}°C (>82, крит диска 88.8)."
+          data:
+            ttl: 0
+            priority: high
+
+  - id: server_fan_failure
+    alias: "Сервер: отказ вентилятора"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id:
+          - sensor.127_0_0_1_it8613_0_fan_speed
+          - sensor.127_0_0_1_it8613_1_fan_speed
+        below: 1
+        for: "00:02:00"
+    action:
+      - service: notify.nothingphone
+        data:
+          title: "🚨 Сервер: вентилятор остановился"
+          message: >-
+            {{ trigger.to_state.attributes.friendly_name }} = 0 RPM уже 2 мин.
+            CPU {{ states('sensor.127_0_0_1_tctl_temperature') }}°C.
+          data:
+            ttl: 0
+            priority: high
