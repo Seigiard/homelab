@@ -24,8 +24,9 @@ views:
     icon: mdi:home
     cards:
       # Очисник (Bubble Card, Clooos/Bubble-Card v3.2.x via HACS).
-      # Блоки: управление (очиститель, увлажнение), статы (воздух), фильтры —
-      # появляются ТОЛЬКО когда фильтр пора менять (< 10% ресурса).
+      # Заголовок-разделитель несёт pills: темп / влажність / PM2.5.
+      # Блоки: управление (очиститель, увлажнение); фильтры — появляются
+      # ТОЛЬКО когда фильтр пора менять (< 10% ресурса).
       # Note: Bubble Card's slider не поддерживает домен humidifier, поэтому
       # влажность — пресеты 40/50/60%; hold карточки → more-info.
       # Лампы зала и робот-пылесос добавятся отдельными секциями ниже.
@@ -33,6 +34,19 @@ views:
         card_type: separator
         name: Очисник
         icon: mdi:air-purifier
+        sub_button:
+          - entity: sensor.bedroom_air_cleaner_and_purifier_temperature
+            icon: mdi:thermometer
+            show_state: true
+            show_name: false
+          - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
+            icon: mdi:water-percent
+            show_state: true
+            show_name: false
+          - entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
+            icon: mdi:blur
+            show_state: true
+            show_name: false
 
       # --- Управление ---
       - type: custom:bubble-card
@@ -80,28 +94,6 @@ views:
           ${hass.states['binary_sensor.bedroom_air_cleaner_and_purifier_humidification']?.state === 'off' ? `.bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'auto' ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
-
-      # --- Повітря ---
-      - type: custom:bubble-card
-        card_type: button
-        button_type: state
-        entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
-        name: Повітря
-        icon: mdi:blur
-        show_state: false        # PM2.5 теперь в pill справа, а не под заголовком
-        sub_button:
-          - entity: sensor.bedroom_air_cleaner_and_purifier_temperature
-            icon: mdi:thermometer
-            show_state: true
-            show_name: false
-          - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-            icon: mdi:water-percent
-            show_state: true
-            show_name: false
-          - entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
-            icon: mdi:blur
-            show_state: true
-            show_name: false
 
       # --- Зволоження (увлажнение + влажность объединены в одну карточку) ---
       # Модуль снят (template binary_sensor: humidifier on + humidification off) →
