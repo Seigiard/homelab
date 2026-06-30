@@ -145,7 +145,7 @@ _Execution note: точные `entity_id` зависят от лейблов Gla
 **Dependencies:** U2.
 **Files:**
 
-- `services/homeassistant/config/packages/hardware-health.yaml` — automations: пороги температур + fan-failure.
+- `services/homeassistant/config/packages/hardware_health.yaml` — automations: пороги температур + fan-failure.
 - `${APPDATA_PATH}/homeassistant/configuration.yaml` — одноразово включить `homeassistant: { packages: !include_dir_named packages }` (если ещё не включено; см. README сервиса).
 
 **Approach:**
@@ -182,7 +182,7 @@ _Execution note: точные `entity_id` зависят от лейблов Gla
 **Dependencies:** U2.
 **Files:**
 
-- `services/homeassistant/config/dashboards/hardware-health.yaml` — Lovelace YAML.
+- `services/homeassistant/config/dashboards/hardware_health.yaml` — Lovelace YAML.
 - `${APPDATA_PATH}/homeassistant/configuration.yaml` — одноразово включить YAML-dashboard (см. README сервиса).
 
 **Approach:**
@@ -208,7 +208,7 @@ _Execution note: точные `entity_id` зависят от лейблов Gla
 **Dependencies:** U2 (активируется ТОЛЬКО если гейт U2 показал отсутствие `fan_speed`).
 **Files:**
 
-- `services/homeassistant/config/packages/hardware-health.yaml` — добавить `command_line` сенсоры оборотов.
+- `services/homeassistant/config/packages/hardware_health.yaml` — добавить `command_line` сенсоры оборотов.
 
 **Approach:**
 

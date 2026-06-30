@@ -315,7 +315,7 @@ views:
   # Сервер — здоровье железа (данные Glances). Entity ids проверены
   # 2026-06-30. Board-температур it8613 в HA нет (коллизия лейблов temp/fan
   # в Glances) — тепло по CPU/NVMe/GPU. Fan 3 (it8613 2) не подключён.
-  # Алерты — config/packages/hardware-health.yaml.
+  # Алерты — config/packages/hardware_health.yaml.
   # ─────────────────────────────────────────────────────────────────────
   - title: Сервер
     path: server
