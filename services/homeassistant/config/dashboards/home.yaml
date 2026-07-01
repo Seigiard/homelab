@@ -237,14 +237,49 @@ views:
           icon: mdi:filter
           show_state: true
 
-  # Lights and the robot vacuum land here once their integrations are added.
-  # Add tiles with the real entity ids (Developer Tools → States):
-  #   - type: tile
-  #     entity: light.<name>
-  #   - type: tile
-  #     entity: vacuum.<name>
-  #     features:
-  #       - type: vacuum-commands
+      # ─── Світло (Yeelight GU10 ×2) ───
+      # Група light.lampi_zala (helper Light group) керує обома лампами одразу:
+      # слайдер = спільна яскравість. Sub-buttons 1/2 — індивідуальне вмикання
+      # кожної лампи. Лампи лише brightness (без кольору).
+      - type: custom:bubble-card
+        card_type: separator
+        name: Світло
+        icon: mdi:lightbulb-group
+
+      - type: custom:bubble-card
+        card_type: button
+        button_type: slider
+        entity: light.lampi_zala
+        name: Лампи зала
+        icon: mdi:lightbulb-group
+        sub_button:
+          - entity: light.yeelink_monob_7a9d_light
+            name: "1"
+            icon: mdi:lightbulb
+            show_state: false
+            tap_action:
+              action: toggle
+          - entity: light.yeelink_monob_725e_light
+            name: "2"
+            icon: mdi:lightbulb
+            show_state: false
+            tap_action:
+              action: toggle
+
+      # ─── Робот-пилосос (Roborock S5 Max) ───
+      # Нативна плитка HA з vacuum-commands (старт/пауза, стоп, док, локатор):
+      # Bubble Card не має повноцінного керування домену vacuum.
+      - type: tile
+        entity: vacuum.roborock_s5e_ea3a_robot_cleaner
+        name: Пилосос
+        icon: mdi:robot-vacuum
+        features:
+          - type: vacuum-commands
+            commands:
+              - start_pause
+              - stop
+              - return_home
+              - locate
 
   # ─────────────────────────────────────────────────────────────────────
   # Сервер — здоровье железа (данные Glances). Entity ids проверены
