@@ -239,8 +239,7 @@ views:
 
       # ─── Світло (Yeelight GU10 ×2) ───
       # Група light.lampi_zala (helper Light group) керує обома лампами одразу:
-      # слайдер = спільна яскравість. Sub-buttons 1/2 — індивідуальне вмикання
-      # кожної лампи. Лампи лише brightness (без кольору).
+      # слайдер = спільна яскравість. Лампи лише brightness (без кольору).
       - type: custom:bubble-card
         card_type: separator
         name: Світло
@@ -252,19 +251,6 @@ views:
         entity: light.lampi_zala
         name: Лампи зала
         icon: mdi:lightbulb-group
-        sub_button:
-          - entity: light.yeelink_monob_7a9d_light
-            name: "1"
-            icon: mdi:lightbulb
-            show_state: false
-            tap_action:
-              action: toggle
-          - entity: light.yeelink_monob_725e_light
-            name: "2"
-            icon: mdi:lightbulb
-            show_state: false
-            tap_action:
-              action: toggle
 
       # ─── Робот-пилосос (Roborock S5 Max) ───
       # Нативна плитка HA з vacuum-commands (старт/пауза, стоп, док, локатор):
