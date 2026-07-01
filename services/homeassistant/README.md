@@ -89,6 +89,9 @@ Each `.yaml` under `config/packages/` is one package and may contain
   "Server hardware monitoring" below). CPU/NVMe overheat (warning + critical) and
   fan-failure (`it8613` fan = 0 RPM) → push via `notify.mobile_app_nothingphone`.
   Messages read values via `states()` (not `trigger.*`) so manual "Run" also works.
+  Also self-heals the Glances integration: if its sensors sit `unavailable` for
+  5 min (stuck failed-setup after a restart race), the `server_glances_autoreload`
+  automation calls `homeassistant.reload_config_entry` — the programmatic Reload.
 
 ## Git-versioned dashboard
 
@@ -167,6 +170,12 @@ e.g. `sensor.127_0_0_1_tctl_temperature`, `sensor.127_0_0_1_it8613_0_fan_speed`.
   temperature and a fan, so HA keeps only the fan entity per label. IT8613E board
   temperatures are therefore not in HA; CPU/NVMe/GPU cover the thermal picture.
   Fan `it8613 2` is unconnected (always 0, excluded from the alert).
+- **Self-heal:** if HA and Glances restart at the same time (e.g. a server reboot),
+  HA can hit Glances mid-restart and permanently fail the integration setup — the
+  HA Glances integration does not wrap the connection error in `ConfigEntryNotReady`,
+  so it never retries and every sensor stays `unavailable` until a manual Reload. The
+  `server_glances_autoreload` automation detects 5 min of `unavailable` and reloads
+  the entry automatically.
 
 ## Notes
 

@@ -23,6 +23,11 @@
 # - for: гасит кратковременные выбросы. mode: single — без штормов повторных пушей.
 # - Сообщения читают значение через states(), а не trigger.* — иначе ручной прогон
 #   (Run в UI) падает: при Run объекта trigger нет, шаблон ломается, notify не уходит.
+# - server_glances_autoreload: чинит застрявший failed-setup интеграции Glances.
+#   Интеграция HA Glances не оборачивает ошибку соединения в ConfigEntryNotReady —
+#   если при старте HA поймал Glances в момент рестарта (гонка после ребута сервера),
+#   setup падает НАСМЕРТЬ и сам не повторяется, все сенсоры висят unavailable до
+#   ручного Reload. Автоматизация делает этот Reload сама через 5 мин простоя.
 
 automation:
   - id: server_cpu_temp_warning
@@ -107,3 +112,16 @@ automation:
           data:
             ttl: 0
             priority: high
+
+  - id: server_glances_autoreload
+    alias: "Сервер: авто-reload интеграции Glances"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: sensor.127_0_0_1_tctl_temperature
+        to: "unavailable"
+        for: "00:05:00"
+    action:
+      - service: homeassistant.reload_config_entry
+        target:
+          entity_id: sensor.127_0_0_1_tctl_temperature
