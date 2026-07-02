@@ -1,0 +1,65 @@
+# Roborock S5 Max — pick rooms, then clean the selection in one run
+#
+# Stored in git so the config can be restored. Loaded as a Home Assistant
+# "package" — see services/homeassistant/README.md for the one-time setup.
+#
+# Integration: xiaomi_miot (HACS, al-one). The per-room segment buttons
+# (button.roborock_s5e_ea3a_segment_NN) each start ONE room immediately. To
+# clean several rooms in a single pass we call vacuum.send_command with the
+# miio command app_segment_clean and a LIST of segment ids.
+#
+# room_mapping verified 2026-07-02 (Developer Tools -> States, button.info):
+#   16 Гостиная (Зала) · 17 Спальня · 18 Кухня · 19 Прихожая · 20 Кабинет
+#
+# Flow: the input_boolean toggles below are the room selection; the script
+# gathers the toggled segment ids, sends them, then resets the toggles.
+# Dashboard UI: dashboards/home.yaml, "Робот-пилосос" section.
+
+input_boolean:
+  roborock_room_zala:
+    name: Зала
+    icon: mdi:sofa
+  roborock_room_spalnya:
+    name: Спальня
+    icon: mdi:bed
+  roborock_room_kuhnya:
+    name: Кухня
+    icon: mdi:stove
+  roborock_room_prihozha:
+    name: Прихожа
+    icon: mdi:coat-rack
+  roborock_room_kabinet:
+    name: Кабінет
+    icon: mdi:desk
+
+script:
+  roborock_clean_selected_rooms:
+    alias: Пилосос — прибрати вибрані кімнати
+    icon: mdi:broom
+    mode: single
+    sequence:
+      - variables:
+          segments: >-
+            {% set ns = namespace(s=[]) %}
+            {% if is_state('input_boolean.roborock_room_zala','on') %}{% set ns.s = ns.s + [16] %}{% endif %}
+            {% if is_state('input_boolean.roborock_room_spalnya','on') %}{% set ns.s = ns.s + [17] %}{% endif %}
+            {% if is_state('input_boolean.roborock_room_kuhnya','on') %}{% set ns.s = ns.s + [18] %}{% endif %}
+            {% if is_state('input_boolean.roborock_room_prihozha','on') %}{% set ns.s = ns.s + [19] %}{% endif %}
+            {% if is_state('input_boolean.roborock_room_kabinet','on') %}{% set ns.s = ns.s + [20] %}{% endif %}
+            {{ ns.s }}
+      - condition: template
+        value_template: "{{ segments | length > 0 }}"
+      - service: vacuum.send_command
+        target:
+          entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
+        data:
+          command: app_segment_clean
+          params: "{{ segments }}"
+      - service: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.roborock_room_zala
+            - input_boolean.roborock_room_spalnya
+            - input_boolean.roborock_room_kuhnya
+            - input_boolean.roborock_room_prihozha
+            - input_boolean.roborock_room_kabinet

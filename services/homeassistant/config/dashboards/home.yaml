@@ -286,54 +286,55 @@ views:
         features:
           - type: select-options
 
-      # Прибирання по кімнатах — segment-кнопки xiaomi_miot (button.press запускає
-      # прибирання конкретної кімнати). room_mapping перевірено 2026-07-02:
-      #   segment_16 Гостиная · 17 Спальня · 18 Кухня · 19 Прихожая · 20 Кабинет.
+      # Прибирання по кімнатах: вибери тогли потрібних кімнат, тисни «Прибрати».
+      # Bubble Card switch-кнопки = тогли input_boolean; name-кнопка запускає
+      # скрипт, що шле список сегментів через vacuum.send_command app_segment_clean
+      # — див. packages/roborock_room_cleaning.yaml.
       # Води/швабри S5 Max через xiaomi_miot не віддає — контролю вологості немає.
       - type: grid
         columns: 2
         square: false
         cards:
-          - type: button
+          - type: custom:bubble-card
+            card_type: button
+            button_type: switch
+            entity: input_boolean.roborock_room_zala
             name: Зала
             icon: mdi:sofa
-            tap_action:
-              action: perform-action
-              perform_action: button.press
-              target:
-                entity_id: button.roborock_s5e_ea3a_segment_16
-          - type: button
+          - type: custom:bubble-card
+            card_type: button
+            button_type: switch
+            entity: input_boolean.roborock_room_spalnya
             name: Спальня
             icon: mdi:bed
-            tap_action:
-              action: perform-action
-              perform_action: button.press
-              target:
-                entity_id: button.roborock_s5e_ea3a_segment_17
-          - type: button
+          - type: custom:bubble-card
+            card_type: button
+            button_type: switch
+            entity: input_boolean.roborock_room_kuhnya
             name: Кухня
             icon: mdi:stove
-            tap_action:
-              action: perform-action
-              perform_action: button.press
-              target:
-                entity_id: button.roborock_s5e_ea3a_segment_18
-          - type: button
+          - type: custom:bubble-card
+            card_type: button
+            button_type: switch
+            entity: input_boolean.roborock_room_prihozha
             name: Прихожа
             icon: mdi:coat-rack
-            tap_action:
-              action: perform-action
-              perform_action: button.press
-              target:
-                entity_id: button.roborock_s5e_ea3a_segment_19
-          - type: button
+          - type: custom:bubble-card
+            card_type: button
+            button_type: switch
+            entity: input_boolean.roborock_room_kabinet
             name: Кабінет
             icon: mdi:desk
-            tap_action:
-              action: perform-action
-              perform_action: button.press
-              target:
-                entity_id: button.roborock_s5e_ea3a_segment_20
+
+      - type: custom:bubble-card
+        card_type: button
+        button_type: name
+        name: Прибрати вибране
+        icon: mdi:broom
+        tap_action:
+          action: call-service
+          service: script.roborock_clean_selected_rooms
+          target: {}
 
   # ─────────────────────────────────────────────────────────────────────
   # Сервер — здоровье железа (данные Glances). Entity ids проверены
