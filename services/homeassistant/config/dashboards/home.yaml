@@ -24,7 +24,8 @@ views:
     icon: mdi:home
     cards:
       # Очисник (Bubble Card, Clooos/Bubble-Card v3.2.x via HACS).
-      # Заголовок-разделитель несёт pills: темп / влажність / PM2.5.
+      # Заголовок-разделитель несёт pill темп. Влажность → в карточку зволоження,
+      # PM2.5 → в карточку очищення (вместо "On").
       # Блоки: управление (очиститель, увлажнение); фильтры — появляются
       # ТОЛЬКО когда фильтр пора менять (< 10% ресурса).
       # Note: Bubble Card's slider не поддерживает домен humidifier, поэтому
@@ -39,17 +40,9 @@ views:
             icon: mdi:thermometer
             show_state: true
             show_name: false
-          - entity: sensor.bedroom_air_cleaner_and_purifier_humidity
-            icon: mdi:water-percent
-            show_state: true
-            show_name: false
-          - entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
-            icon: mdi:blur
-            show_state: true
-            show_name: false
-        # Pills без фона — только иконка + значение (плоский вид).
+        # Pill без фона — только иконка + значение (плоский вид).
         styles: |
-          .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 {
+          .bubble-sub-button-1 {
             background: transparent !important;
             box-shadow: none !important;
           }
@@ -61,7 +54,12 @@ views:
         entity: fan.bedroom_air_cleaner_and_purifier
         name: Очищення
         icon: mdi:air-purifier
-        show_state: true
+        show_state: false
+        show_attribute: true
+        button_action:
+          tap_action:
+            action: more-info
+            entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
         sub_button:
           - name: Авто
             icon: mdi:fan-auto
@@ -97,6 +95,7 @@ views:
         # don't highlight) instead of guessing. Turbo is never highlighted: it
         # reads null even when dry, indistinguishable from a manual speed.
         styles: |
+          ${(() => { const f = hass.states['fan.bedroom_air_cleaner_and_purifier']; const pm = hass.states['sensor.bedroom_air_cleaner_and_purifier_pm2_5']; const s = card.querySelector('.bubble-state'); if (s) s.innerText = (f.state === 'on' && pm) ? `${pm.state} ${pm.attributes.unit_of_measurement || 'µg/m³'}` : ''; return ''; })()}
           ${hass.states['binary_sensor.bedroom_air_cleaner_and_purifier_humidification']?.state === 'off' ? `.bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'auto' ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
@@ -117,6 +116,13 @@ views:
           name: Зволожувач знято
           icon: mdi:air-humidifier-off
           show_state: false
+          show_attribute: true
+          button_action:
+            tap_action:
+              action: more-info
+              entity: sensor.bedroom_air_cleaner_and_purifier_humidity
+          styles: |
+            ${(() => { const c = hass.states['sensor.bedroom_air_cleaner_and_purifier_humidity'].state; const s = card.querySelector('.bubble-state'); if (s) s.innerText = `${c}%`; return ''; })()}
 
       # Вторая строка карточки — «текущая % → целевая %» — собирается в styles:
       # Bubble Card не поддерживает шаблоны в name/state, только правку .bubble-state
@@ -145,6 +151,7 @@ views:
           button_action:
             tap_action:
               action: more-info
+              entity: sensor.bedroom_air_cleaner_and_purifier_humidity
           sub_button:
             - name: 40%
               icon: mdi:water-outline
@@ -174,7 +181,7 @@ views:
                 data:
                   humidity: 60
           styles: |
-            ${(() => { const t = hass.states['humidifier.bedroom_air_cleaner_and_purifier'].attributes.humidity; const c = hass.states['sensor.bedroom_air_cleaner_and_purifier_humidity'].state; const n = card.querySelector('.bubble-name'); const s = card.querySelector('.bubble-state'); if (n) n.innerText = `Зволоження, ${t}%`; if (s) s.innerText = `Поточна ${c}%`; return ''; })()}
+            ${(() => { const t = hass.states['humidifier.bedroom_air_cleaner_and_purifier'].attributes.humidity; const c = hass.states['sensor.bedroom_air_cleaner_and_purifier_humidity'].state; const n = card.querySelector('.bubble-name'); const s = card.querySelector('.bubble-state'); if (n) n.innerText = `Зволоження, ${t}%`; if (s) s.innerText = `${c}%`; return ''; })()}
             .bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }
             ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 40 ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
             ${hass.states['humidifier.bedroom_air_cleaner_and_purifier']?.attributes?.humidity === 50 ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
@@ -201,11 +208,12 @@ views:
           button_action:
             tap_action:
               action: more-info
+              entity: sensor.bedroom_air_cleaner_and_purifier_humidity
           sub_button:
             - name: Немає води
               icon: mdi:cup-off-outline
           styles: |
-            ${(() => { const t = hass.states['humidifier.bedroom_air_cleaner_and_purifier'].attributes.humidity; const c = hass.states['sensor.bedroom_air_cleaner_and_purifier_humidity'].state; const n = card.querySelector('.bubble-name'); const s = card.querySelector('.bubble-state'); if (n) n.innerText = `Зволоження, ${t}%`; if (s) s.innerText = `Поточна ${c}%`; return ''; })()}
+            ${(() => { const t = hass.states['humidifier.bedroom_air_cleaner_and_purifier'].attributes.humidity; const c = hass.states['sensor.bedroom_air_cleaner_and_purifier_humidity'].state; const n = card.querySelector('.bubble-name'); const s = card.querySelector('.bubble-state'); if (n) n.innerText = `Зволоження, ${t}%`; if (s) s.innerText = `${c}%`; return ''; })()}
             .bubble-sub-button-1 { background: var(--error-color) !important; }
 
       # --- Фильтры: блок появляется только когда нужна замена (< 10%) ---
