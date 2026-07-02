@@ -346,16 +346,26 @@ views:
             styles: |
               @media (max-width: 430px) { .bubble-name { display: none; } }
 
-      # Pop-up налаштувань: 1) потужність, 2) вибір кімнат, 3) запуск.
-      # Хедер показує ціль (sensor.roborock_cleaning_target: «Всё» або кімнати).
+      # Pop-up налаштувань: 1) запуск, 2) потужність, 3) вибір кімнат.
+      # name/icon = звичайний заголовок; БЕЗ entity — інакше хедер стає кнопкою
+      # і тап пробує toggle сенсора (помилка sensor.turn_off not found).
       - type: custom:bubble-card
         card_type: pop-up
         hash: '#roborock-rooms'
         name: Прибирання
         icon: mdi:broom
-        entity: sensor.roborock_cleaning_target
-        show_state: true
         cards:
+          - type: custom:bubble-card
+            card_type: button
+            button_type: name
+            name: Запустити
+            icon: mdi:play
+            tap_action: &vacuum_start
+              action: call-service
+              service: script.roborock_clean_selected_rooms
+              target: {}
+            button_action:
+              tap_action: *vacuum_start
           - type: custom:bubble-card
             card_type: select
             entity: select.roborock_s5e_ea3a_mode
@@ -400,17 +410,6 @@ views:
                 entity: input_boolean.roborock_room_kabinet
                 name: Кабінет
                 icon: mdi:desk
-          - type: custom:bubble-card
-            card_type: button
-            button_type: name
-            name: Запустити
-            icon: mdi:play
-            tap_action: &vacuum_start
-              action: call-service
-              service: script.roborock_clean_selected_rooms
-              target: {}
-            button_action:
-              tap_action: *vacuum_start
 
   # ─────────────────────────────────────────────────────────────────────
   # Сервер — здоровье железа (данные Glances). Entity ids проверены

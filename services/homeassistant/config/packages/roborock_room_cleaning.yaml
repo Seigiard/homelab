@@ -13,10 +13,8 @@
 #
 # Flow (dashboards/home.yaml, "Пилосос" section):
 #   - input_boolean toggles below = room selection (shown in a Bubble pop-up)
-#   - sensor.roborock_cleaning_target = "Всё" or the selected room names,
-#     shown on the "Прибираємо" card
-#   - the main Start button runs the script: if any room is selected it sends
-#     those segments, otherwise it starts a full-home clean; then resets toggles.
+#   - the Start button runs the script: if any room is selected it sends those
+#     segments, otherwise it starts a full-home clean; then resets toggles.
 
 input_boolean:
   roborock_room_zala:
@@ -34,20 +32,6 @@ input_boolean:
   roborock_room_kabinet:
     name: Кабінет
     icon: mdi:desk
-
-template:
-  - sensor:
-      - name: Roborock cleaning target
-        unique_id: roborock_cleaning_target
-        icon: mdi:home-map-marker
-        state: >-
-          {% set ns = namespace(r=[]) %}
-          {% if is_state('input_boolean.roborock_room_zala','on') %}{% set ns.r = ns.r + ['Зала'] %}{% endif %}
-          {% if is_state('input_boolean.roborock_room_spalnya','on') %}{% set ns.r = ns.r + ['Спальня'] %}{% endif %}
-          {% if is_state('input_boolean.roborock_room_kuhnya','on') %}{% set ns.r = ns.r + ['Кухня'] %}{% endif %}
-          {% if is_state('input_boolean.roborock_room_prihozha','on') %}{% set ns.r = ns.r + ['Прихожа'] %}{% endif %}
-          {% if is_state('input_boolean.roborock_room_kabinet','on') %}{% set ns.r = ns.r + ['Кабінет'] %}{% endif %}
-          {{ 'Всё' if ns.r | length == 0 else ns.r | join(', ') }}
 
 script:
   roborock_clean_selected_rooms:
