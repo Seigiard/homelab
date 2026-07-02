@@ -347,13 +347,12 @@ views:
               @media (max-width: 430px) { .bubble-name { display: none; } }
 
       # Pop-up налаштувань: 1) запуск, 2) потужність, 3) вибір кімнат.
-      # name/icon = звичайний заголовок; БЕЗ entity — інакше хедер стає кнопкою
-      # і тап пробує toggle сенсора (помилка sensor.turn_off not found).
+      # show_header: false — без заголовка й хрестика; закривається свайпом вниз,
+      # тапом поза попапом або Escape.
       - type: custom:bubble-card
         card_type: pop-up
         hash: '#roborock-rooms'
-        name: Прибирання
-        icon: mdi:broom
+        show_header: false
         cards:
           - type: custom:bubble-card
             card_type: button
