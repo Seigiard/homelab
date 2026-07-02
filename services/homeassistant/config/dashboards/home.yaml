@@ -268,6 +268,10 @@ views:
         icon: mdi:play
         show_name: false
         show_state: true
+        tap_action:
+          action: call-service
+          service: script.roborock_clean_selected_rooms
+          target: {}
         button_action:
           tap_action:
             action: call-service
