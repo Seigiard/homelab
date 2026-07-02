@@ -309,17 +309,28 @@ views:
 
       # Що прибираємо: «Всё» (нічого не вибрано) або список кімнат. Тап → pop-up
       # із тоглами. sensor.roborock_cleaning_target + тогли — у package.
-      - type: custom:bubble-card
-        card_type: button
-        button_type: state
-        entity: sensor.roborock_cleaning_target
-        name: Прибираємо
-        icon: mdi:home-map-marker
-        show_state: true
-        button_action:
-          tap_action:
-            action: navigate
-            navigation_path: '#roborock-rooms'
+      # «Прибираємо» і «Потужність» — у ряд 1/2. Pop-up (невидимий) — нижче.
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:bubble-card
+            card_type: button
+            button_type: state
+            entity: sensor.roborock_cleaning_target
+            name: Прибираємо
+            icon: mdi:home-map-marker
+            show_state: true
+            button_action:
+              tap_action:
+                action: navigate
+                navigation_path: '#roborock-rooms'
+          - type: custom:bubble-card
+            card_type: select
+            entity: select.roborock_s5e_ea3a_mode
+            name: Потужність
+            icon: mdi:fan
+            show_state: true
 
       - type: custom:bubble-card
         card_type: pop-up
@@ -361,14 +372,6 @@ views:
                 entity: input_boolean.roborock_room_kabinet
                 name: Кабінет
                 icon: mdi:desk
-
-      # Потужність всмоктування — Bubble Card select, show_state = поточний режим.
-      - type: custom:bubble-card
-        card_type: select
-        entity: select.roborock_s5e_ea3a_mode
-        name: Потужність
-        icon: mdi:fan
-        show_state: true
 
   # ─────────────────────────────────────────────────────────────────────
   # Сервер — здоровье железа (данные Glances). Entity ids проверены
