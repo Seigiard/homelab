@@ -277,14 +277,13 @@ views:
         vendor: roborock
 
       # Потужність всмоктування окремим контролом — select від xiaomi_miot
-      # (Silent / Basic / Strong / Full Speed). Той самий режим, що всередині
-      # benct-карти, але тут окремим дропдауном у плитці.
-      - type: tile
+      # (Silent / Basic / Strong / Full Speed). Bubble Card select = дропдаун.
+      - type: custom:bubble-card
+        card_type: select
         entity: select.roborock_s5e_ea3a_mode
         name: Потужність
         icon: mdi:fan
-        features:
-          - type: select-options
+        show_state: true
 
       # Прибирання по кімнатах: вибери тогли потрібних кімнат, тисни «Прибрати».
       # Bubble Card switch-кнопки = тогли input_boolean; name-кнопка запускає
