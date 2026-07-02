@@ -276,6 +276,65 @@ views:
         entity: vacuum.roborock_s5e_ea3a_robot_cleaner
         vendor: roborock
 
+      # Потужність всмоктування окремим контролом — select від xiaomi_miot
+      # (Silent / Basic / Strong / Full Speed). Той самий режим, що всередині
+      # benct-карти, але тут окремим дропдауном у плитці.
+      - type: tile
+        entity: select.roborock_s5e_ea3a_mode
+        name: Потужність
+        icon: mdi:fan
+        features:
+          - type: select-options
+
+      # Прибирання по кімнатах — segment-кнопки xiaomi_miot (button.press запускає
+      # прибирання конкретної кімнати). room_mapping перевірено 2026-07-02:
+      #   segment_16 Гостиная · 17 Спальня · 18 Кухня · 19 Прихожая · 20 Кабинет.
+      # Води/швабри S5 Max через xiaomi_miot не віддає — контролю вологості немає.
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: button
+            name: Зала
+            icon: mdi:sofa
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.roborock_s5e_ea3a_segment_16
+          - type: button
+            name: Спальня
+            icon: mdi:bed
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.roborock_s5e_ea3a_segment_17
+          - type: button
+            name: Кухня
+            icon: mdi:stove
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.roborock_s5e_ea3a_segment_18
+          - type: button
+            name: Прихожа
+            icon: mdi:coat-rack
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.roborock_s5e_ea3a_segment_19
+          - type: button
+            name: Кабінет
+            icon: mdi:desk
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.roborock_s5e_ea3a_segment_20
+
   # ─────────────────────────────────────────────────────────────────────
   # Сервер — здоровье железа (данные Glances). Entity ids проверены
   # 2026-06-30. Board-температур it8613 в HA нет (коллизия лейблов temp/fan
