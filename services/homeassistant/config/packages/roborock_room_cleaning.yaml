@@ -11,9 +11,12 @@
 # room_mapping verified 2026-07-02 (Developer Tools -> States, button.info):
 #   16 Гостиная (Зала) · 17 Спальня · 18 Кухня · 19 Прихожая · 20 Кабинет
 #
-# Flow: the input_boolean toggles below are the room selection; the script
-# gathers the toggled segment ids, sends them, then resets the toggles.
-# Dashboard UI: dashboards/home.yaml, "Робот-пилосос" section.
+# Flow (dashboards/home.yaml, "Пилосос" section):
+#   - input_boolean toggles below = room selection (shown in a Bubble pop-up)
+#   - sensor.roborock_cleaning_target = "Всё" or the selected room names,
+#     shown on the "Прибираємо" card
+#   - the main Start button runs the script: if any room is selected it sends
+#     those segments, otherwise it starts a full-home clean; then resets toggles.
 
 input_boolean:
   roborock_room_zala:
@@ -32,9 +35,23 @@ input_boolean:
     name: Кабінет
     icon: mdi:desk
 
+template:
+  - sensor:
+      - name: Roborock cleaning target
+        unique_id: roborock_cleaning_target
+        icon: mdi:home-map-marker
+        state: >-
+          {% set ns = namespace(r=[]) %}
+          {% if is_state('input_boolean.roborock_room_zala','on') %}{% set ns.r = ns.r + ['Зала'] %}{% endif %}
+          {% if is_state('input_boolean.roborock_room_spalnya','on') %}{% set ns.r = ns.r + ['Спальня'] %}{% endif %}
+          {% if is_state('input_boolean.roborock_room_kuhnya','on') %}{% set ns.r = ns.r + ['Кухня'] %}{% endif %}
+          {% if is_state('input_boolean.roborock_room_prihozha','on') %}{% set ns.r = ns.r + ['Прихожа'] %}{% endif %}
+          {% if is_state('input_boolean.roborock_room_kabinet','on') %}{% set ns.r = ns.r + ['Кабінет'] %}{% endif %}
+          {{ 'Всё' if ns.r | length == 0 else ns.r | join(', ') }}
+
 script:
   roborock_clean_selected_rooms:
-    alias: Пилосос — прибрати вибрані кімнати
+    alias: Пилосос — прибрати (вибрані кімнати або все)
     icon: mdi:broom
     mode: single
     sequence:
@@ -47,19 +64,26 @@ script:
             {% if is_state('input_boolean.roborock_room_prihozha','on') %}{% set ns.s = ns.s + [19] %}{% endif %}
             {% if is_state('input_boolean.roborock_room_kabinet','on') %}{% set ns.s = ns.s + [20] %}{% endif %}
             {{ ns.s }}
-      - condition: template
-        value_template: "{{ segments | length > 0 }}"
-      - service: vacuum.send_command
-        target:
-          entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
-        data:
-          command: app_segment_clean
-          params: "{{ segments }}"
-      - service: input_boolean.turn_off
-        target:
-          entity_id:
-            - input_boolean.roborock_room_zala
-            - input_boolean.roborock_room_spalnya
-            - input_boolean.roborock_room_kuhnya
-            - input_boolean.roborock_room_prihozha
-            - input_boolean.roborock_room_kabinet
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ segments | length > 0 }}"
+            sequence:
+              - service: vacuum.send_command
+                target:
+                  entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
+                data:
+                  command: app_segment_clean
+                  params: "{{ segments }}"
+              - service: input_boolean.turn_off
+                target:
+                  entity_id:
+                    - input_boolean.roborock_room_zala
+                    - input_boolean.roborock_room_spalnya
+                    - input_boolean.roborock_room_kuhnya
+                    - input_boolean.roborock_room_prihozha
+                    - input_boolean.roborock_room_kabinet
+        default:
+          - service: vacuum.start
+            target:
+              entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner

@@ -253,87 +253,118 @@ views:
         icon: mdi:lightbulb-group
 
       # ─── Робот-пилосос (Roborock S5 Max) ───
-      # Нативна плитка HA з vacuum-commands (старт/пауза, стоп, док, локатор):
-      # Bubble Card не має повноцінного керування домену vacuum.
-      - type: tile
-        entity: vacuum.roborock_s5e_ea3a_robot_cleaner
+      - type: custom:bubble-card
+        card_type: separator
         name: Пилосос
         icon: mdi:robot-vacuum
-        features:
-          - type: vacuum-commands
-            commands:
-              - start_pause
-              - stop
-              - return_home
-              - locate
 
-      # benct/lovelace-xiaomi-vacuum-card (HACS) — статус-карта: батарея, стан,
-      # режим вентилятора, кнопки. Кнопки викликають стандартні vacuum.*-сервіси.
-      # Статистичні атрибути (cleaned_area/cleaning_time) заповнені лише якщо
-      # інтеграція їх віддає — xiaomi_miot назви атрибутів відрізняються від miio,
-      # тож частина полів може бути порожня.
-      - type: custom:xiaomi-vacuum-card
+      # Керування: головна кнопка = пуск (script — вибрані кімнати АБО все),
+      # показує поточний стан (Docked / Cleaning). Sub-кнопки: стоп, пауза,
+      # «де я» (locate), на базу.
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
         entity: vacuum.roborock_s5e_ea3a_robot_cleaner
-        vendor: roborock
+        icon: mdi:play
+        show_name: false
+        show_state: true
+        button_action:
+          tap_action:
+            action: call-service
+            service: script.roborock_clean_selected_rooms
+            target: {}
+        sub_button:
+          - icon: mdi:stop
+            show_background: false
+            tap_action:
+              action: call-service
+              service: vacuum.stop
+              target:
+                entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
+          - icon: mdi:pause
+            show_background: false
+            tap_action:
+              action: call-service
+              service: vacuum.pause
+              target:
+                entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
+          - icon: mdi:map-marker
+            show_background: false
+            tap_action:
+              action: call-service
+              service: vacuum.locate
+              target:
+                entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
+          - icon: mdi:home-import-outline
+            show_background: false
+            tap_action:
+              action: call-service
+              service: vacuum.return_to_base
+              target:
+                entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
 
-      # Потужність всмоктування окремим контролом — select від xiaomi_miot
-      # (Silent / Basic / Strong / Full Speed). Bubble Card select = дропдаун.
+      # Що прибираємо: «Всё» (нічого не вибрано) або список кімнат. Тап → pop-up
+      # із тоглами. sensor.roborock_cleaning_target + тогли — у package.
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.roborock_cleaning_target
+        name: Прибираємо
+        icon: mdi:home-map-marker
+        show_state: true
+        button_action:
+          tap_action:
+            action: navigate
+            navigation_path: '#roborock-rooms'
+
+      - type: custom:bubble-card
+        card_type: pop-up
+        hash: '#roborock-rooms'
+        name: Кімнати
+        icon: mdi:broom
+        cards:
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: custom:bubble-card
+                card_type: button
+                button_type: switch
+                entity: input_boolean.roborock_room_zala
+                name: Зала
+                icon: mdi:sofa
+              - type: custom:bubble-card
+                card_type: button
+                button_type: switch
+                entity: input_boolean.roborock_room_spalnya
+                name: Спальня
+                icon: mdi:bed
+              - type: custom:bubble-card
+                card_type: button
+                button_type: switch
+                entity: input_boolean.roborock_room_kuhnya
+                name: Кухня
+                icon: mdi:stove
+              - type: custom:bubble-card
+                card_type: button
+                button_type: switch
+                entity: input_boolean.roborock_room_prihozha
+                name: Прихожа
+                icon: mdi:coat-rack
+              - type: custom:bubble-card
+                card_type: button
+                button_type: switch
+                entity: input_boolean.roborock_room_kabinet
+                name: Кабінет
+                icon: mdi:desk
+
+      # Потужність всмоктування — Bubble Card select, show_state = поточний режим.
       - type: custom:bubble-card
         card_type: select
         entity: select.roborock_s5e_ea3a_mode
         name: Потужність
         icon: mdi:fan
         show_state: true
-
-      # Прибирання по кімнатах: вибери тогли потрібних кімнат, тисни «Прибрати».
-      # Bubble Card switch-кнопки = тогли input_boolean; name-кнопка запускає
-      # скрипт, що шле список сегментів через vacuum.send_command app_segment_clean
-      # — див. packages/roborock_room_cleaning.yaml.
-      # Води/швабри S5 Max через xiaomi_miot не віддає — контролю вологості немає.
-      - type: grid
-        columns: 2
-        square: false
-        cards:
-          - type: custom:bubble-card
-            card_type: button
-            button_type: switch
-            entity: input_boolean.roborock_room_zala
-            name: Зала
-            icon: mdi:sofa
-          - type: custom:bubble-card
-            card_type: button
-            button_type: switch
-            entity: input_boolean.roborock_room_spalnya
-            name: Спальня
-            icon: mdi:bed
-          - type: custom:bubble-card
-            card_type: button
-            button_type: switch
-            entity: input_boolean.roborock_room_kuhnya
-            name: Кухня
-            icon: mdi:stove
-          - type: custom:bubble-card
-            card_type: button
-            button_type: switch
-            entity: input_boolean.roborock_room_prihozha
-            name: Прихожа
-            icon: mdi:coat-rack
-          - type: custom:bubble-card
-            card_type: button
-            button_type: switch
-            entity: input_boolean.roborock_room_kabinet
-            name: Кабінет
-            icon: mdi:desk
-
-      - type: custom:bubble-card
-        card_type: button
-        button_type: name
-        name: Прибрати вибране
-        icon: mdi:broom
-        tap_action:
-          action: call-service
-          service: script.roborock_clean_selected_rooms
-          target: {}
 
   # ─────────────────────────────────────────────────────────────────────
   # Сервер — здоровье железа (данные Glances). Entity ids проверены
