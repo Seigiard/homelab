@@ -276,20 +276,6 @@ views:
         entity: vacuum.roborock_s5e_ea3a_robot_cleaner
         vendor: roborock
 
-      # PiotrMachowski/lovelace-xiaomi-vacuum-map-card (HACS) — інтерактивна мапа.
-      # Джерело мапи: camera.xiaomi_cloud_map_extractor (package
-      # packages/xiaomi_cloud_map_extractor.yaml). Рендериться лише коли ця camera
-      # жива — до налаштування extractor карта покаже помилку "entity not available".
-      # vacuum_platform керує тим, які сервіси шле карта для зон/сегментів; для
-      # Roborock через xiaomi_miot може знадобитись інше значення — почни з цього.
-      - type: custom:xiaomi-vacuum-map-card
-        entity: vacuum.roborock_s5e_ea3a_robot_cleaner
-        vacuum_platform: "Xiaomi Miio"
-        map_source:
-          camera: camera.xiaomi_cloud_map_extractor
-        calibration_source:
-          camera: true
-
   # ─────────────────────────────────────────────────────────────────────
   # Сервер — здоровье железа (данные Glances). Entity ids проверены
   # 2026-06-30. Board-температур it8613 в HA нет (коллизия лейблов temp/fan
