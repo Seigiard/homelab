@@ -1,0 +1,21 @@
+# Yeelight GU10 ×2 — suppress "Devices offline" persistent notification
+#
+# Stored in git so the config can be restored. Loaded as a Home Assistant
+# "package" — see services/homeassistant/README.md for the one-time setup.
+#
+# Integration: xiaomi_miot (HACS, al-one). Both lamps share model
+# yeelink.light.monob and drop off WiFi when powered off at the switch.
+#
+# Without this, xiaomi_miot posts a persistent notification
+# (id: xiaomi_miot-devices-offline) after ~5 failed local polls, complaining
+# the lamps are unreachable — which is expected when they are simply off.
+# ignore_offline: true silences that notification for this model.
+#
+# The dashboard card (light.lampi_zala in dashboards/home.yaml) still greys out
+# and disables itself automatically: Bubble Card adds the is-unavailable class
+# (opacity 0.5, cursor not-allowed) when the group goes unavailable.
+
+xiaomi_miot:
+  device_customizes:
+    yeelink.light.monob:
+      ignore_offline: true
