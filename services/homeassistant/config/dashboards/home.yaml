@@ -267,8 +267,8 @@ views:
             show_background: false
 
       # Головна картка: play (зліва) = пуск (script — вибрані кімнати АБО все),
-      # тап по тілу = pop-up. Sub-кнопки справа: шестірня (pop-up), далі команди
-      # стоп / пауза / «де я» / на базу. Відступ після шестірні — CSS margin.
+      # тап по тілу = pop-up. Sub-кнопки справа: команди стоп / пауза / «де я» /
+      # на базу (пласкі), потім шестірня (pop-up) з дефолтним фоном + відступом.
       - type: custom:bubble-card
         card_type: button
         button_type: state
@@ -285,11 +285,6 @@ views:
             action: navigate
             navigation_path: '#roborock-rooms'
         sub_button:
-          - icon: mdi:cog
-            show_background: false
-            tap_action:
-              action: navigate
-              navigation_path: '#roborock-rooms'
           - icon: mdi:stop
             show_background: false
             tap_action:
@@ -318,8 +313,12 @@ views:
               service: vacuum.return_to_base
               target:
                 entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
+          - icon: mdi:cog
+            tap_action:
+              action: navigate
+              navigation_path: '#roborock-rooms'
         styles: |
-          .bubble-sub-button-2 { margin-left: 12px; }
+          .bubble-sub-button-5 { margin-left: 12px; }
 
       # Pop-up налаштувань: 1) запуск, 2) потужність, 3) вибір кімнат.
       # show_header: false — без заголовка й хрестика; закривається свайпом вниз,
