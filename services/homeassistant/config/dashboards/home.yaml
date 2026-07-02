@@ -253,21 +253,29 @@ views:
         icon: mdi:lightbulb-group
 
       # ─── Робот-пилосос (Roborock S5 Max) ───
+      # Хедер-сепаратор + стан пилососа (Docked / Cleaning / Paused) sub-кнопкою
+      # справа (сепаратор не має власного entity — стан показуємо через sub_button).
       - type: custom:bubble-card
         card_type: separator
         name: Пилосос
         icon: mdi:robot-vacuum
+        sub_button:
+          - entity: vacuum.roborock_s5e_ea3a_robot_cleaner
+            show_state: true
+            show_name: false
+            show_icon: false
+            show_background: false
 
-      # Головна картка: іконка play (зліва) = пуск (script — вибрані кімнати АБО
-      # все), показує стан (Docked / Cleaning). Тап по тілу картки й шестірня
-      # справа → pop-up із налаштуваннями (потужність / кімнати / запуск).
+      # Головна картка: play (зліва) = пуск (script — вибрані кімнати АБО все),
+      # тап по тілу = pop-up. Sub-кнопки справа: шестірня (pop-up), далі команди
+      # стоп / пауза / «де я» / на базу. Відступ після шестірні — CSS margin.
       - type: custom:bubble-card
         card_type: button
         button_type: state
         entity: vacuum.roborock_s5e_ea3a_robot_cleaner
         icon: mdi:play
         show_name: false
-        show_state: true
+        show_state: false
         tap_action:
           action: call-service
           service: script.roborock_clean_selected_rooms
@@ -282,69 +290,36 @@ views:
             tap_action:
               action: navigate
               navigation_path: '#roborock-rooms'
-
-      # Команди у ряд 4: стоп, пауза, «де я» (locate), на базу. Назви ховаються
-      # на вузьких екранах (<430px) через CSS у styles кожної кнопки.
-      - type: grid
-        columns: 4
-        square: false
-        cards:
-          - type: custom:bubble-card
-            card_type: button
-            button_type: name
-            name: Стоп
-            icon: mdi:stop
-            tap_action: &vacuum_stop
+          - icon: mdi:stop
+            show_background: false
+            tap_action:
               action: call-service
               service: vacuum.stop
               target:
                 entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
-            button_action:
-              tap_action: *vacuum_stop
-            styles: |
-              @media (max-width: 430px) { .bubble-name { display: none; } }
-          - type: custom:bubble-card
-            card_type: button
-            button_type: name
-            name: Пауза
-            icon: mdi:pause
-            tap_action: &vacuum_pause
+          - icon: mdi:pause
+            show_background: false
+            tap_action:
               action: call-service
               service: vacuum.pause
               target:
                 entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
-            button_action:
-              tap_action: *vacuum_pause
-            styles: |
-              @media (max-width: 430px) { .bubble-name { display: none; } }
-          - type: custom:bubble-card
-            card_type: button
-            button_type: name
-            name: Де я
-            icon: mdi:map-marker
-            tap_action: &vacuum_locate
+          - icon: mdi:map-marker
+            show_background: false
+            tap_action:
               action: call-service
               service: vacuum.locate
               target:
                 entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
-            button_action:
-              tap_action: *vacuum_locate
-            styles: |
-              @media (max-width: 430px) { .bubble-name { display: none; } }
-          - type: custom:bubble-card
-            card_type: button
-            button_type: name
-            name: На базу
-            icon: mdi:home-import-outline
-            tap_action: &vacuum_dock
+          - icon: mdi:home-import-outline
+            show_background: false
+            tap_action:
               action: call-service
               service: vacuum.return_to_base
               target:
                 entity_id: vacuum.roborock_s5e_ea3a_robot_cleaner
-            button_action:
-              tap_action: *vacuum_dock
-            styles: |
-              @media (max-width: 430px) { .bubble-name { display: none; } }
+        styles: |
+          .bubble-sub-button-2 { margin-left: 12px; }
 
       # Pop-up налаштувань: 1) запуск, 2) потужність, 3) вибір кімнат.
       # show_header: false — без заголовка й хрестика; закривається свайпом вниз,
