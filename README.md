@@ -97,6 +97,12 @@ labels:
   - homepage.href=https://myservice.${EXTERNAL_DOMAIN:-1218217.xyz}
 ```
 
+> **Feed services (OPDS, podcast RSS):** podcast/OPDS clients can't follow
+> Authelia's SSO cookie redirect. Use the shared HTTP Basic Auth middleware
+> instead — `middlewares=basic-auth@docker` — so clients subscribe with
+> `https://user:pass@myservice.1218217.xyz/...`. Credentials live in `.env` as
+> `BASIC_AUTH_USERS` (htpasswd format). Used by `ytpod`, `opds`, `opml`.
+
 ## Healthcheck
 
 Verify system state after installation:

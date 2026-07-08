@@ -35,6 +35,10 @@ services:
       - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Email,Remote-Name"
       - "traefik.http.middlewares.authelia.forwardauth.authRequestHeaders=Accept,Cookie,X-Forwarded-For,X-Forwarded-Proto,X-Forwarded-Host,X-Forwarded-Uri,X-Forwarded-Method"
+      # Shared HTTP Basic Auth middleware — for clients that can't do Authelia's
+      # SSO cookie redirect (OPDS/podcast apps subscribe with user:pass@host).
+      # Credentials in .env as BASIC_AUTH_USERS (htpasswd format).
+      - "traefik.http.middlewares.basic-auth.basicauth.users=${BASIC_AUTH_USERS}"
       # Traefik routing - HTTP (local)
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${LOCAL_DOMAIN:-home.local}`)"

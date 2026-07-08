@@ -30,6 +30,7 @@ services:
       - traefik.http.routers.opml-generator-secure.entrypoints=websecure
       - traefik.http.routers.opml-generator-secure.tls=true
       - traefik.http.routers.opml-generator-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.opml-generator-secure.middlewares=basic-auth@docker
       - traefik.http.routers.opml-generator-secure.service=opml-generator
       # Homepage
       - homepage.group=Media

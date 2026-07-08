@@ -1,0 +1,70 @@
+services:
+  ytpod:
+    image: madiele/vod2pod-rss:latest
+    container_name: ytpod
+    restart: unless-stopped
+    depends_on:
+      - ytpod-redis
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+      - MP3_BITRATE=192
+      - TRANSCODE=true
+      - SUBFOLDER=/
+      - RUST_LOG=INFO
+      - REDIS_ADDRESS=ytpod-redis
+      - REDIS_PORT=6379
+      # Опционально: YouTube Data API v3 ключ. Без него фиды ограничены
+      # ~15 элементами и нет аватарок каналов. Задать в .env как YT_API_KEY.
+      - YT_API_KEY=${YT_API_KEY:-}
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    networks:
+      - traefik-net
+    labels:
+      # Traefik routing - HTTP (local, без авторизации — только LAN/Tailscale)
+      - traefik.enable=true
+      - traefik.http.routers.ytpod.rule=Host(`ytpod.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.ytpod.entrypoints=web
+      - traefik.http.services.ytpod.loadbalancer.server.port=8080
+      # Traefik routing - HTTPS (external, shared HTTP Basic Auth вместо Authelia —
+      # подкаст-клиенты не проходят cookie-редирект Authelia, но умеют
+      # user:pass@host в URL подписки).
+      - traefik.http.routers.ytpod-secure.rule=Host(`ytpod.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.ytpod-secure.entrypoints=websecure
+      - traefik.http.routers.ytpod-secure.tls=true
+      - traefik.http.routers.ytpod-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.ytpod-secure.middlewares=basic-auth@docker
+      - traefik.http.routers.ytpod-secure.service=ytpod
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=YouTube Podcast
+      - homepage.icon=mdi-podcast
+      - homepage.href=http://ytpod.${LOCAL_DOMAIN:-home.local}
+      - homepage.description=YouTube → audio podcast RSS
+
+  ytpod-redis:
+    image: redis:8.4
+    container_name: ytpod-redis
+    command: redis-server --save 20 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/ytpod/redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true
