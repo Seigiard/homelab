@@ -101,7 +101,9 @@ labels:
 > Authelia's SSO cookie redirect. Use the shared HTTP Basic Auth middleware
 > instead — `middlewares=basic-auth@docker` — so clients subscribe with
 > `https://user:pass@myservice.1218217.xyz/...`. Credentials live in `.env` as
-> `BASIC_AUTH_USERS` (htpasswd format). Used by `ytpod`, `opds`, `opml`.
+> `BASIC_AUTH_USERS` (htpasswd format — double every `$` to `$$`, Compose
+> interpolates `$`). Used by `ytpod`, `opds`, `opml`.
+> Generate: `htpasswd -nbB feeds 'password' | sed 's/\$/\$\$/g'`
 
 ## Healthcheck
 
