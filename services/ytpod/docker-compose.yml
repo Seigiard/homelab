@@ -1,6 +1,9 @@
 services:
   ytpod:
-    image: madiele/vod2pod-rss:latest
+    # beta, не latest: yt-dlp вшит в образ при сборке, latest отстаёт от смен
+    # YouTube-плеера (nsig extraction failed → пустой stream URL). beta обновляют
+    # в течение дней после релиза yt-dlp. Ломается YouTube снова → rebuild.sh ytpod.
+    image: madiele/vod2pod-rss:beta
     container_name: ytpod
     restart: unless-stopped
     depends_on:
