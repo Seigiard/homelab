@@ -148,7 +148,8 @@ sudo upsc eaton@localhost battery.charge
 ### Инфраструктурные компоненты
 
 - **Traefik v3** — reverse proxy, auto-discovery сервисов через Docker labels
-- **Authelia** — SSO аутентификация (forwardAuth middleware для Traefik)
+- **Authelia** — SSO аутентификация (forwardAuth middleware `authelia@docker` для Traefik)
+- **HTTP Basic Auth** — общий middleware `basic-auth@docker` (определён на контейнере traefik, креды в `.env` → `BASIC_AUTH_USERS`). Для feed-клиентов (OPDS/подкасты: `opds`, `opml`, `ytpod`), которые не проходят SSO-редирект Authelia — подписка через `user:pass@host`
 - **Cloudflared** — Cloudflare Tunnel для внешнего доступа
 - **AdGuard Home** — DNS + блокировка рекламы + split-horizon для локального HTTPS
 - **Avahi** — mDNS для `*.home.local` (системный сервис, не Docker)
