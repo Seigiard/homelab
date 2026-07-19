@@ -27,7 +27,14 @@
 #   Интеграция HA Glances не оборачивает ошибку соединения в ConfigEntryNotReady —
 #   если при старте HA поймал Glances в момент рестарта (гонка после ребута сервера),
 #   setup падает НАСМЕРТЬ и сам не повторяется, все сенсоры висят unavailable до
-#   ручного Reload. Автоматизация делает этот Reload сама через 5 мин простоя.
+#   ручного Reload. Автоматизация делает этот Reload сама.
+#   Два триггера обязательны (инцидент 2026-07-18, 23ч простоя):
+#   * state-триггер to: unavailable ловит только ПЕРЕХОД — рантайм-обрыв у живой
+#     интеграции. При failed-setup на старте HA сенсор рождается сразу unavailable,
+#     перехода нет, триггер молчит.
+#   * time_pattern /10 + условие "unavailable ≥5 мин" закрывает старт и даёт
+#     retry-цикл: если glances ещё не поднялся к моменту reload, setup упадёт
+#     снова — следующий тик повторит.
 
 automation:
   - id: server_cpu_temp_warning
@@ -120,6 +127,13 @@ automation:
       - platform: state
         entity_id: sensor.127_0_0_1_tctl_temperature
         to: "unavailable"
+        for: "00:05:00"
+      - platform: time_pattern
+        minutes: "/10"
+    condition:
+      - condition: state
+        entity_id: sensor.127_0_0_1_tctl_temperature
+        state: "unavailable"
         for: "00:05:00"
     action:
       - service: homeassistant.reload_config_entry
