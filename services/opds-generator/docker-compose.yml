@@ -9,6 +9,7 @@ services:
       - ADMIN_TOKEN=${OPDS_ADMIN_TOKEN}
     volumes:
       - ${DATA_PATH:-/mnt/data}/public/library:/books:ro
+      - ${DATA_PATH:-/mnt/data}/public/ttrpg/rpg-guides:/books/rpg-guides:ro
       - ${APPDATA_PATH:-/opt/homelab/appdata}/opds-generator:/data
     deploy:
       resources:
