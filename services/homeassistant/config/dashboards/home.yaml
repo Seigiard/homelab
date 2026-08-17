@@ -23,6 +23,39 @@ views:
     path: bedroom
     icon: mdi:home
     cards:
+      # ─── Повітря (SONOFF SAWF-08P AirGuard, Matter over WiFi) ───
+      # Головне число — CO₂ у ppm, поруч якісна оцінка від самого приладу
+      # (sensor…_air_quality, enum extremely_poor…good). Праворуч пласкі пігулки
+      # температури й вологості з того ж приладу. Тап → історія CO₂.
+      # Іконка червоніє від 1400 ppm, жовтіє від 1000 ppm (задуха, час провітрити).
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.bedroom_sonoff_air_quality_monitor_carbon_dioxide
+        name: Повітря
+        icon: mdi:molecule-co2
+        show_state: false
+        show_attribute: true
+        button_action:
+          tap_action:
+            action: more-info
+            entity: sensor.bedroom_sonoff_air_quality_monitor_carbon_dioxide
+        sub_button:
+          - entity: sensor.bedroom_sonoff_air_quality_monitor_temperature
+            icon: mdi:thermometer
+            show_state: true
+            show_name: false
+          - entity: sensor.bedroom_sonoff_air_quality_monitor_humidity
+            icon: mdi:water-percent
+            show_state: true
+            show_name: false
+        # styles: is a JS template literal (not Jinja). Bubble Card не підтримує
+        # шаблони в state, тому другий рядок пишемо в .bubble-state вручну.
+        styles: |
+          ${(() => { const co2 = hass.states['sensor.bedroom_sonoff_air_quality_monitor_carbon_dioxide']; const q = hass.states['sensor.bedroom_sonoff_air_quality_monitor_air_quality']; const labels = { good: 'добре', fair: 'прийнятно', moderate: 'помірно', poor: 'погано', very_poor: 'дуже погано', extremely_poor: 'жахливо' }; const s = card.querySelector('.bubble-state'); const ppm = co2 && !isNaN(Number(co2.state)) ? Math.round(Number(co2.state)) : null; if (s) s.innerText = ppm === null ? 'немає даних' : `${ppm} ppm${labels[q?.state] ? ` · ${labels[q.state]}` : ''}`; return ''; })()}
+          .bubble-sub-button-1, .bubble-sub-button-2 { background: transparent !important; box-shadow: none !important; }
+          ${(() => { const v = Number(hass.states['sensor.bedroom_sonoff_air_quality_monitor_carbon_dioxide']?.state); if (isNaN(v)) return ''; const c = v >= 1400 ? 'var(--error-color)' : v >= 1000 ? 'var(--warning-color)' : ''; return c ? `.bubble-icon { color: ${c} !important; }` : ''; })()}
+
       # Очисник (Bubble Card, Clooos/Bubble-Card v3.2.x via HACS).
       # Заголовок-разделитель несёт pill темп. Влажность → в карточку зволоження,
       # PM2.5 → в карточку очищення (вместо "On").

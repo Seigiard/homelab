@@ -122,6 +122,11 @@ lovelace:
 - YAML dashboards have **no visual editor**. To author a card visually, build it on
   the default dashboard, open "Edit → Show code editor", and copy the YAML in.
 - Edits to `home.yaml` are picked up by a **browser refresh** (F5) — no HA restart.
+- First card of the Bedroom view is "Повітря" — the SONOFF SAWF-08P AirGuard
+  (Matter, see `services/matter-server/`): CO₂ in ppm plus the device's own
+  qualitative rating, temperature and humidity as flat pills, tap → CO₂ history.
+  Icon turns amber at 1000 ppm and red at 1400 ppm. Entity ids are prefixed
+  `sensor.bedroom_sonoff_air_quality_monitor_*`.
 - `home.yaml` currently covers the Bedroom ("Спальня") view (AC3737 controls + air/
   filter sensors) in two styles for comparison: stock HA cards on top, a Bubble Card
   variant below. Labels are in Ukrainian. Order: Очищення → Повітря → Зволоження →
