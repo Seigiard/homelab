@@ -1,0 +1,33 @@
+services:
+  matter-server:
+    image: ghcr.io/matter-js/python-matter-server:stable
+    container_name: matter-server
+    restart: unless-stopped
+    # host networking is REQUIRED: Matter-устройства находятся через mDNS по IPv6,
+    # через docker-мост это не работает. Home Assistant (тоже host network)
+    # подключается к WebSocket API на 127.0.0.1:5580.
+    network_mode: host
+    security_opt:
+      # Нужно для доступа к Bluetooth через D-Bus (см. BLE ниже).
+      - apparmor:unconfined
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+    volumes:
+      # Fabric-данные (сертификаты Matter-сети). Потеря = переспаривание всех устройств.
+      - ${APPDATA_PATH:-./appdata}/matter-server:/data
+      - /run/dbus:/run/dbus:ro
+      - /etc/localtime:/etc/localtime:ro
+    # Спаривание идёт с телефона (HA Companion), поэтому BLE на сервере не включён.
+    # Чтобы спаривать прямо из web-UI HA, нужен Bluetooth-адаптер на сервере и строка:
+    # command: --storage-path /data --paa-root-cert-dir /data/credentials --bluetooth-adapter 0
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    labels:
+      # Homepage-тайл без ссылки: у matter-server нет web-UI, только WebSocket API.
+      - homepage.group=Smart Home
+      - homepage.name=Matter Server
+      - homepage.icon=home-assistant
+      - homepage.description=Matter fabric controller

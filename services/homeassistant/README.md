@@ -186,6 +186,8 @@ e.g. `sensor.127_0_0_1_tctl_temperature`, `sensor.127_0_0_1_it8613_0_fan_speed`.
   `services/traefik/config/dynamic/homeassistant.yml`. Domains there are hardcoded
   (`ha.home.local` / `ha.1218217.xyz`) since the file provider does not expand
   env vars.
+- **Matter devices** need a separate controller container — this HA has no add-on
+  store. See `services/matter-server/`.
 - **Adding a Zigbee/Z-Wave USB stick later:** pass the device through by adding to
   this compose file:
   ```yaml
