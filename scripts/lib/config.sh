@@ -110,6 +110,7 @@ APT_PACKAGES=(
     mc
     tree
     ncdu
+    duf        # df replacement with nice table (Go, muesli/duf — крейт `duf` это другая программа)
     jq
     fd-find    # fast find alternative
     ripgrep    # fast grep alternative
@@ -139,7 +140,6 @@ CARGO_PACKAGES=(
     bat        # cat with syntax highlighting
     procs      # ps replacement with tree view
     du-dust    # du replacement with visual tree
-    duf        # df replacement with nice table
     rgrc       # colorizes terminal output
     zoxide     # smarter cd command
 )
