@@ -11,7 +11,8 @@
 | CPU       | AMD Ryzen 7 5825U with Radeon Graphics — 8 ядер / 16 потоков (Zen3 «Barcelo») |
 | RAM       | 32 GB DDR4 (≈30 GiB доступно)                                |
 | NVMe      | Kingston SEDC2000BM8240G 240 GB (система; перенесён с HP)    |
-| HDD       | Seagate ST6000VN006 6 TB — пока **НЕ подключён** (перенос в bay отложен, см. `PLAN.md`) |
+| HDD данные | 2× Seagate ST6000VN006 6 TB — зеркало RAID1 (`/dev/md0`) → `/mnt/data`, 5.4 TiB |
+| HDD бэкап  | Seagate ST8000VN002 8 TB (`sdd`) — холодный бэкап, монтируется вручную раз в неделю |
 | GPU       | AMD Radeon Vega 8 (iGPU Ryzen 5825U), драйвер `amdgpu` (in-kernel) |
 | Сеть      | 2× 2.5GbE onboard: `eno1` (активный) + `enp2s0` (резерв)     |
 | Отсеки    | 4× hot-swap bay (3.5"/2.5")                                 |
@@ -27,6 +28,31 @@
 - smartd мониторит только HDD, NVMe исключён (`/etc/smartd.conf`)
 - Glances скрывает Sensor 2 (`services/glances/glances.conf`)
 - `lm-sensors`: фейк виден как `Sensor 2` (`temp3` чипа `nvme-pci-*`, ~82°C), и его `temp3_min/max` сыплют `I/O error` в выводе `sensors`. Реальная температура — `Composite` (`temp1`). Оба прячутся `/etc/sensors.d/kingston-nvme.conf` → `ignore temp3` для `nvme-pci-*`
+- **`udisks2` замаскирован** (`bootstrap.sh` → `systemctl mask udisks2`): служба периодически опрашивает диски и засоряет журнал теми же ложными NVMe-ошибками. Побочный эффект — предупреждение fwupd, см. ниже
+
+### fwupd: «UEFI ESP partition not detected»
+
+`fwupdmgr get-upgrades` печатает предупреждение и не может применить обновления Secure Boot:
+
+```
+WARNING: UEFI ESP partition not detected or configured
+Update Error: Not updatable as UEFI ESP partition not detected
+```
+
+**Это не поломка, а следствие маскировки `udisks2`.** ESP на месте (`nvme0n1p1`, 1 GB, vfat, смонтирован в `/boot/efi`), но fwupd перечисляет разделы только через D-Bus API udisks2, а не через `/etc/fstab`. Диагностика упирается в `fwupdtool esp-list` → `Unit udisks2.service is masked`.
+
+Цепочка: `udisks2 замаскирован` → fwupd не видит ESP → dbx/db-обновления показываются, но не ставятся.
+
+**Действий не требуется.** Secure Boot на этой машине **выключен** (`mokutil --sb-state` → `SecureBoot disabled`), поэтому предлагаемые dbx/db — списки ключей UEFI, которые никто не читает. Обновлений прошивки самого железа fwupd не находит вообще (все устройства в «no available firmware updates»). Размаскировать udisks2 ради этого = вернуть спам NVMe-ошибок в журнал без выигрыша.
+
+**Что уже пробовали и что не работает** (чтобы не повторять):
+
+- `EspLocation=/boot/efi` в секции `[fwupd]` файла `/etc/fwupd/fwupd.conf` — **не помогает** (проверено на fwupd 2.0.20, Ubuntu 24.04). Предупреждение и `Update Error` остаются: явный путь к ESP не снимает зависимость от udisks2, она нужна fwupd и дальше по коду. Настройку откатили.
+- `apt install udisks2` — пакет и так установлен (`2.10.1`), дело именно в маске службы, а не в отсутствии пакета.
+
+Единственный работающий способ убрать предупреждение — `sudo systemctl unmask udisks2 && sudo systemctl enable --now udisks2`, что возвращает спам ложных NVMe-ошибок в журнал. **Не делаем.**
+
+**Прочее из вывода fwupd:** `OEMCOMPUTER PK` / `OEMCOMPUTER KEK CA` / `OWN CA` — Secure Boot ключи, прошитые производителем AOOSTAR вместо стандартных Microsoft. Нормально для этой платы, на выключенном Secure Boot роли не играет.
 
 ### Платформа AMD (после миграции)
 
@@ -63,8 +89,9 @@ echo "it87" | sudo tee /etc/modules-load.d/it87.conf
 
 ### Планы по апгрейду
 
-- Подключить HDD Seagate 6 ТБ в bay нового NAS, поднять `/mnt/data` по UUID (восстановить схему appdata-on-SSD / data-on-HDD). До этого `/mnt/data` недоступен.
-- 4 отсека позволяют добавить второй диск под mirror/parity или локальный бэкап `/mnt/data` (сейчас единичный HDD = нет избыточности).
+- Перенести живые данные из `/mnt/data-tmp` (временно на системном NVMe) в `/mnt/data` на зеркале и вернуть `DATA_PATH=/mnt/data` в `.env`. См. «Хранилище» → «Переходное состояние».
+- Автоматизировать недельный бэкап зеркала на 8 ТБ диск `sdd` (сейчас монтируется и копируется вручную).
+- Один отсек из четырёх свободен (в четвёртом временно стоит Samsung 186 ГБ, с которого стягиваются старые данные).
 
 ## UPS
 
@@ -97,13 +124,49 @@ sudo upsc eaton@localhost battery.charge
 - **Appdata** (NVMe SSD) — конфиги, БД, метаданные контейнеров
 - **Data** (HDD) — медиа, документы, загрузки, бэкапы
 
+### Диски
+
+| Устройство | Диск                        | Роль |
+| ---------- | --------------------------- | ---- |
+| `sda`+`sdb` | 2× Seagate ST6000VN006 6 TB | RAID1 `md0` → `/mnt/data` |
+| `sdd`      | Seagate ST8000VN002 8 TB    | Холодный бэкап, обычно не смонтирован |
+| `sdc`      | Samsung SP2004C 186 GB      | **Временный** — стягивание старых данных, после переноса вынимается |
+| `nvme0n1`  | Kingston SEDC2000BM8240G 240 GB | Система + appdata |
+
+Инвентаризация: `lsblk -d -o NAME,SIZE,MODEL,SERIAL,ROTA,TRAN` (`ROTA=1` — HDD, `0` — SSD/NVMe).
+
+**SMART на SATA-дисках работает нормально** — запрет `smartctl` касается только NVMe Kingston (см. «Известные проблемы железа»). Приёмка новых дисков: `sudo smartctl -x /dev/sdX` (интересуют `Power_On_Hours`, `Reallocated_Sector_Ct`, `Current_Pending_Sector`, `Offline_Uncorrectable`, `UDMA_CRC_Error_Count` — все нули у нового диска), затем `sudo smartctl -t long /dev/sdX` (≈10–13 ч на 6–8 ТБ, идёт в прошивке диска, обрыв SSH не мешает, перезагрузка прерывает) и `sudo smartctl -l selftest /dev/sdX` → ждём `Extended offline  Completed without error`.
+
+### RAID1 (`/dev/md0`)
+
+Зеркало на **целых дисках, без разделов** (`mdadm --create /dev/md0 --level=1 --raid-devices=2 --bitmap=internal /dev/sda /dev/sdb`) — оба диска одной модели, возни с выравниванием разделов нет. `--bitmap=internal` (write-intent bitmap): после аварийного выключения пересинхронизируются только изменённые участки, а не все 5.5 ТБ.
+
+- ФС: `mkfs.ext4 -L data -m 1` — резерв под root снижен 5% → 1%, это ~220 ГБ обратно в доступное место. `/mnt/data` не корневая ФС, её заполнение систему не валит.
+- Монтирование по UUID в `/etc/fstab`: `defaults,noatime,nofail,x-systemd.device-timeout=30 0 2`. `nofail` обязателен — иначе неподнявшийся массив уронит загрузку в аварийную консоль на сервере без монитора.
+- **`ARRAY`-строка в `/etc/mdadm/mdadm.conf` + `update-initramfs -u` обязательны** (`sudo mdadm --detail --scan | sudo tee -a /etc/mdadm/mdadm.conf`). Без этого массив после перезагрузки поднимается как `/dev/md127`.
+
+Проверка состояния:
+
+```bash
+cat /proc/mdstat                    # [2/2] [UU] — оба диска в строю; [U_] — деградация
+sudo mdadm --detail /dev/md0
+```
+
+Первичная синхронизация после создания — ~8.5 часа (186 МБ/с), массив при этом уже пригоден к работе.
+
+**Замена сбойного диска:** `sudo mdadm --manage /dev/md0 --fail /dev/sdX --remove /dev/sdX`, физически заменить, затем `sudo mdadm --manage /dev/md0 --add /dev/sdY` и следить за `resync` в `/proc/mdstat`. Зеркало ≠ бэкап: удаление файла удаляет его с обоих дисков, поэтому холодная копия на `sdd` нужна отдельно.
+
+### Переходное состояние (данные ещё не на зеркале)
+
+Массив собран и смонтирован в `/mnt/data`, но **пустой**. Живые данные сервисов лежат в `/mnt/data-tmp` на системном NVMe (`.env` → `DATA_PATH=/mnt/data-tmp`) — временный фоллбэк с тех пор, как выпал прежний одиночный HDD. Пока `DATA_PATH` не переключён, все контейнеры (`syncthing`, `filebrowser`, `samba` и прочие, монтирующие `${DATA_PATH}/public` и `${DATA_PATH}/users`) пишут именно туда. Реальный путь любого тома: `docker inspect <svc> --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}'`.
+
 ### Структура на сервере
 
 ```
 /opt/homelab/                 # Репозиторий (SSD)
 /opt/homelab/appdata/         # Конфиги контейнеров (SSD)
 
-/mnt/data/                    # HDD
+/mnt/data/                    # RAID1 md0 (2× 6 TB HDD), 5.4 TiB
   public/                     # Общий доступ (Samba guest)
     movies/
     tv/
