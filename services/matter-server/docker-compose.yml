@@ -17,9 +17,12 @@ services:
       - ${APPDATA_PATH:-./appdata}/matter-server:/data
       - /run/dbus:/run/dbus:ro
       - /etc/localtime:/etc/localtime:ro
-    # Спаривание идёт с телефона (HA Companion), поэтому BLE на сервере не включён.
-    # Чтобы спаривать прямо из web-UI HA, нужен Bluetooth-адаптер на сервере и строка:
-    # command: --storage-path /data --paa-root-cert-dir /data/credentials --bluetooth-adapter 0
+    # --primary-interface: к какому интерфейсу привязывать link-local адреса устройств
+    # (fe80::… неотправляем без суффикса %iface). Автоопределение в контейнере даёт None,
+    # потому что рядом полтора десятка docker-овских veth/br. eno1 — LAN-интерфейс сервера.
+    # Спаривание идёт с телефона (HA Companion), поэтому BLE не включён; для спаривания
+    # из web-UI HA нужен Bluetooth-адаптер на сервере и `--bluetooth-adapter 0` в конце.
+    command: --storage-path /data --paa-root-cert-dir /data/credentials --primary-interface eno1
     deploy:
       resources:
         limits:

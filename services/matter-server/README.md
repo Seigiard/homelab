@@ -15,6 +15,14 @@ containers share the host stack).
 
 ## Deploy
 
+The compose file pins `--primary-interface eno1` (the server's LAN NIC). Change it
+if the interface is ever renamed — without it the server logs
+`Using 'None' as primary interface` and cannot scope device link-local addresses.
+Harmless noise in the log: `Failed to advertise records: Network is unreachable` —
+CHIP announces mDNS on every host interface and the docker `veth*`/`br-*` ones have
+no IPv6. Also `Failed to get WiFi interface`: the server is Ethernet-only.
+
+
 ```bash
 ./scripts/docker/deploy.sh matter-server
 docker logs -f matter-server        # wait for "Matter Server successfully initialized"
