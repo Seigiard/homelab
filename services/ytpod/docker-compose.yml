@@ -19,6 +19,11 @@ services:
       # Опционально: YouTube Data API v3 ключ. Без него фиды ограничены
       # ~15 элементами и нет аватарок каналов. Задать в .env как YT_API_KEY.
       - YT_API_KEY=${YT_API_KEY:-}
+      # ВРЕМЕННО (2026-08-18): YouTube сломал дефолтный клиент android_vr
+      # (403 на все stream URL, yt-dlp/yt-dlp#17456). Форсим клиент android,
+      # пока фикс dae52d8 не попадёт в стабильный yt-dlp и в образ beta.
+      # После этого строку удалить.
+      - YOUTUBE_YT_DLP_GET_URL_EXTRA_ARGS=["--extractor-args","youtube:player_client=android"]
     deploy:
       resources:
         limits:
