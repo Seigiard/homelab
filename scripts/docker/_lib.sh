@@ -130,9 +130,35 @@ ensure_service_dirs() {
     done
 }
 
+# Aborts if the service stores data on a filesystem that fstab knows but is not
+# mounted (e.g. the RAID1 mirror failed to assemble; fstab carries `nofail`, so
+# boot succeeds and /mnt/data is an empty directory on the root filesystem).
+# Without this, Docker creates the bind-mount sources there and services run on
+# an empty tree while writing to the system disk.
+check_data_mount() {
+    local compose_file="$1"
+
+    grep -q 'DATA_PATH' "$compose_file" 2>/dev/null || return 0
+
+    local data_path
+    data_path=$(grep -E '^DATA_PATH=' "$PROJECT_DIR/.env" | tail -1 | cut -d= -f2-)
+    data_path="${data_path%/}"
+    [[ -n "$data_path" ]] || return 0
+
+    # Only guard paths fstab declares as their own mount point
+    findmnt --fstab -T "$data_path" >/dev/null 2>&1 || return 0
+
+    if ! mountpoint -q "$data_path"; then
+        log_error "$data_path is in /etc/fstab but not mounted — refusing to deploy."
+        log_error "Data would land on the root filesystem. Check: cat /proc/mdstat; sudo mount -a"
+        return 1
+    fi
+}
+
 do_deploy() {
     local service="$1"
     validate_service "$service" || return 1
+    check_data_mount "$SERVICES_DIR/$service/docker-compose.yml" || return 1
 
     # Create directories BEFORE container starts to prevent root:root ownership
     ensure_service_dirs "$SERVICES_DIR/$service/docker-compose.yml"
@@ -199,6 +225,7 @@ do_purge() {
 do_rebuild() {
     local service="$1"
     validate_service "$service" || return 1
+    check_data_mount "$SERVICES_DIR/$service/docker-compose.yml" || return 1
 
     # Ensure directories exist with correct ownership
     ensure_service_dirs "$SERVICES_DIR/$service/docker-compose.yml"
