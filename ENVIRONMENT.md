@@ -92,7 +92,6 @@ echo "it87" | sudo tee /etc/modules-load.d/it87.conf
 - Первая холодная копия зеркала на 8 ТБ диск `sdd`, затем автоматизация недельного бэкапа. До неё каталог `/mnt/data/users` живёт только на зеркале: restic-планы бэкапят лишь appdata, а зеркало защищает от отказа диска, но не от удаления файла. Эта копия — гейт для удаления `/mnt/data-tmp` (переезд выполнен 2026-08-18, каталог оставлен как путь отката; порядок вывода из обращения — переименование, выдержка, удаление).
 - `smartd` мониторит только `/dev/sda` (`scripts/bootstrap.sh` → `/etc/smartd.conf`). Второй диск зеркала без наблюдения: отказ `sdb` пройдёт незамеченным.
 - Виджет Homepage следит только за `/` (`services/homepage/config/widgets.yaml`) — заполненность массива не видна нигде.
-- Точка монтирования `public/library/rpg-guides` для `opds-generator` лежит внутри Receive Only-папки Syncthing и уже удалялась им однажды, после чего сервис перестал подниматься. Вынести её из синхронизируемого дерева либо занести в `.stignore`.
 - Один отсек из четырёх свободен (в четвёртом временно стоит Samsung 186 ГБ, с которого стягиваются старые данные).
 
 ## UPS
@@ -206,6 +205,9 @@ sudo mdadm --detail /dev/md0
 
 - **Receive Only папки должны иметь `Ignore Permissions = on`.** Файлы пишутся внутри контейнера от `root:root` (PUID/PGID из compose эта сборка не применяет), а permission-биты приходят с macOS-источника и не совпадают. Без Ignore Permissions Syncthing помечает каждый файл как «Locally Changed» (видно по сотням items с суммарным размером ~0 B) и в режиме Receive Only **застревает на полпути**, не докачивая остальное.
 - Фикс застрявшей папки: Edit → Advanced → `Ignore Permissions` → Save → **Revert Local Changes** → дождаться, пока Local State догонит Global State.
+- **Состав папок (все пять — Receive Only, `Ignore Permissions = Yes`):** BookLibrary → `/public/library`, TTRPG → `/public/ttrpg` (оба внутри `${DATA_PATH}/public`); Documents, Knowledge base, TTRPG Obsidian → `/data/documents`, `/data/knowledge-base`, `/data/ttrpg` (внутри `${DATA_PATH}/users/andrew/sync`). Партнёры: MacBook Pro, MBP2026Pro, NothingPhone. Receive Only означает, что сервер только принимает изменения и **сам партнёрам ничего не отправляет** — при работах с деревом данных сценарий «сервер разослал удаление» этим закрыт.
+- **`.stignore` для точки монтирования `rpg-guides`.** `opds-generator` монтирует `public/ttrpg/rpg-guides` внутрь `/books/rpg-guides`, то есть внутрь смонтированной только для чтения `public/library`. Каталог-приёмник обязан физически существовать в `library`, иначе контейнер не стартует (`error mounting ... read-only file system`). Но для Syncthing он чужеродный: 2026-08-18 папка BookLibrary его удалила, и сервис перестал подниматься. Решение — `/mnt/data/public/library/.stignore` со строкой `/rpg-guides`: Syncthing перестаёт видеть каталог (в панели папки появляется «Reduced by ignore patterns»), метка `Local Additions` не возникает, а `Revert Local Changes` его не сносит. Файл `.stignore` не синхронизируется и локален для этой машины.
+- **`Revert Local Changes` в Receive Only-папке уничтожает всё, чего нет у партнёра** — включая каталоги, созданные на сервере под точки монтирования. Не нажимать, не убедившись, что в папке нет ничего только-локального.
 
 ## Сеть
 
