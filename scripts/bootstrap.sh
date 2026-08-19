@@ -366,12 +366,29 @@ configure_smartd() {
     cat > "$SMARTD_CONF" << 'EOF'
 # Homelab smartd configuration
 # NVMe (Kingston DC2000B) excluded: firmware generates false "Invalid Field in Command" errors
-# Only HDD is monitored explicitly — no DEVICESCAN
-/dev/sda -d removable -n standby -a -o on -S on -s (S/../.././02|L/../../6/03) -W 4,45,55 -m root -M exec /usr/share/smartmontools/smartd-runner
+# Only HDDs are monitored explicitly — no DEVICESCAN
+#
+# Addressed by /dev/disk/by-id, never /dev/sdX: letters are handed out in
+# discovery order, so pulling one drive renames the others and monitoring
+# would silently follow a different disk.
+#
+# -d removable: a missing disk is not a startup error (the backup disk lives
+#               unplugged between weekly runs)
+# -n standby:   never spin a sleeping disk up just to poll it
+
+# RAID1 mirror, member 1
+/dev/disk/by-id/ata-ST6000VN006-2ZM186_WVX10XE1 -d removable -n standby -a -o on -S on -s (S/../.././01|L/../../6/02) -W 4,45,55 -m root -M exec /usr/share/smartmontools/smartd-runner
+
+# RAID1 mirror, member 2 — long test one day after member 1, so the two halves
+# of the mirror are never both busy scanning
+/dev/disk/by-id/ata-ST6000VN006-2ZM186_WVX14BCK -d removable -n standby -a -o on -S on -s (S/../.././03|L/../../7/02) -W 4,45,55 -m root -M exec /usr/share/smartmontools/smartd-runner
+
+# Cold backup disk (8 TB), mounted by hand once a week
+/dev/disk/by-id/ata-ST8000VN002-2ZM188_WPV3L1K8 -d removable -n standby -a -o on -S on -s (S/../.././05|L/../../1/05) -W 4,45,55 -m root -M exec /usr/share/smartmontools/smartd-runner
 EOF
 
     systemctl restart smartd
-    log_info "smartd configured: monitoring HDD only, NVMe excluded"
+    log_info "smartd configured: both mirror members + backup disk, NVMe excluded"
 
     log_step "Disabling udisks2 (not needed on headless server, generates NVMe errors)..."
     systemctl stop udisks2 2>/dev/null || true
