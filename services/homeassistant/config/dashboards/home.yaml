@@ -443,24 +443,97 @@ views:
     path: server
     icon: mdi:server
     cards:
-      - type: glance
-        title: Сейчас
+      # Три группы вместо одной плитки glance: та выкладывала семь разнородных
+      # значений в общую сетку, и температуры мешались с оборотами.
+      # Separator = заголовок группы, под ним grid из bubble-кнопок.
+      # tap по кнопке → история значения (more-info).
+      - type: custom:bubble-card
+        card_type: separator
+        name: Диски
+        icon: mdi:harddisk
+
+      - type: grid
         columns: 3
-        entities:
-          - entity: sensor.127_0_0_1_tctl_temperature
-            name: CPU
-          - entity: sensor.127_0_0_1_nvme_ssd_temperature
+        square: false
+        cards:
+          - type: custom:bubble-card
+            card_type: button
+            button_type: state
+            entity: sensor.127_0_0_1_nvme_ssd_temperature
             name: NVMe
-          - entity: sensor.127_0_0_1_edge_temperature
-            name: GPU
-          - entity: sensor.living_room_127_0_0_1_raid_disk_1_temperature
+            icon: mdi:memory
+            show_state: true
+            button_action: &more_info
+              tap_action:
+                action: more-info
+          - type: custom:bubble-card
+            card_type: button
+            button_type: state
+            entity: sensor.living_room_127_0_0_1_raid_disk_1_temperature
             name: RAID 1
-          - entity: sensor.living_room_127_0_0_1_raid_disk_2_temperature
+            icon: mdi:harddisk
+            show_state: true
+            button_action: *more_info
+          - type: custom:bubble-card
+            card_type: button
+            button_type: state
+            entity: sensor.living_room_127_0_0_1_raid_disk_2_temperature
             name: RAID 2
-          - entity: sensor.127_0_0_1_it8613_0_fan_speed
+            icon: mdi:harddisk
+            show_state: true
+            button_action: *more_info
+
+      - type: custom:bubble-card
+        card_type: separator
+        name: Материнка
+        icon: mdi:developer-board
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:bubble-card
+            card_type: button
+            button_type: state
+            entity: sensor.127_0_0_1_tctl_temperature
+            name: CPU
+            icon: mdi:cpu-64-bit
+            show_state: true
+            button_action: *more_info
+          - type: custom:bubble-card
+            card_type: button
+            button_type: state
+            entity: sensor.127_0_0_1_edge_temperature
+            name: GPU
+            icon: mdi:expansion-card-variant
+            show_state: true
+            button_action: *more_info
+
+      - type: custom:bubble-card
+        card_type: separator
+        name: Вентиляторы
+        icon: mdi:fan
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:bubble-card
+            card_type: button
+            button_type: state
+            entity: sensor.127_0_0_1_it8613_0_fan_speed
             name: Fan 1
-          - entity: sensor.127_0_0_1_it8613_1_fan_speed
+            icon: mdi:fan
+            show_state: true
+            button_action: *more_info
+          - type: custom:bubble-card
+            card_type: button
+            button_type: state
+            entity: sensor.127_0_0_1_it8613_1_fan_speed
             name: Fan 2
+            icon: mdi:fan
+            show_state: true
+            button_action: *more_info
 
       - type: history-graph
         title: Температуры (24 ч)
