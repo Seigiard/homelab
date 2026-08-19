@@ -353,6 +353,15 @@ configure_smartd() {
         return 0
     fi
 
+    log_step "Enabling SATA drive temperature sensors (drivetemp)..."
+
+    # Without this module the kernel exposes no temperature for SATA disks, so
+    # lm-sensors — and everything downstream of it, Glances and Home Assistant —
+    # only ever sees CPU, NVMe and GPU. Reading it does not wake a sleeping
+    # disk: a drive in standby keeps its power state and reports its last value.
+    echo drivetemp > /etc/modules-load.d/drivetemp.conf
+    modprobe drivetemp 2>/dev/null || log_warn "drivetemp module not available on this kernel"
+
     log_step "Configuring SMART monitoring (smartd)..."
 
     local SMARTD_CONF="/etc/smartd.conf"
