@@ -107,6 +107,27 @@ get_services_reversed() {
 # Service operations
 # -------------------------------------------
 
+# Expands ${VAR} and ${VAR:-default} the way Compose does.
+# envsubst cannot replace this: it ignores the :-default form and leaves the
+# whole ${VAR:-default} in place.
+expand_compose_vars() {
+    local rest="$1" out="" expr var default
+
+    while [[ "$rest" == *'${'* ]]; do
+        out+="${rest%%'${'*}"
+        rest="${rest#*'${'}"
+        expr="${rest%%\}*}"
+        rest="${rest#*\}}"
+
+        var="${expr%%:-*}"
+        default=""
+        [[ "$expr" == *":-"* ]] && default="${expr#*:-}"
+        out+="${!var:-$default}"
+    done
+
+    printf '%s' "$out$rest"
+}
+
 # Creates directories from docker-compose volumes with correct ownership
 # This prevents Docker from creating them as root:root
 ensure_service_dirs() {
@@ -118,12 +139,24 @@ ensure_service_dirs() {
     set +a
 
     # Extract host paths from volumes (format: ${VAR}/path:/container/path or /absolute/path:/container/path)
-    # Skip named volumes (no / at start after expansion)
-    grep -E '^\s*-\s*(\$\{|/)' "$compose_file" 2>/dev/null | \
-    sed -E 's/^\s*-\s*//; s/:.*$//' | \
-    envsubst | while read -r host_path; do
-        # Only process absolute paths that don't exist
-        if [[ -n "$host_path" && "$host_path" == /* && ! -e "$host_path" ]]; then
+    # Variables expand first: ${VAR:-default} carries its own colon, so the
+    # host/container split is only unambiguous after expansion.
+    grep -E '^[[:space:]]*-[[:space:]]*(\$\{|/)' "$compose_file" 2>/dev/null | \
+    sed -E 's/^[[:space:]]*-[[:space:]]*//' | \
+    while IFS= read -r volume; do
+        local host_path
+        host_path="$(expand_compose_vars "$volume")"
+        host_path="${host_path%%:*}"
+
+        # Skip named volumes and unexpanded relative defaults
+        [[ -n "$host_path" && "$host_path" == /* ]] || continue
+
+        # Never materialize host system paths that a service only reads
+        case "$host_path" in
+            /|/dev/*|/etc/*|/proc/*|/run/*|/sys/*|/var/run/*) continue ;;
+        esac
+
+        if [[ ! -e "$host_path" ]]; then
             sudo install -d -m 755 -o "${PUID:-1000}" -g "${PGID:-1000}" "$host_path"
             log_info "Created directory: $host_path"
         fi
