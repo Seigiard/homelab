@@ -10,6 +10,9 @@ services:
     volumes:
       - ./config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Read-only, purely so the resources widget can stat the mirror:
+      # without a mount of its own the container only ever sees /
+      - ${DATA_PATH:-/mnt/data}:/mnt/data:ro
     deploy:
       resources:
         limits:
