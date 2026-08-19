@@ -435,6 +435,8 @@ views:
   # в Glances) — тепло по CPU/NVMe/GPU. Fan 3 (it8613 2) не подключён.
   # Диски зеркала добавлены 2026-08-19 (модуль drivetemp + псевдонимы в
   # services/glances/glances.conf); Samsung и бэкапный диск скрыты там же.
+  # У них приставка living_room_, у июньских сенсоров её нет: entity_id
+  # выдаётся один раз при создании, из тогдашнего имени устройства Glances.
   # Алерты — config/packages/hardware_health.yaml.
   # ─────────────────────────────────────────────────────────────────────
   - title: Сервер
@@ -451,9 +453,9 @@ views:
             name: NVMe
           - entity: sensor.127_0_0_1_edge_temperature
             name: GPU
-          - entity: sensor.127_0_0_1_raid_disk_1_temperature
+          - entity: sensor.living_room_127_0_0_1_raid_disk_1_temperature
             name: RAID 1
-          - entity: sensor.127_0_0_1_raid_disk_2_temperature
+          - entity: sensor.living_room_127_0_0_1_raid_disk_2_temperature
             name: RAID 2
           - entity: sensor.127_0_0_1_it8613_0_fan_speed
             name: Fan 1
@@ -470,9 +472,9 @@ views:
             name: NVMe
           - entity: sensor.127_0_0_1_edge_temperature
             name: GPU
-          - entity: sensor.127_0_0_1_raid_disk_1_temperature
+          - entity: sensor.living_room_127_0_0_1_raid_disk_1_temperature
             name: RAID 1
-          - entity: sensor.127_0_0_1_raid_disk_2_temperature
+          - entity: sensor.living_room_127_0_0_1_raid_disk_2_temperature
             name: RAID 2
 
       - type: history-graph

@@ -8,8 +8,8 @@
 #   Fan1 (it8613)        : sensor.127_0_0_1_it8613_0_fan_speed   (~1000 RPM)
 #   Fan2 (it8613)        : sensor.127_0_0_1_it8613_1_fan_speed   (~1000 RPM)
 #   Fan3 (it8613)        : sensor.127_0_0_1_it8613_2_fan_speed   — НЕ подключён, всегда 0 → в алерты НЕ берём
-#   RAID1 disk 1 (sda)   : sensor.127_0_0_1_raid_disk_1_temperature   (добавлено 2026-08-19)
-#   RAID1 disk 2 (sdb)   : sensor.127_0_0_1_raid_disk_2_temperature
+#   RAID1 disk 1 (sda)   : sensor.living_room_127_0_0_1_raid_disk_1_temperature   (добавлено 2026-08-19)
+#   RAID1 disk 2 (sdb)   : sensor.living_room_127_0_0_1_raid_disk_2_temperature
 #
 # Пуш — notify.mobile_app_nothingphone (legacy mobile_app сервис: принимает
 #   data.priority/ttl для пробивных critical-пушей). philips_ac3737.yaml шлёт через
@@ -113,8 +113,8 @@ automation:
     trigger:
       - platform: numeric_state
         entity_id:
-          - sensor.127_0_0_1_raid_disk_1_temperature
-          - sensor.127_0_0_1_raid_disk_2_temperature
+          - sensor.living_room_127_0_0_1_raid_disk_1_temperature
+          - sensor.living_room_127_0_0_1_raid_disk_2_temperature
         above: 50
         for: "00:15:00"
     action:
@@ -123,7 +123,7 @@ automation:
           title: "⚠️ Сервер: диск зеркала греется"
           message: >-
             {{ trigger.to_state.attributes.friendly_name if trigger is defined and trigger.to_state is not none else 'Диск зеркала' }}
-            {{ states('sensor.127_0_0_1_raid_disk_1_temperature') }}/{{ states('sensor.127_0_0_1_raid_disk_2_temperature') }}°C
+            {{ states('sensor.living_room_127_0_0_1_raid_disk_1_temperature') }}/{{ states('sensor.living_room_127_0_0_1_raid_disk_2_temperature') }}°C
             (>50 уже 15 мин). Проверь обдув.
 
   - id: server_raid_disk_temp_critical
@@ -132,8 +132,8 @@ automation:
     trigger:
       - platform: numeric_state
         entity_id:
-          - sensor.127_0_0_1_raid_disk_1_temperature
-          - sensor.127_0_0_1_raid_disk_2_temperature
+          - sensor.living_room_127_0_0_1_raid_disk_1_temperature
+          - sensor.living_room_127_0_0_1_raid_disk_2_temperature
         above: 55
         for: "00:02:00"
     action:
@@ -142,7 +142,7 @@ automation:
           title: "🚨 Сервер: перегрев диска зеркала"
           message: >-
             {{ trigger.to_state.attributes.friendly_name if trigger is defined and trigger.to_state is not none else 'Диск зеркала' }}
-            {{ states('sensor.127_0_0_1_raid_disk_1_temperature') }}/{{ states('sensor.127_0_0_1_raid_disk_2_temperature') }}°C
+            {{ states('sensor.living_room_127_0_0_1_raid_disk_1_temperature') }}/{{ states('sensor.living_room_127_0_0_1_raid_disk_2_temperature') }}°C
             (>55, предел диска 60).
           data:
             ttl: 0
