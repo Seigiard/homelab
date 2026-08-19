@@ -35,6 +35,20 @@ template:
           {{ is_state('humidifier.bedroom_air_cleaner_and_purifier', 'on')
              and is_state('binary_sensor.bedroom_air_cleaner_and_purifier_humidification', 'off') }}
 
+      # Detects loss of the local patch to philips_airpurifier_coap (a HACS update
+      # silently restores the upstream file — see services/homeassistant/README.md,
+      # "AC3737 mode readback patch"). Patched, every mode reports at least one of
+      # preset_mode / percentage; unpatched while humidifying, both are null.
+      # Also true for a few seconds around a restart, hence the 30 min delay on the
+      # automation below.
+      - name: "AC3737 mode unreadable"
+        unique_id: ac3737_mode_unreadable
+        icon: mdi:help-rhombus-outline
+        state: >
+          {{ is_state('fan.bedroom_air_cleaner_and_purifier', 'on')
+             and state_attr('fan.bedroom_air_cleaner_and_purifier', 'preset_mode') is none
+             and state_attr('fan.bedroom_air_cleaner_and_purifier', 'percentage') is none }}
+
 automation:
   - id: ac3737_night_sleep
     alias: "AC3737 — тихий режим ночью + увлажнение 50%"
@@ -233,4 +247,26 @@ automation:
         data:
           title: "AC3737: вода"
           message: "Бак для воды пуст — увлажнение остановлено"
+    mode: single
+
+  # The integration lives in appdata/ and is patched by hand, so a HACS update
+  # reverts it without a word. The symptom is exactly the bug we fixed: the fan
+  # runs but neither preset_mode nor percentage can be read.
+  - id: ac3737_patch_lost
+    alias: "AC3737 — режим не читается (патч интеграции потерян?)"
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.ac3737_mode_unreadable
+        to: "on"
+        for: "00:30:00"
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id: notify.nothingphone
+        data:
+          title: "AC3737: режим не читается"
+          message: >
+            Home Assistant полчаса не может прочитать режим вентилятора.
+            Похоже, обновление HACS откатило локальный патч интеграции —
+            см. services/homeassistant/README.md, "AC3737 mode readback patch"
     mode: single

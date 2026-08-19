@@ -122,16 +122,15 @@ views:
               data:
                 preset_mode: turbo
         # styles: is a JS template literal (not Jinja).
-        # The AC3737 only reports a readable preset_mode when NOT humidifying;
-        # while humidifying (binary_sensor…_humidification = on) every mode reads
-        # null, so we can't tell them apart — leave buttons neutral (don't dim,
-        # don't highlight) instead of guessing. Turbo is never highlighted: it
-        # reads null even when dry, indistinguishable from a manual speed.
+        # preset_mode is readable in every mode, humidifying or not, since the
+        # local patch to philips_airpurifier_coap (see the service README).
+        # Manual speeds 1 and 2 are not presets — they report preset_mode null
+        # and percentage 50/75, so none of the three buttons lights up then.
         styles: |
           ${(() => { const f = hass.states['fan.bedroom_air_cleaner_and_purifier']; const pm = hass.states['sensor.bedroom_air_cleaner_and_purifier_pm2_5']; const s = card.querySelector('.bubble-state'); if (s) s.innerText = (f.state === 'on' && pm) ? `${pm.state} ${pm.attributes.unit_of_measurement || 'µg/m³'}` : ''; return ''; })()}
-          ${hass.states['binary_sensor.bedroom_air_cleaner_and_purifier_humidification']?.state === 'off' ? `.bubble-sub-button-1, .bubble-sub-button-2, .bubble-sub-button-3 { opacity: 0.4; }` : ''}
-          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'auto' ? `.bubble-sub-button-1 { opacity: 1; background: var(--accent-color) !important; }` : ''}
-          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { opacity: 1; background: var(--accent-color) !important; }` : ''}
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'auto' ? `.bubble-sub-button-1 { background: var(--accent-color) !important; }` : ''}
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { background: var(--accent-color) !important; }` : ''}
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'turbo' ? `.bubble-sub-button-3 { background: var(--accent-color) !important; }` : ''}
 
       # --- Зволоження (увлажнение + влажность объединены в одну карточку) ---
       # Модуль снят (template binary_sensor: humidifier on + humidification off) →

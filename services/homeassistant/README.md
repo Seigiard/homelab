@@ -142,17 +142,84 @@ lovelace:
   The Bubble Card block needs Bubble Card installed via HACS, otherwise those cards
   render an error. Lights and the robot vacuum get tiles there once their entity
   ids exist.
-- Known limitation: the AC3737's active fan mode cannot be highlighted reliably
-  while humidifying. The `philips_airpurifier_coap` integration reports
-  `fan.preset_mode: null` whenever humidification is active (device field
-  `D0310A=4` breaks its preset match — upstream bug
-  [kongo09/philips-airpurifier-coap#356](https://github.com/kongo09/philips-airpurifier-coap/issues/356)),
-  and the real mode field is not exposed to HA. Verified mode readback (module
-  out, no humidification): Auto→`preset_mode: auto`, Sleep→`sleep`,
-  Speed 1/2→`percentage: 50/75` (no `preset_mode`), Turbo→`null/null` (unreadable
-  even when dry). So the Bubble Card highlight lights **Auto/Sleep only when not
-  humidifying**; Turbo is never highlighted, and while humidifying the mode
-  buttons stay neutral (mode unknown) rather than guessing.
+- The AC3737 fan mode used to be unreadable while humidifying; **fixed locally by
+  patching the HACS integration** — see "AC3737 mode readback patch" below. The
+  Bubble Card highlight now lights Auto/Sleep/Turbo from `preset_mode` in every
+  state. Manual speeds 1 and 2 are not presets (`preset_mode: null`,
+  `percentage: 50/75`), so no button lights up for them.
+
+### AC3737 mode readback patch
+
+`philips_airpurifier_coap` v0.37 cannot read the AC3737's fan mode while
+humidification runs — `fan.preset_mode` and `percentage` are both `null`
+(upstream issue
+[kongo09/philips-airpurifier-coap#356](https://github.com/kongo09/philips-airpurifier-coap/issues/356)).
+
+Cause: in `custom_components/philips_airpurifier_coap/philips.py`, class
+`PhilipsAC3737` lists field `D0310A` (`NEW2_MODE_A`) in all seven mode dicts with
+value 2 or 3, and both properties require every field to match. The same repo's
+`const.py` declares `D0310A` a *humidification* binary sensor (`value == 4`), and
+this device reports 4 whenever it humidifies — so the match never succeeds. Same
+bug shape as AC3420 / issue #371, fixed upstream in PR #374 by commenting the
+offending field out.
+
+Local fix: comment out the seven `PhilipsApi.NEW2_MODE_A: <n>,` lines inside
+`class PhilipsAC3737` only. **Do not touch** `AVAILABLE_BINARY_SENSORS`, which
+legitimately uses the same field for the humidification sensor.
+
+```bash
+docker exec -i homeassistant python - <<'PATCH'
+import re, glob, shutil
+p = '/config/custom_components/philips_airpurifier_coap/philips.py'
+shutil.copy(p, p + '.orig-v0.37')
+src = open(p).read()
+i, j = src.index('class PhilipsAC3737('), src.index('class PhilipsAC3829(')
+new, n = re.subn(r'(?m)^(\s*)(PhilipsApi\.NEW2_MODE_A: [0-9]+,)$',
+                 r'\1# \2  # AC3737: humidification flag, not a fan mode field (upstream #356)',
+                 src[i:j])
+open(p, 'w').write(src[:i] + new + src[j:])
+for d in glob.glob('/config/custom_components/philips_airpurifier_coap/**/__pycache__', recursive=True):
+    shutil.rmtree(d)
+print('patched lines:', n)
+PATCH
+```
+
+Must print `patched lines: 7`, then restart HA core. A backup of the original is
+left next to the file as `philips.py.orig-v0.37`.
+
+**The patch lives in `appdata/`, not in git, and any HACS update of the
+integration silently reverts it.** `binary_sensor.ac3737_mode_unreadable` in
+`config/packages/philips_ac3737.yaml` watches for that and pushes to the phone.
+
+Verified on AC3737/10 fw 1.0.4, integration v0.37, 2026-08-19. Modes were switched
+on the appliance panel, so Home Assistant could not be echoing its own command
+back (its setter writes the requested mode straight into the coordinator state,
+which makes "set from HA, then read from HA" prove nothing):
+
+| Mode set on the appliance | `preset_mode` | `percentage` | before the patch |
+|---|---|---|---|
+| Auto | `auto` | `null` | `null` / `null` |
+| Sleep | `sleep` | 25 | `null` / `null` |
+| Speed 1 | `null` | 50 | `null` / `null` |
+| Speed 2 | `null` | 75 | `null` / `null` |
+| Turbo | `turbo` | 100 | `null` / `null` |
+
+Identical with the humidifier module in (humidifying) and removed (dry). Turbo was
+unreadable in *both* states before the patch.
+
+Also measured, and worth knowing: unpatched v0.37 sends `D0310A` together with the
+mode (`{"D03102":1,"D0310A":2,"D0310C":17}` for sleep), the device silently ignores
+that field and obeys `D0310C` alone, and humidification never stops — so the bug is
+read-side only. Field `D0310D` tracks the fan mode (auto/sleep 5, turbo 4,
+speed 1 → 1, speed 2 → 2), so it is not a humidification indicator on this model.
+
+> Do not read device state with `docker exec homeassistant python -m aioairctrl …`
+> while HA is running: the appliance serves a single status observation, the CLI
+> steals it, HA's client dies with `aiocoap.error.LibraryShutdown`, and every
+> service call fails with "unknown error" until HA's 180 s watchdog reconnects.
+> Read HA's own `observation status:` debug lines instead:
+> `docker logs --since 5m homeassistant | grep 'observation status' | tail -1`
+> (needs `logger.set_level` with `aioairctrl.coap.client: debug`).
 
 ## Server hardware monitoring (Glances)
 
