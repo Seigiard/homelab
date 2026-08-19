@@ -8,6 +8,8 @@
 #   Fan1 (it8613)        : sensor.127_0_0_1_it8613_0_fan_speed   (~1000 RPM)
 #   Fan2 (it8613)        : sensor.127_0_0_1_it8613_1_fan_speed   (~1000 RPM)
 #   Fan3 (it8613)        : sensor.127_0_0_1_it8613_2_fan_speed   — НЕ подключён, всегда 0 → в алерты НЕ берём
+#   RAID1 disk 1 (sda)   : sensor.127_0_0_1_raid_disk_1_temperature   (добавлено 2026-08-19)
+#   RAID1 disk 2 (sdb)   : sensor.127_0_0_1_raid_disk_2_temperature
 #
 # Пуш — notify.mobile_app_nothingphone (legacy mobile_app сервис: принимает
 #   data.priority/ttl для пробивных critical-пушей). philips_ac3737.yaml шлёт через
@@ -20,6 +22,12 @@
 # - Опорная температура для fan-failure — CPU (Tctl): при отказе вентилятора растёт.
 # - Пороги NVMe подняты против первоначального плана (70/80 → 75/82): диск в простое
 #   уже 56–58°C, под нагрузкой штатно заходит за 70 (крит самого диска 88.8°C).
+# - Диски зеркала: температура приходит от модуля ядра drivetemp через Glances,
+#   имена задаются псевдонимами в services/glances/glances.conf. Пороги 50/55 при
+#   рабочих 43°C и пределе диска 60: за 50 ресурс HDD заметно падает, 55 — уже
+#   повод вмешаться. У smartd свои независимые пороги (-W 4,45,55), он пишет в
+#   журнал; сюда приходит пуш. Диск в standby не будится опросом — драйвер отдаёт
+#   последнее известное значение (проверено на бэкапном диске 2026-08-19).
 # - for: гасит кратковременные выбросы. mode: single — без штормов повторных пушей.
 # - Сообщения читают значение через states(), а не trigger.* — иначе ручной прогон
 #   (Run в UI) падает: при Run объекта trigger нет, шаблон ломается, notify не уходит.
@@ -95,6 +103,47 @@ automation:
         data:
           title: "🚨 Сервер: NVMe перегрев"
           message: "NVMe {{ states('sensor.127_0_0_1_nvme_ssd_temperature') }}°C (>82, крит диска 88.8)."
+          data:
+            ttl: 0
+            priority: high
+
+  - id: server_raid_disk_temp_warning
+    alias: "Сервер: диск зеркала греется (warning)"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id:
+          - sensor.127_0_0_1_raid_disk_1_temperature
+          - sensor.127_0_0_1_raid_disk_2_temperature
+        above: 50
+        for: "00:15:00"
+    action:
+      - service: notify.mobile_app_nothingphone
+        data:
+          title: "⚠️ Сервер: диск зеркала греется"
+          message: >-
+            {{ trigger.to_state.attributes.friendly_name if trigger is defined and trigger.to_state is not none else 'Диск зеркала' }}
+            {{ states('sensor.127_0_0_1_raid_disk_1_temperature') }}/{{ states('sensor.127_0_0_1_raid_disk_2_temperature') }}°C
+            (>50 уже 15 мин). Проверь обдув.
+
+  - id: server_raid_disk_temp_critical
+    alias: "Сервер: перегрев диска зеркала (critical)"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id:
+          - sensor.127_0_0_1_raid_disk_1_temperature
+          - sensor.127_0_0_1_raid_disk_2_temperature
+        above: 55
+        for: "00:02:00"
+    action:
+      - service: notify.mobile_app_nothingphone
+        data:
+          title: "🚨 Сервер: перегрев диска зеркала"
+          message: >-
+            {{ trigger.to_state.attributes.friendly_name if trigger is defined and trigger.to_state is not none else 'Диск зеркала' }}
+            {{ states('sensor.127_0_0_1_raid_disk_1_temperature') }}/{{ states('sensor.127_0_0_1_raid_disk_2_temperature') }}°C
+            (>55, предел диска 60).
           data:
             ttl: 0
             priority: high

@@ -433,6 +433,8 @@ views:
   # Сервер — здоровье железа (данные Glances). Entity ids проверены
   # 2026-06-30. Board-температур it8613 в HA нет (коллизия лейблов temp/fan
   # в Glances) — тепло по CPU/NVMe/GPU. Fan 3 (it8613 2) не подключён.
+  # Диски зеркала добавлены 2026-08-19 (модуль drivetemp + псевдонимы в
+  # services/glances/glances.conf); Samsung и бэкапный диск скрыты там же.
   # Алерты — config/packages/hardware_health.yaml.
   # ─────────────────────────────────────────────────────────────────────
   - title: Сервер
@@ -449,6 +451,10 @@ views:
             name: NVMe
           - entity: sensor.127_0_0_1_edge_temperature
             name: GPU
+          - entity: sensor.127_0_0_1_raid_disk_1_temperature
+            name: RAID 1
+          - entity: sensor.127_0_0_1_raid_disk_2_temperature
+            name: RAID 2
           - entity: sensor.127_0_0_1_it8613_0_fan_speed
             name: Fan 1
           - entity: sensor.127_0_0_1_it8613_1_fan_speed
@@ -464,6 +470,10 @@ views:
             name: NVMe
           - entity: sensor.127_0_0_1_edge_temperature
             name: GPU
+          - entity: sensor.127_0_0_1_raid_disk_1_temperature
+            name: RAID 1
+          - entity: sensor.127_0_0_1_raid_disk_2_temperature
+            name: RAID 2
 
       - type: history-graph
         title: Обороты вентиляторов (24 ч)
