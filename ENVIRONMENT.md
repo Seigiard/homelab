@@ -58,7 +58,7 @@ Update Error: Not updatable as UEFI ESP partition not detected
 
 - **`amdgpu` из коробки** на ядре Ubuntu 24.04 (6.8) — переход Intel→AMD прозрачен, проприетарных драйверов не нужно. `i915` (Intel GPU) просто не подгружается.
 - **CPU-микрокод:** доустановить `amd64-microcode` (`sudo apt install amd64-microcode && sudo update-initramfs -u`); `intel-microcode`, если остался от прошлого железа, на AMD не используется (можно `apt purge`). Не критично для загрузки, рекомендуется для фиксов CPU.
-- **VAAPI-транскодинг** (если появится Jellyfin/Immich): на AMD — `mesa-va-drivers` (radeonsi), **не** Intel `intel-media-va-driver`.
+- **VAAPI-транскодинг** (Jellyfin, в перспективе Immich): на AMD — `mesa-va-drivers` (radeonsi), **не** Intel `intel-media-va-driver`. Образ `jellyfin/jellyfin` несёт свои драйверы внутри, на хосте пакет нужен только для диагностики через `vainfo`. Контейнеру пробрасывается весь `/dev/dri` (нумерация `cardN` на amdgpu плавает между загрузками), а доступ к нему даёт `group_add` с GID группы `render` — он в `.env` как `RENDER_GROUP_ID`. Не совпал GID — Jellyfin молча уходит в софтверный транскодинг.
 - **Сенсоры:** температуры читаются через `k10temp` (AMD), не `coretemp`; при необходимости `sudo sensors-detect`.
 
 ### Управление вентиляторами (Super-I/O IT8613E)
