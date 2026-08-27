@@ -20,10 +20,20 @@ else
     print_box "REBUILDING: ${services[*]}"
 fi
 
+# A failing service must not abort the run: set -e used to skip every service
+# after the failure without a word. An unknown name reached the same silence,
+# because the directory guard here returned before validate_service could
+# report it. do_rebuild validates and reports; record what it rejects.
+failed=()
+
 for service in "${services[@]}"; do
-    if [[ -d "$SERVICES_DIR/$service" ]]; then
-        do_rebuild "$service"
-    fi
+    do_rebuild "$service" || failed+=("$service")
 done
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+    print_footer "Rebuild finished with errors"
+    log_error "Failed: ${failed[*]}"
+    exit 1
+fi
 
 print_footer "Rebuild complete!"

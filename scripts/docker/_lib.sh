@@ -264,8 +264,13 @@ do_rebuild() {
     ensure_service_dirs "$SERVICES_DIR/$service/docker-compose.yml"
 
     log_step "Rebuilding $service..."
-    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" down
-    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" pull
-    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" up -d
+    # Pull before down. adguard is the host resolver, so tearing it down first
+    # kills DNS for the whole machine and the pull that follows cannot reach the
+    # registry -- the service then stays dead and takes cloudflared with it.
+    # With the image already local, up -d needs no name resolution at all.
+    # A failed pull now also leaves the running container untouched.
+    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" pull || return 1
+    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" down || return 1
+    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" up -d || return 1
     log_info "$service rebuilt"
 }
