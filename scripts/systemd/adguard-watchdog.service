@@ -1,0 +1,11 @@
+[Unit]
+Description=Restart AdGuard when the host resolver stops answering
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=__PROJECT_DIR__/scripts/adguard-watchdog.sh
+# The attempt counter lives here; without Preserve, systemd would wipe it after
+# every oneshot run and the retry limit could never be reached.
+RuntimeDirectory=adguard-watchdog
+RuntimeDirectoryPreserve=yes

@@ -1,0 +1,12 @@
+[Unit]
+Description=Check every minute that the host resolver still answers
+
+[Timer]
+# Docker needs a moment after boot to bring adguard up on its own.
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=adguard-watchdog.service
+
+[Install]
+WantedBy=timers.target
