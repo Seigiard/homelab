@@ -4,6 +4,9 @@ services:
     container_name: cloudflared
     restart: unless-stopped
     command: tunnel run
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     deploy:
