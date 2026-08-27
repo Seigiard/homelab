@@ -89,13 +89,26 @@ views:
         icon: mdi:air-purifier
         show_state: false
         show_attribute: true
+        # Bubble Card binds the round icon to the card's top-level tap_action and the
+        # rest of the card to button_action. Left at its default the icon opens
+        # more-info of `entity`, which is not what the card body does. Pointing both at
+        # the same sensor keeps the whole row one target: the graph.
+        tap_action:
+          action: more-info
+          entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
         button_action:
           tap_action:
             action: more-info
             entity: sensor.bedroom_air_cleaner_and_purifier_pm2_5
+        # Five buttons cover every mode the appliance has, so the more-info
+        # slider is never needed. That slider is a bad control here: auto is not
+        # a fan speed, so the fan entity reports percentage null for it and HA
+        # draws an empty bar that reads as "off", while a swipe to the bottom
+        # really does switch the appliance off.
+        # Icons only — five named chips do not fit the card width.
         sub_button:
-          - name: Авто
-            icon: mdi:fan-auto
+          - icon: mdi:fan-auto
+            show_name: false
             tap_action:
               action: call-service
               service: fan.set_preset_mode
@@ -103,8 +116,8 @@ views:
                 entity_id: fan.bedroom_air_cleaner_and_purifier
               data:
                 preset_mode: auto
-          - name: Сон
-            icon: mdi:power-sleep
+          - icon: mdi:power-sleep
+            show_name: false
             tap_action:
               action: call-service
               service: fan.set_preset_mode
@@ -112,8 +125,26 @@ views:
                 entity_id: fan.bedroom_air_cleaner_and_purifier
               data:
                 preset_mode: sleep
-          - name: Турбо
-            icon: mdi:fan-speed-3
+          - icon: mdi:fan-speed-1
+            show_name: false
+            tap_action:
+              action: call-service
+              service: fan.set_preset_mode
+              target:
+                entity_id: fan.bedroom_air_cleaner_and_purifier
+              data:
+                preset_mode: speed_1
+          - icon: mdi:fan-speed-2
+            show_name: false
+            tap_action:
+              action: call-service
+              service: fan.set_preset_mode
+              target:
+                entity_id: fan.bedroom_air_cleaner_and_purifier
+              data:
+                preset_mode: speed_2
+          - icon: mdi:fan-speed-3
+            show_name: false
             tap_action:
               action: call-service
               service: fan.set_preset_mode
@@ -124,13 +155,15 @@ views:
         # styles: is a JS template literal (not Jinja).
         # preset_mode is readable in every mode, humidifying or not, since the
         # local patch to philips_airpurifier_coap (see the service README).
-        # Manual speeds 1 and 2 are not presets — they report preset_mode null
-        # and percentage 50/75, so none of the three buttons lights up then.
+        # Speeds 1 and 2 became presets in the same patch, so all five buttons
+        # highlight; before it they reported preset_mode null.
         styles: |
           ${(() => { const f = hass.states['fan.bedroom_air_cleaner_and_purifier']; const pm = hass.states['sensor.bedroom_air_cleaner_and_purifier_pm2_5']; const s = card.querySelector('.bubble-state'); if (s) s.innerText = (f.state === 'on' && pm) ? `${pm.state} ${pm.attributes.unit_of_measurement || 'µg/m³'}` : ''; return ''; })()}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'auto' ? `.bubble-sub-button-1 { background: var(--accent-color) !important; }` : ''}
           ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'sleep' ? `.bubble-sub-button-2 { background: var(--accent-color) !important; }` : ''}
-          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'turbo' ? `.bubble-sub-button-3 { background: var(--accent-color) !important; }` : ''}
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'speed_1' ? `.bubble-sub-button-3 { background: var(--accent-color) !important; }` : ''}
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'speed_2' ? `.bubble-sub-button-4 { background: var(--accent-color) !important; }` : ''}
+          ${hass.states['fan.bedroom_air_cleaner_and_purifier']?.attributes?.preset_mode === 'turbo' ? `.bubble-sub-button-5 { background: var(--accent-color) !important; }` : ''}
 
       # --- Зволоження (увлажнение + влажность объединены в одну карточку) ---
       # Модуль снят (template binary_sensor: humidifier on + humidification off) →
@@ -149,6 +182,13 @@ views:
           icon: mdi:air-humidifier-off
           show_state: false
           show_attribute: true
+          # Bubble Card binds the round icon to the card's top-level tap_action and the
+          # rest of the card to button_action. Left at its default the icon opens
+          # more-info of `entity`, which is not what the card body does. Pointing both at
+          # the same sensor keeps the whole row one target: the graph.
+          tap_action:
+            action: more-info
+            entity: sensor.bedroom_air_cleaner_and_purifier_humidity
           button_action:
             tap_action:
               action: more-info
@@ -180,6 +220,13 @@ views:
           icon: mdi:air-humidifier
           show_state: false
           show_attribute: true
+          # Bubble Card binds the round icon to the card's top-level tap_action and the
+          # rest of the card to button_action. Left at its default the icon opens
+          # more-info of `entity`, which is not what the card body does. Pointing both at
+          # the same sensor keeps the whole row one target: the graph.
+          tap_action:
+            action: more-info
+            entity: sensor.bedroom_air_cleaner_and_purifier_humidity
           button_action:
             tap_action:
               action: more-info
@@ -237,6 +284,13 @@ views:
           icon: mdi:air-humidifier
           show_state: false
           show_attribute: true
+          # Bubble Card binds the round icon to the card's top-level tap_action and the
+          # rest of the card to button_action. Left at its default the icon opens
+          # more-info of `entity`, which is not what the card body does. Pointing both at
+          # the same sensor keeps the whole row one target: the graph.
+          tap_action:
+            action: more-info
+            entity: sensor.bedroom_air_cleaner_and_purifier_humidity
           button_action:
             tap_action:
               action: more-info
