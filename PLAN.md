@@ -7,6 +7,10 @@
 - [ ] **Immich** — фото-библиотека (директория `services/immich/` подготовлена)
 - [ ] **Paperless** или [Papra](https://github.com/papra-hq/papra) — управление документами
 
+## Планируемая интеграция
+
+- [ ] **herdr remote** — сервер как SSH-машина для herdr 0.9.0 (`herdr machine add server` с mbp2026). SSH-доступ уже работает (Tailscale, ключи в 1Password на клиентах). Что нужно на сервере: бинарь herdr (шаг `scripts/setup/13-setup-herdr.sh`) и синхронизация агентского стека из my-mac-setup — herdr-плагины (`~/.config/herdr/plugins`), хелперы (`~/.local/bin`, `~/.local/lib`), скиллы агентов. herdr сам ничего не копирует на удалённые машины. Открытый вопрос — механизм связки без дублирования исходников: (а) клон my-mac-setup на сервере + симлинки только агентского поднабора из setup-шага homelab, или (б) chezmoi-роль `server` в my-mac-setup деплоит только агентские пути, а zsh и остальное остаётся за homelab (наборы путей должны быть непересекающимися). Парная задача в my-mac-setup: `docs/issues/2026-09-09-001-set-up-herdr-0-9-0-multi-machine-remote.md`.
+
 ## Идеи
 
 _(пока пусто)_
