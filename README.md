@@ -177,18 +177,21 @@ rclone is installed automatically. Configure a remote for backups:
 rclone config
 ```
 
-Example: Add Google Drive remote named `gdrive`:
+The server currently uses two remotes:
 
-1. Choose `n` (new remote)
-2. Name: `gdrive`
-3. Storage: `drive` (Google Drive)
-4. Follow OAuth flow in browser
+| Remote       | Storage                       | Capacity |
+| ------------ | ----------------------------- | -------- |
+| `dropbox`    | Dropbox                       | ~10 GB   |
+| `ftp-backup` | HostBrr StorageBox (over FTP) | 1 TB     |
+
+A copy of the finished config lives in 1Password as "RClone conf" — Backrest
+mounts it read-only from `~/.config/rclone`.
 
 Verify configuration:
 
 ```bash
-rclone listremotes        # Should show: gdrive:
-rclone lsd gdrive:        # List folders
+rclone listremotes        # Should show: dropbox: ftp-backup:
+rclone about dropbox:     # Quota — watch the free space, see below
 ```
 
 ### 2. Configure Backrest
@@ -197,15 +200,45 @@ After deploying Backrest (`./scripts/docker/deploy.sh backrest`):
 
 1. Open http://backup.home.local
 2. **Add Repository**:
-   - URI: `rclone:gdrive:backups/homelab`
+   - URI: `rclone:dropbox:backups` (or `rclone:ftp-backup:<path>`)
    - Password: create a strong encryption password (save it!)
-3. **Add Backup Plans**:
+3. **Add Backup Plan**:
    - Path: `/backup/appdata` → container configs
-   - Path: `/backup/users` → user data
    - Schedule: `0 3 * * *` (daily at 3 AM)
-4. **Test**: Run backup manually, verify in Google Drive
+   - Retention: daily 7 / weekly 4 / monthly 2 on Dropbox, monthly 6 on the StorageBox
+4. **Test**: Run backup manually, verify the snapshot appears
+
+`/mnt/data/users` is deliberately *not* in any plan — the mount
+`/backup/users:ro` exists in the container but nothing references it.
 
 Backrest uses [restic](https://restic.net/) for encrypted, deduplicated backups.
+The plan config (repos, excludes, retention) lives in
+`appdata/backrest/config/config.json` on the server, not in this repo.
+
+### 3. Keep the backup set small
+
+Dropbox only holds ~10 GB, so anything large and regenerable must be excluded
+or it eats the quota and takes the repo with it. With the current excludes a
+snapshot of `appdata` is 233 MB (5.1 GB on disk) and the whole Dropbox repo sits
+at 108 MB.
+
+The excludes cover generated media (`stash/config/generated`, `blobs`),
+downloaded binaries (`stash/config/ffmpeg`, `ffprobe`, `*.zip`), caches and
+logs, `transmission-omg/resume`, and the Home Assistant recorder DB
+(`home-assistant_v2.db*` — 300+ MB rewritten daily, and a copy taken from a live
+sqlite is inconsistent anyway; the HA config itself lives in `.storage` and yaml
+and is still backed up).
+
+Two rules worth remembering:
+
+- **A full repo cannot clean itself.** restic needs to write a lock file before
+  it can prune, so once the remote is at quota every operation fails with
+  `path/insufficient_space` and unused data stays forever. Keep headroom.
+- **Retention pins mistakes.** One snapshot that accidentally caught 3 GB of
+  Ollama model weights landed in the monthly bucket, where it would have sat for
+  six months. Check the size column: `restic snapshots --no-lock --compact`
+  should read as an even line, and any outlier means something large slipped
+  past the excludes.
 
 ## SSL Setup (HTTPS for Local Access)
 

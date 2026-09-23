@@ -1,8 +1,14 @@
 # Restic repos живут на удалённых хранилищах (через rclone, см. volume ниже):
-#   - FTP StorageBox 949745329.xyz (HostBrr, 1 TB)
-#   - Dropbox
+#   - FTP StorageBox 949745329.xyz (HostBrr, 1 ТБ) — долгая история, monthly 6
+#   - Dropbox (~10 ГБ квоты!) — monthly 2, prune раз в неделю
 # ВНИМАНИЕ: планы бэкапят ТОЛЬКО /backup/appdata. Маунт /backup/users:ro
 # смонтирован, но ни в одном плане не используется → /mnt/data/users НЕ бэкапится.
+# Конфиг планов (excludes, retention) — в appdata/backrest/config/config.json,
+# в git его нет. Из-за 10 ГБ на Dropbox всё крупное и перекачиваемое обязано
+# быть в excludes: stash/config/{generated,blobs,ffmpeg,ffprobe,*.zip},
+# homeassistant/home-assistant_v2.db* (300+ МБ, переписывается каждый день),
+# transmission-omg/resume, кэши и логи. Полный репо не может почистить сам себя:
+# restic не запишет даже lock → prune падает с path/insufficient_space.
 services:
   backrest:
     image: garethgeorge/backrest:latest

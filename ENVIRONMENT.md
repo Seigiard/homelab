@@ -195,6 +195,60 @@ sudo mdadm --detail /dev/md0
   backups/                    # Бэкапы контейнеров и БД
 ```
 
+### Бэкапы (Backrest/restic)
+
+| Репозиторий | rclone remote                                         | Объём  | Retention                      | Prune        |
+| ----------- | ----------------------------------------------------- | ------ | ------------------------------ | ------------ |
+| Dropbox     | `dropbox:backups`                                     | ~10 ГБ | daily 7 / weekly 4 / monthly 2 | раз в неделю |
+| StorageBox  | `ftp-backup:domains/949745329.xyz/public_ftp/backup/` | 1 ТБ   | daily 7 / weekly 4 / monthly 6 | раз в месяц  |
+
+Оба плана бэкапят только `/backup/appdata` — 5.1 ГБ на диске, 233 МБ после
+excludes, 108 МБ на удалённом хранилище (restic жмёт 2.18×).
+**`/mnt/data/users` не бэкапится ни одним планом** — маунт `/backup/users:ro` в
+контейнере есть, но в планах не используется.
+
+Конфиг планов — `appdata/backrest/config/config.json` (в git не лежит, при правке
+снаружи: `docker stop backrest` → `docker cp` → `docker start`; backrest сам
+складывает прошлые версии в `config.json.bak.*`).
+
+**Дропбоксовые 10 ГБ — узкое место.** 2026-09-23 квота кончилась: снапшот 31.08
+затянул `appdata/ai-gateway/ollama` (3.1 ГБ весов моделей, сервис давно удалён) и
+залип в monthly-бакете на полгода, плюс `home-assistant_v2.db` (326 МБ) целиком
+переписывается каждый день и каждый дневной снапшот приносил сотни новых мегабайт.
+Полный репозиторий не в состоянии почистить себя сам: restic не может записать даже
+lock-файл, всё падает с `path/insufficient_space`, а значит prune не проходит —
+дедлок. Вылечено пересозданием репо (`rclone purge dropbox:backups` + `restic init`,
+история осталась на StorageBox), GUID нового репо прописан в конфиг, monthly
+срезано до 2, prune переведён на недельный. Итог: снапшот 823 → 233 МБ,
+репозиторий 7.16 ГБ → 108 МБ, на Dropbox свободно 7.05 из 9.88 ГБ.
+
+Что в excludes и почему: `stash/config/generated` + `blobs` (превью и спрайты,
+3.4 ГБ), `stash/config/{ffmpeg,ffprobe,*.zip}` (206 МБ — stash качает их сам при
+старте), `homeassistant/home-assistant_v2.db*` (recorder-телеметрия; копия с живой
+sqlite всё равно несогласованная, конфиг HA лежит в `.storage` и yaml),
+`transmission-omg/resume`, `jellyfin` metadata/cache, `adguard/work`,
+`opds-generator`, кэши и логи.
+
+Проверка состояния. Всё делается изнутри контейнера: rclone.conf смонтирован
+только там, а `restic` лежит в образе. Переменные `RESTIC_*` в контейнере не
+заданы — передавать через `docker exec -e` (пароль репозитория — в
+`config.json`):
+
+```bash
+docker exec backrest rclone about dropbox:        # сколько свободно
+docker exec -e RESTIC_PASSWORD=<пароль> -e RESTIC_REPOSITORY=rclone:dropbox:backups \
+  backrest restic snapshots --no-lock --compact   # колонка размеров ровная?
+```
+
+Выброс в колонке размеров = что-то крупное проскочило мимо excludes; именно так и
+нашёлся снапшот с моделями Ollama. Разложить толстый снапшот по каталогам:
+`restic ls -l --no-lock <id>` и просуммировать размеры по второму уровню пути.
+
+`--no-lock` обязателен, если репо уже полон: иначе restic упрётся в запись
+lock-файла и не выполнит даже чтение. Операции backrest в контейнере при этом
+идут своим чередом — команды выше репозиторий не блокируют, но запускать их
+одновременно с бэкапом по расписанию (03:00) не стоит.
+
 ### Сетевые шары (Samba)
 
 | Путь                | Samba-домен        | Web-домен            | Доступ |
