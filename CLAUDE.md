@@ -6,9 +6,9 @@
 
 ## Документация
 
-- `README.md` — установка, настройка, использование (EN)
-- `ENVIRONMENT.md` — серверное окружение: железо, хранилище, сеть, бэкапы, известные проблемы
-- `PLAN.md` — roadmap: планируемые сервисы и идеи
+- `ENVIRONMENT.md` — справочник по серверу. Читать перед работой с железом, дисками, сетью, DNS, бэкапами, Syncthing: там грабли и что уже пробовали.
+- `PLAN.md` — roadmap. Читать, когда задача про новый сервис или незакрытый план.
+- `README.md` — установка и первичная настройка для человека (EN).
 
 ## Структура проекта
 
@@ -17,7 +17,7 @@ scripts/
   setup.sh              # Точка входа (curl | bash)
   bootstrap.sh          # Docker, папки, права, firewall, smartd
   healthcheck.sh        # Проверка состояния после установки
-  setup/                # Модульные шаги установки (00-10)
+  setup/                # Модульные шаги установки, NN-*.sh
   docker/               # Управление сервисами (deploy/stop/rebuild/remove/status)
   lib/config.sh         # Все переменные (пользователи, пакеты, пути)
   lib/tui.sh            # TUI-библиотека
@@ -92,9 +92,8 @@ Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON.
 
 <important if="you are debugging ytpod, or YouTube playback returns 403 or 520">
 
-**Временный обход клиента yt-dlp** (с 2026-08-18). Дефолтный клиент `android_vr` получает 403 на все stream URL (yt-dlp/yt-dlp#17456), `android` — SABR-only без прямых URL. В compose форсится `YOUTUBE_YT_DLP_GET_URL_EXTRA_ARGS=["--extractor-args","youtube:player_client=visionos,web_embedded"]`.
+**Временный обход клиента yt-dlp** (с 2026-08-18): compose форсит `player_client` через `YOUTUBE_YT_DLP_GET_URL_EXTRA_ARGS`. Причина и условие удаления — комментарий рядом в `services/ytpod/docker-compose.yml`.
 
-- Убрать, когда стабильный yt-dlp с фиксом `dae52d8` попадёт в образ `madiele/vod2pod-rss:beta`.
 - Симптом возврата: 520 через Cloudflare, 403 на `googlevideo.com` в `docker logs ytpod`.
 - vod2pod кэширует stream URL в Redis → после смены клиента `docker exec ytpod-redis redis-cli FLUSHALL`.
 - Подбор живого клиента: `docker exec ytpod yt-dlp -q -f bestaudio --get-url --extractor-args "youtube:player_client=<клиент>" <video-url>`, затем curl полученного URL.

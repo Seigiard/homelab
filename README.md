@@ -8,17 +8,10 @@ Automated setup scripts for Ubuntu home server.
 curl -fsSL https://raw.githubusercontent.com/seigiard/homelab/main/scripts/setup.sh | bash
 ```
 
-The script will:
-
-1. Install git and clone repository to `/opt/homelab`
-2. Update system (apt update/upgrade)
-3. Install packages (zsh, micro, zoxide, htop, mc, jq, ffmpeg, mediainfo, chafa, etc.)
-4. Setup Oh-My-Zsh with plugins
-5. Configure git
-6. Setup Avahi (mDNS)
-7. Apply dotfiles
-8. Install Docker
-9. Generate SSH key for GitHub (interactive step)
+The script installs git, clones the repository to `/opt/homelab`, then runs the
+steps in `scripts/setup/` in numeric order: system update, packages (list in
+`scripts/lib/config.sh`), zsh, git, Avahi, dotfiles, Docker, SSH key, NUT,
+Tailscale and the rest. The SSH key and Tailscale steps are interactive.
 
 ## Project Structure
 
@@ -31,7 +24,7 @@ homelab/
 │   ├── lib/
 │   │   ├── config.sh         # Shared variables
 │   │   └── tui.sh            # TUI library
-│   ├── setup/                # Modular install steps (00-08)
+│   ├── setup/                # Modular install steps, NN-*.sh
 │   └── docker/               # Service management (deploy/stop/rebuild/remove/status)
 ├── dotfiles/                  # Symlinked to ~
 ├── services/                  # Docker services (one dir per service)
@@ -218,16 +211,8 @@ The plan config (repos, excludes, retention) lives in
 ### 3. Keep the backup set small
 
 Dropbox only holds ~10 GB, so anything large and regenerable must be excluded
-or it eats the quota and takes the repo with it. With the current excludes a
-snapshot of `appdata` is 233 MB (5.1 GB on disk) and the whole Dropbox repo sits
-at 108 MB.
-
-The excludes cover generated media (`stash/config/generated`, `blobs`),
-downloaded binaries (`stash/config/ffmpeg`, `ffprobe`, `*.zip`), caches and
-logs, `transmission-omg/resume`, and the Home Assistant recorder DB
-(`home-assistant_v2.db*` — 300+ MB rewritten daily, and a copy taken from a live
-sqlite is inconsistent anyway; the HA config itself lives in `.storage` and yaml
-and is still backed up).
+or it eats the quota and takes the repo with it. The current excludes, sizes and
+the 2026-09-23 quota incident are in `ENVIRONMENT.md` → "Бэкапы (Backrest/restic)".
 
 Two rules worth remembering:
 

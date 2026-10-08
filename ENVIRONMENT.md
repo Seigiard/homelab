@@ -57,7 +57,7 @@ Update Error: Not updatable as UEFI ESP partition not detected
 ### Платформа AMD (после миграции)
 
 - **`amdgpu` из коробки** на ядре Ubuntu 24.04 (6.8) — переход Intel→AMD прозрачен, проприетарных драйверов не нужно. `i915` (Intel GPU) просто не подгружается.
-- **CPU-микрокод:** доустановить `amd64-microcode` (`sudo apt install amd64-microcode && sudo update-initramfs -u`); `intel-microcode`, если остался от прошлого железа, на AMD не используется (можно `apt purge`). Не критично для загрузки, рекомендуется для фиксов CPU.
+- **CPU-микрокод:** `amd64-microcode` установлен. `intel-microcode`, если остался от прошлого железа, на AMD не используется (можно `apt purge`).
 - **VAAPI-транскодинг** (Jellyfin, в перспективе Immich): на AMD — `mesa-va-drivers` (radeonsi), **не** Intel `intel-media-va-driver`. Образ `jellyfin/jellyfin` несёт свои драйверы внутри, на хосте пакет нужен только для диагностики через `vainfo`. Контейнеру пробрасывается весь `/dev/dri` (нумерация `cardN` на amdgpu плавает между загрузками), а доступ к нему даёт `group_add` с GID группы `render` — он в `.env` как `RENDER_GROUP_ID`. Не совпал GID — Jellyfin молча уходит в софтверный транскодинг.
 - **Сенсоры:** температуры читаются через `k10temp` (AMD), не `coretemp`; при необходимости `sudo sensors-detect`.
 
@@ -86,11 +86,6 @@ echo "it87" | sudo tee /etc/modules-load.d/it87.conf
 - **Маппинг:** `fan2`/`pwm2` (≈CPU, низкий duty ~16%) и `fan3`/`pwm3` (≈HDD-корзина, ~51%); `fan4` не подключён. Оба `pwmX_enable = 2` (авто).
 - **Шум в `sensors` — игнорировать:** вольтажные `ALARM` (`in0`, `3VSB`…) и абсурдные пороги температур — мусорные дефолты generic-драйвера, не настоящие тревоги. Реальные данные — только `fanX` (RPM) и `temp2`/`temp3`. Прячется через `/etc/sensors.d/aoostar-it8613.conf` (`ignore` напряжений / `fan1,4,5` / `temp1` / `intrusion0`). После фильтра вывод `it8613` полностью чистый: `fan2`/`fan3` + `temp2`/`temp3`. Конфиг пишет шаг `11-setup-fan-sensors.sh`. _Две строки `temp3_min/max I/O error` в общем выводе `sensors` относятся к **NVMe Kingston** (фейковый Sensor 2), а не к it8613 — см. «Известные проблемы железа»._
 - **Мониторинг в Home Assistant:** температуры (CPU/NVMe/GPU) и обороты `it8613 0/1` выведены в HA через интеграцию Glances — графики + алерты (перегрев, отказ вентилятора). Подробности: `services/homeassistant/README.md` → «Server hardware monitoring». Board-температуры it8613 в HA недоступны (коллизия лейблов Glances).
-
-### Планы по апгрейду
-
-- Первая холодная копия зеркала на 8 ТБ диск `sdd`, затем автоматизация недельного бэкапа. До неё каталог `/mnt/data/users` живёт только на зеркале: restic-планы бэкапят лишь appdata, а зеркало защищает от отказа диска, но не от удаления файла. Эта копия — гейт для удаления `/mnt/data-tmp.DELETE-20260818` (переезд выполнен 2026-08-18, каталог выведен из обращения переименованием 2026-08-19 и ждёт удаления; до появления копии он остаётся единственным вторым экземпляром данных).
-- Один отсек из четырёх свободен (в четвёртом временно стоит Samsung 186 ГБ, с которого стягивали старые данные; раздел `sdc1` не смонтирован, диск ничем не занят).
 
 ## UPS
 
@@ -129,7 +124,7 @@ sudo upsc eaton@localhost battery.charge
 | ---------- | --------------------------- | ---- |
 | `sda`+`sdb` | 2× Seagate ST6000VN006 6 TB | RAID1 `md0` → `/mnt/data` |
 | `sdd`      | Seagate ST8000VN002 8 TB    | Холодный бэкап, обычно не смонтирован |
-| `sdc`      | Samsung SP2004C 186 GB      | **Временный** — стягивание старых данных, после переноса вынимается |
+| `sdc`      | Samsung SP2004C 186 GB      | **Временный**, с него стягивали старые данные. `sdc1` не смонтирован, диск ничем не занят — вынуть |
 | `nvme0n1`  | Kingston SEDC2000BM8240G 240 GB | Система + appdata |
 
 Инвентаризация: `lsblk -d -o NAME,SIZE,MODEL,SERIAL,ROTA,TRAN` (`ROTA=1` — HDD, `0` — SSD/NVMe).
@@ -157,6 +152,8 @@ sudo mdadm --detail /dev/md0
 
 **Замена сбойного диска:** `sudo mdadm --manage /dev/md0 --fail /dev/sdX --remove /dev/sdX`, физически заменить, затем `sudo mdadm --manage /dev/md0 --add /dev/sdY` и следить за `resync` в `/proc/mdstat`. Зеркало ≠ бэкап: удаление файла удаляет его с обоих дисков, поэтому холодная копия на `sdd` нужна отдельно.
 
+**`/mnt/data-tmp.DELETE-20260818`** — данные до переезда на зеркало (переезд 2026-08-18, каталог переименован 2026-08-19). Пока нет холодной копии на `sdd`, это единственный второй экземпляр `/mnt/data/users`: restic его не бэкапит. Удалять только после первой копии (план — `PLAN.md`).
+
 **SMART-наблюдение** (`/etc/smartd.conf`, генерится из `scripts/bootstrap.sh`) покрывает оба диска зеркала и диск холодного бэкапа. Диски адресуются через `/dev/disk/by-id/` — буквы `sdX` раздаются в порядке обнаружения, поэтому изъятие любого диска переименовало бы остальные и наблюдение молча переехало бы на чужое устройство. Длинный тест у второго диска зеркала стоит на сутки позже, чем у первого: одновременное сканирование обеих половин упирается в диски и тормозит массив. Флаг `-n standby` не даёт будить спящий диск ради опроса, `-d removable` позволяет диску холодного бэкапа отсутствовать без ошибки при старте. Добавить новый диск = дописать строку с его `by-id`-именем; после этого нужен только `sudo systemctl restart smartd`, **не** прогон `bootstrap.sh` целиком (он делает рекурсивный `chown`, см. ниже). Имена: `ls -l /dev/disk/by-id/ata-* | grep -v part`.
 
 Служба называется **`smartmontools.service`**, `smartd` — только алиас: перезапуск по алиасу работает, а `journalctl -u smartd` молча возвращает `No entries`. Проверка: `systemctl status smartd`, журнал — `sudo journalctl -u smartmontools`. Признак исправной работы — строка `Monitoring 3 ATA/SATA, 0 SCSI/SAS and 0 NVMe devices`. Записи вида `Raw_Read_Error_Rate changed` у Seagate — колебания нормализованного значения, а не ошибки; тревожны только атрибуты 5, 197 и 198. `not found in smartd database` означает лишь отсутствие пресета имён атрибутов для модели.
@@ -168,7 +165,7 @@ sudo mdadm --detail /dev/md0
 - **Каталог под точкой монтирования сделан неизменяемым** (`chattr +i /mnt/data`, выставлено на пустом каталоге при отмонтированном массиве). Docker при незамонтированном массиве падает громко. Снять при необходимости: `sudo umount /mnt/data && sudo chattr -i /mnt/data`.
 - **`do_deploy`/`do_rebuild` в `scripts/docker/_lib.sh` проверяют монтирование** (`check_data_mount`) перед подъёмом сервиса, чей compose ссылается на `DATA_PATH`, если этот путь описан в `/etc/fstab`. Проверка стоит именно в `do_deploy`, а не внутри `ensure_service_dirs` — так она срабатывает раньше любого создания каталогов и не зависит от того, разобрала ли та строку тома.
 
-**Создание каталогов под тома** (`ensure_service_dirs`, там же) до 2026-08-19 не работало ни для одного пути с `DATA_PATH`: строка тома резалась по первому двоеточию, а оно есть уже внутри `${DATA_PATH:-/mnt/data}`, так что до проверки доходил огрызок. Каталоги вместо скрипта заводил dockerd — с владельцем `root:root`. Чинится раскрытием переменных **до** разделения на хостовой и контейнерный путь (`expand_compose_vars`, чистый bash: `envsubst` не понимает форму `${VAR:-default}`). Системные пути (`/`, `/etc`, `/run`, `/var/run`, `/proc`, `/sys`, `/dev`) в белый список не входят — их сервисы монтируют только на чтение, и подсунуть контейнеру пустой каталог вместо отсутствующего файла хуже, чем упасть.
+**Создание каталогов под тома** (`ensure_service_dirs`, там же) раскрывает переменные **до** разделения строки тома на хостовой и контейнерный путь: двоеточие есть уже внутри `${DATA_PATH:-/mnt/data}`. Раскрытие — `expand_compose_vars`, чистый bash: `envsubst` не понимает форму `${VAR:-default}`. До 2026-08-19 этого не было, и каталоги под `DATA_PATH` заводил dockerd с владельцем `root:root` — у старых каталогов такой владелец может остаться. Системные пути (`/`, `/etc`, `/run`, `/var/run`, `/proc`, `/sys`, `/dev`) в белый список не входят — их сервисы монтируют только на чтение, и подсунуть контейнеру пустой каталог вместо отсутствующего файла хуже, чем упасть.
 
 **Не «чинить» права запуском `scripts/bootstrap.sh` на заполненном дереве.** Его `set_permissions` делает рекурсивные `chown -R 1000:1000` и `chmod -R 775/750` — chmod без режима `X` навесит бит исполнения на каждый файл, а chown затрёт `root:root`, который Syncthing проставляет осознанно (см. раздел Syncthing).
 
@@ -269,7 +266,7 @@ lock-файла и не выполнит даже чтение. Операции
 
 - **Receive Only папки должны иметь `Ignore Permissions = on`.** Файлы пишутся внутри контейнера от `root:root` (PUID/PGID из compose эта сборка не применяет), а permission-биты приходят с macOS-источника и не совпадают. Без Ignore Permissions Syncthing помечает каждый файл как «Locally Changed» (видно по сотням items с суммарным размером ~0 B) и в режиме Receive Only **застревает на полпути**, не докачивая остальное.
 - Фикс застрявшей папки: Edit → Advanced → `Ignore Permissions` → Save → **Revert Local Changes** → дождаться, пока Local State догонит Global State.
-- **Состав папок (все пять — Receive Only, `Ignore Permissions = Yes`):** BookLibrary → `/public/library`, TTRPG → `/public/ttrpg` (оба внутри `${DATA_PATH}/public`); Documents, Knowledge base, TTRPG Obsidian → `/data/documents`, `/data/knowledge-base`, `/data/ttrpg` (внутри `${DATA_PATH}/users/andrew/sync`). Партнёры: MacBook Pro, MBP2026Pro, NothingPhone. Receive Only означает, что сервер только принимает изменения и **сам партнёрам ничего не отправляет** — при работах с деревом данных сценарий «сервер разослал удаление» этим закрыт.
+- **Папки и партнёры настраиваются вручную в UI** — актуальный список смотреть на сервере: `docker exec syncthing grep -o '<folder id=[^>]*>' /var/syncthing/config/config.xml`. Правило: все папки на сервере — **Receive Only**. Сервер только принимает изменения и сам партнёрам ничего не отправляет, поэтому при работах с деревом данных сценарий «сервер разослал удаление» закрыт. Каталог, который не входит ни в одну папку, Syncthing не трогает, и сервер может писать в него сам.
 - **`.stignore` для точки монтирования `rpg-guides`.** `opds-generator` монтирует `public/ttrpg/rpg-guides` внутрь `/books/rpg-guides`, то есть внутрь смонтированной только для чтения `public/library`. Каталог-приёмник обязан физически существовать в `library`, иначе контейнер не стартует (`error mounting ... read-only file system`). Но для Syncthing он чужеродный: 2026-08-18 папка BookLibrary его удалила, и сервис перестал подниматься. Решение — `/mnt/data/public/library/.stignore` со строкой `/rpg-guides`: Syncthing перестаёт видеть каталог (в панели папки появляется «Reduced by ignore patterns»), метка `Local Additions` не возникает, а `Revert Local Changes` его не сносит. Файл `.stignore` не синхронизируется и локален для этой машины.
 - **`Revert Local Changes` в Receive Only-папке уничтожает всё, чего нет у партнёра** — включая каталоги, созданные на сервере под точки монтирования. Не нажимать, не убедившись, что в папке нет ничего только-локального.
 
@@ -288,16 +285,10 @@ lock-файла и не выполнит даже чтение. Операции
 - **Traefik v3** — reverse proxy, auto-discovery сервисов через Docker labels
 - **Authelia** — SSO аутентификация (forwardAuth middleware `authelia@docker` для Traefik)
 - **HTTP Basic Auth** — общий middleware `basic-auth@docker` (определён на контейнере traefik, креды в `.env` → `BASIC_AUTH_USERS`). Для feed-клиентов (OPDS/подкасты: `opds`, `opml`, `ytpod`), которые не проходят SSO-редирект Authelia — подписка через `user:pass@host`
-- **Cloudflared** — Cloudflare Tunnel для внешнего доступа
+- **Cloudflared** — Cloudflare Tunnel для внешнего доступа. В Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON
 - **AdGuard Home** — DNS + блокировка рекламы + split-horizon для локального HTTPS
 - **Avahi** — mDNS для `*.home.local` (системный сервис, не Docker)
 - **Tailscale** — mesh VPN (WireGuard) для удалённого SSH-доступа к хосту. Host-сервис, не Docker (как NUT). См. раздел «Tailscale» ниже
-
-### Важные настройки
-
-- Все Docker-сервисы в сети `traefik-net`
-- Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON
-- Homepage + Docker socket требует `user: root`
 
 ### DNS хоста (netplan + systemd-resolved)
 
