@@ -12,15 +12,16 @@ server:
         createUserDir: true
 
 userDefaults:
-  permissions:
-    admin: false
-    api: false
-    create: true
-    modify: true
-    delete: true
-    share: true
-    download: true
-    realtime: false
+  account:
+    permissions:
+      admin: false
+      api: false
+      create: true
+      modify: true
+      delete: true
+      share: true
+      download: true
+      realtime: false
 
 auth:
   adminUsername: admin
