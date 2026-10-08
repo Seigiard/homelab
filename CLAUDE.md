@@ -70,6 +70,7 @@ dotfiles/               # Симлинкуются в ~ при установк�
 - По умолчанию снаружи — `authelia@docker` (cookie-редирект SSO).
 - **Feed-клиенты** (подкасты, OPDS) редирект не проходят → общий middleware `basic-auth@docker` (определён на контейнере traefik). Используют `opds`, `opml`, `ytpod`. Подписка: `https://user:pass@host/...`.
 - **Jellyfin и Navidrome снаружи без middleware** — телевизоры и мобильные плееры не проходят редирект; защищает собственный логин сервиса.
+- **LiteLLM снаружи без middleware** — API-клиенты (агенты, IDE) не проходят редирект; защищают Bearer-ключи LiteLLM, клиентам выдавать virtual keys, не master key.
 </important>
 
 <important if="you are editing a value in .env that contains `$`, such as BASIC_AUTH_USERS">

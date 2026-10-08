@@ -1,0 +1,78 @@
+services:
+  litellm:
+    image: docker.litellm.ai/berriai/litellm:latest
+    container_name: litellm
+    restart: unless-stopped
+    depends_on:
+      litellm-db:
+        condition: service_healthy
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      # Шифрует ключи провайдеров в БД. Ротации нет — потеря соли = ключи
+      # из UI не расшифровать.
+      - LITELLM_SALT_KEY=${LITELLM_SALT_KEY}
+      - DATABASE_URL=postgresql://litellm:${LITELLM_DB_PASSWORD}@litellm-db:5432/litellm
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENCODE_GO_API_KEY=${OPENCODE_GO_API_KEY:-}
+      - STORE_MODEL_IN_DB=True
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    networks:
+      - traefik-net
+      - litellm-internal
+    labels:
+      # Traefik routing - HTTP (local)
+      - traefik.enable=true
+      - traefik.docker.network=traefik-net
+      - traefik.http.routers.litellm.rule=Host(`litellm.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.litellm.entrypoints=web
+      - traefik.http.services.litellm.loadbalancer.server.port=4000
+      # Traefik routing - HTTPS (external). Без Authelia: клиенты API (агенты,
+      # IDE) не проходят cookie-редирект. Защита — Bearer-ключи LiteLLM
+      # (master key и virtual keys); UI на /ui входит по master key.
+      - traefik.http.routers.litellm-secure.rule=Host(`litellm.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.litellm-secure.entrypoints=websecure
+      - traefik.http.routers.litellm-secure.tls=true
+      - traefik.http.routers.litellm-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.litellm-secure.service=litellm
+      # Homepage
+      - homepage.group=Infrastructure
+      - homepage.name=LiteLLM
+      - homepage.icon=litellm
+      - homepage.href=https://litellm.${EXTERNAL_DOMAIN:-1218217.xyz}/ui
+      - homepage.description=LLM proxy (OpenRouter, OpenCode Go)
+
+  litellm-db:
+    image: postgres:17
+    container_name: litellm-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=litellm
+      - POSTGRES_PASSWORD=${LITELLM_DB_PASSWORD}
+      - POSTGRES_DB=litellm
+    volumes:
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/litellm/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm -d litellm"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+    networks:
+      - litellm-internal
+
+networks:
+  traefik-net:
+    external: true
+  litellm-internal:
