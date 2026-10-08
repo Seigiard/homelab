@@ -1,0 +1,49 @@
+services:
+  ttrpg-map-viewer:
+    image: ghcr.io/seigiard/ttrpg-map-viewer:latest
+    container_name: ttrpg-map-viewer
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+      - FILES=/maps
+      - DATA=/data
+      - OVERRIDES=/config/overrides.json
+      # One 16000x22000 PNG needs ~1.4 GB while decoding; 2 parallel jobs stay well inside the limit.
+      - THUMBNAIL_CONCURRENCY=2
+    volumes:
+      # Collection (HDD), never written
+      - ${DATA_PATH:-/mnt/data}/public/ttrpg/BattleMaps:/maps:ro
+      # Generated catalog (HDD, ~5-6 GB): the generator owns /data and deletes anything it does not recognize
+      - ${DATA_PATH:-/mnt/data}/appdata/ttrpg-map-viewer:/data
+      # Optional cover overrides (SSD)
+      - ${APPDATA_PATH:-/opt/homelab/appdata}/ttrpg-map-viewer/config:/config:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+    networks:
+      - traefik-net
+    labels:
+      # Traefik - HTTP (local)
+      - traefik.enable=true
+      - traefik.http.routers.ttrpg-maps.rule=Host(`ttrpg-maps.${LOCAL_DOMAIN:-home.local}`)
+      - traefik.http.routers.ttrpg-maps.entrypoints=web
+      - traefik.http.services.ttrpg-maps.loadbalancer.server.port=80
+      # Traefik - HTTPS (external via split-DNS)
+      - traefik.http.routers.ttrpg-maps-secure.rule=Host(`ttrpg-maps.${EXTERNAL_DOMAIN:-1218217.xyz}`)
+      - traefik.http.routers.ttrpg-maps-secure.entrypoints=websecure
+      - traefik.http.routers.ttrpg-maps-secure.tls=true
+      - traefik.http.routers.ttrpg-maps-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.ttrpg-maps-secure.middlewares=authelia@docker
+      - traefik.http.routers.ttrpg-maps-secure.service=ttrpg-maps
+      # Homepage
+      - homepage.group=Media
+      - homepage.name=Battle Maps
+      - homepage.icon=mdi-map
+      - homepage.href=https://ttrpg-maps.${EXTERNAL_DOMAIN:-1218217.xyz}
+      - homepage.description=TTRPG battle map catalog
+
+networks:
+  traefik-net:
+    external: true
