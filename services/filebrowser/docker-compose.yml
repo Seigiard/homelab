@@ -8,6 +8,9 @@ services:
         limits:
           cpus: '0.50'
           memory: 256M
+    environment:
+      # Since v1.5 the image defaults FILEBROWSER_CONFIG to data/config.yaml; keep the git-tracked config.
+      - FILEBROWSER_CONFIG=/home/filebrowser/config.yaml
     volumes:
       - ./config.yaml:/home/filebrowser/config.yaml:ro
       - ${DATA_PATH:-/mnt/data}/public:/srv/public
