@@ -134,6 +134,8 @@ sudo upsc eaton@localhost battery.charge
 
 Инвентаризация: `lsblk -d -o NAME,SIZE,MODEL,SERIAL,ROTA,TRAN` (`ROTA=1` — HDD, `0` — SSD/NVMe).
 
+**Корень `/` на LVM.** `ubuntu-lv` занимает 180 ГБ из 220 ГБ раздела `nvme0n1p3`, ~40 ГБ свободно в `ubuntu-vg` (`sudo vgs` → `VFree`). Расширить онлайн: `sudo lvextend -r -L +NG /dev/ubuntu-vg/ubuntu-lv`. Уменьшить ext4 онлайн нельзя.
+
 **SMART на SATA-дисках работает нормально** — запрет `smartctl` касается только NVMe Kingston (см. «Известные проблемы железа»). Приёмка новых дисков: `sudo smartctl -x /dev/sdX` (интересуют `Power_On_Hours`, `Reallocated_Sector_Ct`, `Current_Pending_Sector`, `Offline_Uncorrectable`, `UDMA_CRC_Error_Count` — все нули у нового диска), затем `sudo smartctl -t long /dev/sdX` (≈10–13 ч на 6–8 ТБ, идёт в прошивке диска, обрыв SSH не мешает, перезагрузка прерывает) и `sudo smartctl -l selftest /dev/sdX` → ждём `Extended offline  Completed without error`.
 
 ### RAID1 (`/dev/md0`)
