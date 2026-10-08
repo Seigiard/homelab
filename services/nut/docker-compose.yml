@@ -6,6 +6,9 @@ services:
     environment:
       - TZ=${TZ:-Europe/Bratislava}
       - WEB_HOST=0.0.0.0
+      # 6.0 turned the login on by default; it blocks the Homepage widget (401).
+      # External access is already behind authelia@docker.
+      - AUTH_DISABLED=true
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
