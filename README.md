@@ -2,6 +2,13 @@
 
 Automated setup scripts for Ubuntu home server.
 
+## Development checks
+
+Install Lefthook 2.2.1 or newer (`brew install lefthook` on macOS), then run
+`make install-git-hooks` once per clone. The pre-commit hook checks staged Bash
+syntax with `bash -n` and staged whitespace. These checks parse local files;
+they do not run setup scripts or deploy services.
+
 ## Quick Install
 
 ```bash
