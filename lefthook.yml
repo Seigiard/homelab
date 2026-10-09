@@ -1,0 +1,10 @@
+glob_matcher: doublestar
+
+pre-commit:
+  piped: true
+  jobs:
+    - name: shell-syntax
+      glob: '**/*.sh'
+      run: for file in {staged_files}; do bash -n "$file" || exit; done
+    - name: whitespace
+      run: git diff --cached --check
