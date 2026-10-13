@@ -10,9 +10,11 @@ source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
 
 print_box "SERVICE STATUS"
 
-filters=()
-for service in "$@"; do
-    filters+=(--filter "label=com.docker.compose.project=$service")
-done
+if (($# == 0)); then
+    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+    exit
+fi
 
-docker ps "${filters[@]}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+for service in "$@"; do
+    docker ps --filter "label=com.docker.compose.project=$service" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+done
