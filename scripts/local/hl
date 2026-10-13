@@ -39,4 +39,8 @@ if (($# != 1)); then
     exit 2
 fi
 
+if [[ -t 0 ]]; then
+    exec tailscale ssh "$host" -t -o BatchMode=yes "cd /opt/homelab && $1"
+fi
+
 exec tailscale ssh "$host" -o BatchMode=yes "cd /opt/homelab && $1"
