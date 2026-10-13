@@ -45,6 +45,10 @@ dotfiles/               # Симлинкуются в ~ при установк�
 
 <important if="you need to deploy, stop, rebuild, remove, or check the status of services, or rerun an install step">
 
+From the laptop, ship committed service changes with `./scripts/local/ship.sh svc1 svc2`.
+Run another server command with `./scripts/local/hl '<command>'`. Never copy files
+outside git: `ship.sh` pushes, pulls, and deploys without leaving the server tree dirty.
+
 ```bash
 ./scripts/docker/deploy.sh svc1 svc2    # деплой (без аргументов — все)
 ./scripts/docker/stop.sh svc1 svc2      # остановка
