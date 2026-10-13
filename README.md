@@ -288,7 +288,7 @@ curl -v https://traefik.1218217.xyz
 
 Tailscale (mesh VPN) gives **SSH to the host and device-to-device mesh** over a private tailnet — no public port forwarding. Runs on the host (like NUT), not in Docker. Setup: `scripts/setup/10-setup-tailscale.sh` (interactive login on first run). Variables: `TS_*` in `scripts/lib/config.sh`.
 
-- **Tailscale SSH** — `ssh seigiard@home` (or `tailscale ssh seigiard@home`) from any tailnet device, no SSH keys / port forwarding.
+- **Tailscale SSH** — `tailscale ssh seigiard@home` from any tailnet device, no SSH keys / port forwarding.
 - **Mesh** — your devices reach each other over the tailnet.
 
 The tailnet is single-user (trusted zone): SSH to `home` is gated by tailnet membership, independent of the UFW `:22` key-auth rule.
