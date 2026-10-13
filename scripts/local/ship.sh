@@ -25,7 +25,10 @@ for service in "$@"; do
     fi
 done
 
-git push origin main
+if ! git push origin main; then
+    printf 'ship could not push main to origin; no server command was run.\n' >&2
+    exit 1
+fi
 local_head=$(git rev-parse HEAD)
 services=$(printf ' %q' "$@")
 

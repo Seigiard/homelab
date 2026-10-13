@@ -28,7 +28,7 @@ fi
 
 if (($# == 0)); then
     interactive_command="cd /opt/homelab && exec \"\${SHELL:-bash}\" -l"
-    exec tailscale ssh "$host" -o BatchMode=yes "$interactive_command"
+    exec tailscale ssh "$host" -t -o BatchMode=yes "$interactive_command"
 fi
 
 if (($# != 1)); then
@@ -36,4 +36,4 @@ if (($# != 1)); then
     exit 2
 fi
 
-exec tailscale ssh "$host" -o BatchMode=yes "server_dir=/opt/homelab && cd \"\$server_dir\" && pwd() { if ((\$# == 0)); then printf '%s\\n' \"\$server_dir\"; else command pwd \"\$@\"; fi; } && $1"
+exec tailscale ssh "$host" -o BatchMode=yes "cd /opt/homelab && $1"
