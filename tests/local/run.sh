@@ -320,6 +320,7 @@ test_ship_refuses_to_deploy_when_server_head_differs_after_pull() {
 test_ship_rejects_dirty_server_without_reset_or_deploy() {
   # #given
   new_fixture ship-dirty-server
+  commit_laptop_change unpublished-dirty-server
   printf 'keep me\n' >"$SERVER/untracked.txt"
   local server_head
   server_head=$(git -C "$SERVER" rev-parse HEAD)
