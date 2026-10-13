@@ -4,6 +4,7 @@ set -u -o pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 WORK_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/homelab-local-tests.XXXXXX")
+WORK_ROOT=$(cd "$WORK_ROOT" && pwd)
 TESTS=0
 FAILURES=0
 
