@@ -54,10 +54,25 @@ assert_file_content() {
   local description=$1
   local expected=$2
   local path=$3
-  local actual=''
+  local actual
 
-  [[ -f $path ]] && actual=$(<"$path")
+  if [[ ! -f $path ]]; then
+    if [[ ${ASSERT_FILE_CONTENT_PROBE:-0} != 1 ]]; then
+      fail "$description: file is missing at [$path]"
+    fi
+    return 1
+  fi
+
+  actual=$(<"$path")
   assert_equal "$description" "$expected" "$actual"
+}
+
+commit_laptop_change() {
+  local name=$1
+
+  printf '%s\n' "$name" >"$LAPTOP/$name"
+  git -C "$LAPTOP" add "$name"
+  git -C "$LAPTOP" commit -m "$name" >/dev/null
 }
 
 new_fixture() {
@@ -126,8 +141,8 @@ if [[ $remote_command == *true* && ${FAKE_PROBE_MODE:-ok} == fail ]]; then
   exit 255
 fi
 if [[ $remote_command == *true* && ${FAKE_PROBE_MODE:-ok} == hang ]]; then
-  sleep 5
-  exit 255
+  sleep "${FAKE_HANG_SECONDS:-5}"
+  exit 0
 fi
 if [[ -z $remote_command ]]; then
   exit 0
@@ -147,6 +162,10 @@ run_from_laptop() {
 }
 
 run_test() {
+  if [[ -n ${TEST_FILTER:-} && $1 != "$TEST_FILTER" ]]; then
+    return
+  fi
+
   TESTS=$((TESTS + 1))
   "$@"
 }
@@ -193,14 +212,32 @@ test_hl_blocks_real_command_when_probe_fails() {
 test_hl_blocks_real_command_when_probe_times_out() {
   # #given
   new_fixture hl-probe-timeout
-  export FAKE_PROBE_MODE=hang HL_PROBE_TIMEOUT=1
+  export FAKE_PROBE_MODE=hang HL_PROBE_TIMEOUT=1 FAKE_HANG_SECONDS=5
   # #when
+  SECONDS=0
   run_from_laptop ./scripts/local/hl 'touch .real-command-ran'
-  unset FAKE_PROBE_MODE HL_PROBE_TIMEOUT
+  local elapsed=$SECONDS
+  unset FAKE_PROBE_MODE HL_PROBE_TIMEOUT FAKE_HANG_SECONDS
   # #then
   [[ $COMMAND_STATUS -ne 0 ]] || { fail 'hl timed-out probe exits non-zero'; return; }
+  ((elapsed < 3)) || { fail "hl watchdog ends a probe that would otherwise wait: expected under 3 seconds, got $elapsed"; return; }
   assert_contains 'hl timeout explains the connection problem' 'connection' "$COMMAND_OUTPUT" || return
   assert_file_absent 'hl does not run the real command after a timed-out probe' "$SERVER/.real-command-ran"
+}
+
+test_hl_successful_capture_returns_before_probe_timeout() {
+  # #given
+  new_fixture hl-successful-capture
+  export HL_PROBE_TIMEOUT=5
+  # #when
+  SECONDS=0
+  run_from_laptop ./scripts/local/hl 'printf quick-response'
+  local elapsed=$SECONDS
+  unset HL_PROBE_TIMEOUT
+  # #then
+  assert_equal 'hl returns the successful remote command status' '0' "$COMMAND_STATUS" || return
+  assert_equal 'hl returns the successful remote command output' 'quick-response' "$COMMAND_OUTPUT" || return
+  ((elapsed < 3)) || fail "hl closes captured output before its probe timeout: expected under 3 seconds, got $elapsed"
 }
 
 test_ship_requires_services() {
@@ -208,6 +245,7 @@ test_ship_requires_services() {
   new_fixture ship-no-services
   local remote_head
   remote_head=$(git -C "$ORIGIN" rev-parse main)
+  commit_laptop_change unpublished-no-services
   # #when
   run_from_laptop ./scripts/local/ship.sh
   # #then
@@ -219,6 +257,7 @@ test_ship_requires_services() {
 test_ship_rejects_invalid_local_state_before_remote_work() {
   # #given
   new_fixture ship-invalid-local-state
+  commit_laptop_change unpublished-non-main
   git -C "$LAPTOP" checkout -b feature >/dev/null
   local remote_head
   remote_head=$(git -C "$ORIGIN" rev-parse main)
@@ -231,9 +270,10 @@ test_ship_rejects_invalid_local_state_before_remote_work() {
   assert_file_absent 'ship on a non-main branch makes no server call' "$TAILSCALE_LOG"
 }
 
-test_ship_rejects_dirty_tree_and_unknown_service_before_remote_work() {
+test_ship_rejects_dirty_local_tree_before_remote_work() {
   # #given
   new_fixture ship-dirty-local-tree
+  commit_laptop_change unpublished-dirty-tree
   printf 'dirty\n' >"$LAPTOP/untracked.txt"
   local remote_head
   remote_head=$(git -C "$ORIGIN" rev-parse main)
@@ -245,11 +285,36 @@ test_ship_rejects_dirty_tree_and_unknown_service_before_remote_work() {
   assert_equal 'ship with a dirty local tree does not push' "$remote_head" "$(git -C "$ORIGIN" rev-parse main)" || return
   assert_file_absent 'ship with a dirty local tree makes no server call' "$TAILSCALE_LOG" || return
 
-  rm "$LAPTOP/untracked.txt"
+}
+
+test_ship_rejects_unknown_service_before_remote_work() {
+  # #given
+  new_fixture ship-unknown-service
+  local remote_head
+  remote_head=$(git -C "$ORIGIN" rev-parse main)
+  commit_laptop_change unpublished-unknown-service
+  # #when
   run_from_laptop ./scripts/local/ship.sh missing
+  # #then
   [[ $COMMAND_STATUS -ne 0 ]] || { fail 'ship with an unknown service exits non-zero'; return; }
   assert_contains 'ship identifies the missing service compose file' 'missing' "$COMMAND_OUTPUT" || return
   assert_equal 'ship with an unknown service does not push' "$remote_head" "$(git -C "$ORIGIN" rev-parse main)"
+}
+
+test_ship_refuses_to_deploy_when_server_head_differs_after_pull() {
+  # #given
+  new_fixture ship-server-head-mismatch
+  local server_origin="$FIXTURE/server-origin.git"
+  git init --bare --initial-branch=main "$server_origin" >/dev/null
+  git -C "$SEED" push "$server_origin" main >/dev/null 2>&1
+  git -C "$SERVER" remote set-url origin "$server_origin"
+  commit_laptop_change unpublished-server-head-mismatch
+  # #when
+  run_from_laptop ./scripts/local/ship.sh a
+  # #then
+  [[ $COMMAND_STATUS -ne 0 ]] || { fail 'ship with a mismatched server HEAD exits non-zero'; return; }
+  assert_contains 'ship reports the server and local HEAD mismatch' 'does not match local HEAD' "$COMMAND_OUTPUT" || return
+  assert_file_absent 'ship does not deploy when the server HEAD differs after pull' "$SERVER/.deploy-args"
 }
 
 test_ship_rejects_dirty_server_without_reset_or_deploy() {
@@ -310,14 +375,14 @@ test_make_ship_forwards_services_and_rejects_empty_value() {
   mkdir -p "$LAPTOP/scripts/local"
   cat >"$LAPTOP/scripts/local/ship.sh" <<'EOF'
 #!/usr/bin/env bash
-printf '%s' "$*" > .make-ship-args
+printf '%s\n' "$@" > .make-ship-args
 EOF
   chmod +x "$LAPTOP/scripts/local/ship.sh"
   # #when
   run_from_laptop make ship 'SVC=a b'
   # #then
   assert_equal 'make ship succeeds with services' '0' "$COMMAND_STATUS" || return
-  assert_file_content 'make ship forwards each service to ship.sh' 'a b' "$LAPTOP/.make-ship-args" || return
+  assert_file_content 'make ship forwards each service to ship.sh' $'a\nb' "$LAPTOP/.make-ship-args" || return
 
   rm "$LAPTOP/.make-ship-args"
   run_from_laptop make ship
@@ -325,17 +390,33 @@ EOF
   assert_file_absent 'make ship without SVC does not run ship.sh' "$LAPTOP/.make-ship-args"
 }
 
+test_assert_file_content_rejects_a_missing_file() {
+  # #given
+  new_fixture assert-file-content-missing
+  # #when
+  export ASSERT_FILE_CONTENT_PROBE=1
+  assert_file_content 'assert_file_content missing-file control' '' "$SERVER/missing-file"
+  local status=$?
+  unset ASSERT_FILE_CONTENT_PROBE
+  # #then
+  assert_equal 'assert_file_content fails when its file is missing' '1' "$status"
+}
+
 run_test test_fake_tailscale_maps_the_server_path_and_returns_remote_status
 run_test test_hl_preserves_command_semantics
 run_test test_hl_blocks_real_command_when_probe_fails
 run_test test_hl_blocks_real_command_when_probe_times_out
+run_test test_hl_successful_capture_returns_before_probe_timeout
 run_test test_ship_requires_services
 run_test test_ship_rejects_invalid_local_state_before_remote_work
-run_test test_ship_rejects_dirty_tree_and_unknown_service_before_remote_work
+run_test test_ship_rejects_dirty_local_tree_before_remote_work
+run_test test_ship_rejects_unknown_service_before_remote_work
 run_test test_ship_rejects_dirty_server_without_reset_or_deploy
+run_test test_ship_refuses_to_deploy_when_server_head_differs_after_pull
 run_test test_ship_pushes_pulls_and_deploys_each_time
 run_test test_ship_reports_status_after_deploy_failure
 run_test test_make_ship_forwards_services_and_rejects_empty_value
+run_test test_assert_file_content_rejects_a_missing_file
 
 if ((FAILURES)); then
   printf '%s of %s local tests failed\n' "$FAILURES" "$TESTS" >&2
