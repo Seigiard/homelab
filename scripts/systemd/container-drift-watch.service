@@ -4,5 +4,6 @@ After=docker.service
 
 [Service]
 Type=oneshot
+TimeoutStartSec=2min
 ExecStart=__PROJECT_DIR__/scripts/container-drift-watch.sh
 StateDirectory=container-drift-watch

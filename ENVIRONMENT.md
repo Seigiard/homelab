@@ -280,8 +280,8 @@ lock-файла и не выполнит даже чтение. Операции
 
 Проверка: `systemctl status container-drift-watch.timer`; журнал:
 `journalctl -t container-drift-watch -f`. Для разового обзора всех контейнеров:
-`./scripts/docker/status.sh` — там есть `RestartCount`, последний exit code, короткий
-image ID и время создания image.
+`./scripts/docker/status.sh` — там есть `STATE`, `RestartCount`, последний exit code,
+короткий image ID и время создания image.
 
 Dozzle alerts не используются. Docker events могут сообщить о `die`, но не отличают
 обычный recreate от смены image, не имеют cooldown для crash loop и требуют

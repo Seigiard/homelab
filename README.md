@@ -46,7 +46,7 @@ homelab/
 ./scripts/docker/stop.sh             # Stop all
 ./scripts/docker/rebuild.sh          # Rebuild (pull + restart)
 ./scripts/docker/remove.sh           # Stop + remove containers
-./scripts/docker/status.sh           # Restart count, last exit, image ID and image creation time
+./scripts/docker/status.sh           # State, restart count, last exit, image ID and image creation time
 ```
 
 After first deployment, containers auto-start on reboot (`restart: unless-stopped`).
