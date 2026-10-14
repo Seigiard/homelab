@@ -1,6 +1,6 @@
 [
   {
-    "Id": "alpha-container-id",
+    "Id": "alpha-recreated-container-id",
     "Name": "/alpha",
     "Image": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
     "State": {"ExitCode": 139},
