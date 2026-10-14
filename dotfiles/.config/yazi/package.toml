@@ -10,6 +10,8 @@ hash = "b5067143415bd2d46c0dfa57319ddcef"
 
 [[plugin.deps]]
 use = "boydaihungst/mediainfo"
+rev = "8ab04b2"
+hash = "bdd196f71aa3e6aa02d1b1d6cad22424"
 
 [[flavor.deps]]
 use = "gosxrgxx/flexoki-light"

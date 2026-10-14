@@ -38,3 +38,7 @@ services/authelia/config/users_database.yml
 
 services/backrest/gdrive-sa.json
 gdrive-sa.json
+.env.bak-*
+
+# Yazi plugin screenshots from upstream READMEs (not needed at runtime)
+dotfiles/.config/yazi/plugins/*/assets/
