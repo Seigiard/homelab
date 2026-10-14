@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "alpha-container-id",
+    "Name": "/alpha",
+    "Image": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "State": {"ExitCode": 139},
+    "RestartCount": 6157,
+    "Config": {"Labels": {"com.docker.compose.project": "alpha"}}
+  },
+  {
+    "Id": "beta-container-id",
+    "Name": "/beta",
+    "Image": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "State": {"ExitCode": 3},
+    "RestartCount": 42,
+    "Config": {"Labels": {"com.docker.compose.project": "beta"}}
+  }
+]

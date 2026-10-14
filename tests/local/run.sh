@@ -40,6 +40,24 @@ assert_contains() {
   fi
 }
 
+assert_whitespace_field() {
+  local description=$1
+  local expected=$2
+  local line=$3
+  local field
+  local -a fields
+
+  IFS=$' \t\n' read -r -a fields <<<"$line"
+  for field in "${fields[@]}"; do
+    if [[ $field == "$expected" ]]; then
+      return
+    fi
+  done
+
+  fail "$description: expected whitespace-separated field [$expected], got [$line]"
+  return 1
+}
+
 assert_file_absent() {
   local description=$1
   local path=$2
@@ -159,6 +177,161 @@ run_from_laptop() {
   output=$(cd "$LAPTOP" && PATH="$FAKE_BIN:$PATH" FAKE_TAILSCALE_LOG="$TAILSCALE_LOG" FAKE_SERVER_REPO="$SERVER" "$@" 2>&1)
   COMMAND_STATUS=$?
   COMMAND_OUTPUT=$output
+}
+
+new_container_drift_fixture() {
+  DRIFT_FIXTURE="$WORK_ROOT/$1"
+  DRIFT_BIN="$DRIFT_FIXTURE/bin"
+  DRIFT_CONTAINERS="$DRIFT_FIXTURE/containers.json"
+  DRIFT_IMAGES="$DRIFT_FIXTURE/images.json"
+  DRIFT_STATE="$DRIFT_FIXTURE/state.json"
+  DRIFT_CURL_LOG="$DRIFT_FIXTURE/curl.log"
+
+  mkdir -p "$DRIFT_BIN"
+  cp "$ROOT/tests/local/fixtures/container-drift-initial.json" "$DRIFT_CONTAINERS"
+  cp "$ROOT/tests/local/fixtures/container-drift-images.json" "$DRIFT_IMAGES"
+
+  cat >"$DRIFT_BIN/docker" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+
+containers=${FAKE_DOCKER_CONTAINERS:?}
+images=${FAKE_DOCKER_IMAGES:?}
+
+case ${1:-} in
+  ps)
+    shift
+    project=''
+    while (($#)); do
+      case $1 in
+        -a|-q)
+          shift
+          ;;
+        --filter)
+          project=${2#label=com.docker.compose.project=}
+          shift 2
+          ;;
+        *)
+          exit 64
+          ;;
+      esac
+    done
+    if [[ -n $project ]]; then
+      jq -r --arg project "$project" '.[] | select(.Config.Labels["com.docker.compose.project"] == $project) | .Id' "$containers"
+    else
+      jq -r '.[].Id' "$containers"
+    fi
+    ;;
+  inspect)
+    shift
+    jq -c --args '$ARGS.positional as $ids | [.[] | select(.Id as $id | $ids | index($id))]' "$@" <"$containers"
+    ;;
+  image)
+    [[ ${2:-} == inspect ]] || exit 64
+    shift 2
+    jq -c --args '$ARGS.positional as $ids | [.[] | select(.Id as $id | $ids | index($id))]' "$@" <"$images"
+    ;;
+  *)
+    exit 64
+    ;;
+esac
+EOF
+  chmod +x "$DRIFT_BIN/docker"
+
+  cat >"$DRIFT_BIN/curl" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+
+body=''
+url=''
+while (($#)); do
+  case $1 in
+    -d|--data|--data-binary)
+      value=$2
+      shift 2
+      if [[ $value == @- ]]; then
+        body=$(cat)
+      else
+        body=$value
+      fi
+      ;;
+    --data=*|--data-binary=*)
+      body=${1#*=}
+      shift
+      ;;
+    --json)
+      value=$2
+      shift 2
+      if [[ $value == @- ]]; then
+        body=$(cat)
+      else
+        body=$value
+      fi
+      ;;
+    -H|--header|-X|--request)
+      shift 2
+      ;;
+    -*)
+      shift
+      ;;
+    *)
+      url=$1
+      shift
+      ;;
+  esac
+done
+
+printf '%s\t%s\n' "$url" "$body" >>"${FAKE_CURL_LOG:?}"
+exit "${FAKE_CURL_STATUS:-0}"
+EOF
+  chmod +x "$DRIFT_BIN/curl"
+
+  cat >"$DRIFT_BIN/logger" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+  chmod +x "$DRIFT_BIN/logger"
+}
+
+use_container_drift_snapshot() {
+  cp "$ROOT/tests/local/fixtures/$1" "$DRIFT_CONTAINERS"
+}
+
+run_container_drift_watch() {
+  local output
+  output=$(PATH="$DRIFT_BIN:$PATH" FAKE_DOCKER_CONTAINERS="$DRIFT_CONTAINERS" FAKE_DOCKER_IMAGES="$DRIFT_IMAGES" \
+    FAKE_CURL_LOG="$DRIFT_CURL_LOG" CONTAINER_DRIFT_STATE="$DRIFT_STATE" \
+    HA_WEBHOOK_URL='http://ha.example.invalid/api/webhook/homelab-container-drift' \
+    bash "$ROOT/scripts/container-drift-watch.sh" 2>&1)
+  COMMAND_STATUS=$?
+  COMMAND_OUTPUT=$output
+}
+
+run_docker_status() {
+  local output
+  output=$(PATH="$DRIFT_BIN:$PATH" FAKE_DOCKER_CONTAINERS="$DRIFT_CONTAINERS" FAKE_DOCKER_IMAGES="$DRIFT_IMAGES" \
+    bash "$ROOT/scripts/docker/status.sh" "$@" 2>&1)
+  COMMAND_STATUS=$?
+  COMMAND_OUTPUT=$output
+}
+
+assert_webhook_event() {
+  local description=$1
+  local expected_container=$2
+  local expected_event=$3
+  local expected_request=$4
+  local request=0 url='' body=''
+
+  [[ -f $DRIFT_CURL_LOG ]] || { fail "$description: webhook was not called"; return 1; }
+
+  while IFS=$'\t' read -r url body; do
+    request=$((request + 1))
+    [[ $request == "$expected_request" ]] && break
+  done <"$DRIFT_CURL_LOG"
+
+  assert_equal "$description URL" 'http://ha.example.invalid/api/webhook/homelab-container-drift' "$url" || return
+  assert_equal "$description event fields" "{\"container\":\"$expected_container\",\"event\":\"$expected_event\"}" "$(printf '%s' "$body" | jq -c '{container, event}')" || return
+  assert_equal "$description message" 'present' "$(printf '%s' "$body" | jq -r 'if ((.message | type) == "string" and (.message | length) > 0) then "present" else "missing" end')"
 }
 
 run_test() {
@@ -403,6 +576,175 @@ test_assert_file_content_rejects_a_missing_file() {
   assert_equal 'assert_file_content fails when its file is missing' '1' "$status"
 }
 
+test_container_drift_fake_docker_matches_the_consumed_cli_boundary() {
+  # #given
+  new_container_drift_fixture container-drift-fake-docker
+  # #when
+  local container_ids inspect_output image_output
+  container_ids=$(FAKE_DOCKER_CONTAINERS="$DRIFT_CONTAINERS" FAKE_DOCKER_IMAGES="$DRIFT_IMAGES" "$DRIFT_BIN/docker" ps -a -q --filter label=com.docker.compose.project=alpha)
+  inspect_output=$(FAKE_DOCKER_CONTAINERS="$DRIFT_CONTAINERS" FAKE_DOCKER_IMAGES="$DRIFT_IMAGES" "$DRIFT_BIN/docker" inspect alpha-container-id)
+  image_output=$(FAKE_DOCKER_CONTAINERS="$DRIFT_CONTAINERS" FAKE_DOCKER_IMAGES="$DRIFT_IMAGES" "$DRIFT_BIN/docker" image inspect sha256:1111111111111111111111111111111111111111111111111111111111111111)
+  # #then
+  assert_equal 'fake docker filters compose projects' 'alpha-container-id' "$container_ids" || return
+  assert_equal 'fake docker inspect returns Docker JSON arrays' '139' "$(printf '%s' "$inspect_output" | jq -r '.[0].State.ExitCode')" || return
+  assert_equal 'fake docker image inspect returns image creation time' '2026-10-01T00:00:00.000000000Z' "$(printf '%s' "$image_output" | jq -r '.[0].Created')"
+}
+
+test_assert_webhook_event_rejects_a_wrong_event() {
+  # #given
+  new_container_drift_fixture assert-webhook-event-wrong-event
+  printf '%s\t%s\n' 'http://ha.example.invalid/api/webhook/homelab-container-drift' '{"container":"alpha","event":"restarts","message":"restart count grew"}' >"$DRIFT_CURL_LOG"
+  local failures_before=$FAILURES
+  # #when
+  assert_webhook_event 'webhook assertion wrong-event control' alpha image 1 2>/dev/null
+  local status=$?
+  FAILURES=$failures_before
+  # #then
+  assert_equal 'webhook assertion rejects the wrong event' '1' "$status"
+}
+
+test_assert_webhook_event_accepts_the_webhook_contract() {
+  # #given
+  new_container_drift_fixture assert-webhook-event-contract
+  printf '%s\t%s\n' 'http://ha.example.invalid/api/webhook/homelab-container-drift' '{"container":"alpha","event":"restarts","message":"restart count grew"}' >"$DRIFT_CURL_LOG"
+  # #when
+  assert_webhook_event 'webhook assertion contract control' alpha restarts 1
+  local status=$?
+  # #then
+  assert_equal 'webhook assertion accepts a contract post' '0' "$status"
+}
+
+test_assert_whitespace_field_matches_only_complete_fields() {
+  # #given
+  local line='alpha 6157 139 111111111111 2026-10-01T00:00:00.000000000Z'
+  local failures_before=$FAILURES
+  # #when
+  assert_whitespace_field 'whitespace field valid control' 6157 "$line"
+  local valid_status=$?
+  assert_whitespace_field 'whitespace field wrong-value control' 6158 "$line" 2>/dev/null
+  local wrong_status=$?
+  FAILURES=$failures_before
+  # #then
+  assert_equal 'whitespace field accepts the complete expected token' '0' "$valid_status" || return
+  assert_equal 'whitespace field rejects a nearby wrong token' '1' "$wrong_status"
+}
+
+test_fake_curl_records_json_request_bodies() {
+  # #given
+  new_container_drift_fixture fake-curl-json
+  local request='{"container":"alpha","event":"restarts","message":"restart count grew"}'
+  # #when
+  FAKE_CURL_LOG="$DRIFT_CURL_LOG" "$DRIFT_BIN/curl" --json "$request" http://ha.example.invalid/api/webhook/homelab-container-drift
+  local inline_status=$?
+  printf '%s' "$request" | FAKE_CURL_LOG="$DRIFT_CURL_LOG" "$DRIFT_BIN/curl" --json @- http://ha.example.invalid/api/webhook/homelab-container-drift
+  local stdin_status=$?
+  # #then
+  assert_equal 'fake curl accepts an inline --json body' '0' "$inline_status" || return
+  assert_equal 'fake curl accepts a stdin --json body' '0' "$stdin_status" || return
+  assert_file_content 'fake curl records inline and stdin --json bodies' "http://ha.example.invalid/api/webhook/homelab-container-drift	$request
+http://ha.example.invalid/api/webhook/homelab-container-drift	$request" "$DRIFT_CURL_LOG"
+}
+
+test_docker_status_shows_container_drift_columns_and_filters_services() {
+  # #given
+  new_container_drift_fixture docker-status-columns
+  # #when
+  run_docker_status
+  # #then
+  assert_equal 'docker status succeeds for every container' '0' "$COMMAND_STATUS" || return
+  local alpha_line beta_line
+  alpha_line=$(printf '%s\n' "$COMMAND_OUTPUT" | grep -F alpha)
+  beta_line=$(printf '%s\n' "$COMMAND_OUTPUT" | grep -F beta)
+  assert_whitespace_field 'docker status prints alpha restart count' '6157' "$alpha_line" || return
+  assert_whitespace_field 'docker status prints alpha exit code' '139' "$alpha_line" || return
+  assert_whitespace_field 'docker status prints alpha short image ID' '111111111111' "$alpha_line" || return
+  assert_whitespace_field 'docker status prints alpha image creation time' '2026-10-01T00:00:00.000000000Z' "$alpha_line" || return
+  assert_whitespace_field 'docker status prints beta restart count' '42' "$beta_line" || return
+  assert_whitespace_field 'docker status prints beta exit code' '3' "$beta_line" || return
+  assert_whitespace_field 'docker status prints beta short image ID' '333333333333' "$beta_line" || return
+  assert_whitespace_field 'docker status prints beta image creation time' '2026-09-30T00:00:00.000000000Z' "$beta_line" || return
+
+  run_docker_status alpha
+  assert_equal 'docker status succeeds for a selected service' '0' "$COMMAND_STATUS" || return
+  assert_contains 'docker status keeps the selected service' 'alpha' "$COMMAND_OUTPUT" || return
+  assert_equal 'docker status omits other services when filtered' 'absent' "$(if [[ $COMMAND_OUTPUT == *beta* ]]; then printf present; else printf absent; fi)"
+}
+
+test_container_drift_notifies_when_restart_count_grows() {
+  # #given
+  new_container_drift_fixture container-drift-restarts
+  run_container_drift_watch
+  assert_equal 'container drift first run records state' '0' "$COMMAND_STATUS" || return
+  assert_file_absent 'container drift first run does not notify' "$DRIFT_CURL_LOG" || return
+  use_container_drift_snapshot container-drift-restarted.json
+  # #when
+  run_container_drift_watch
+  # #then
+  assert_equal 'container drift restart notification succeeds' '0' "$COMMAND_STATUS" || return
+  assert_webhook_event 'container drift restart notification' alpha restarts 1
+}
+
+test_container_drift_notifies_when_image_id_changes() {
+  # #given
+  new_container_drift_fixture container-drift-image
+  run_container_drift_watch
+  assert_equal 'container drift first run records image state' '0' "$COMMAND_STATUS" || return
+  assert_file_absent 'container drift first run does not notify about images' "$DRIFT_CURL_LOG" || return
+  use_container_drift_snapshot container-drift-image-changed.json
+  # #when
+  run_container_drift_watch
+  # #then
+  assert_equal 'container drift image notification succeeds' '0' "$COMMAND_STATUS" || return
+  assert_webhook_event 'container drift image notification' alpha image 1
+}
+
+test_container_drift_suppresses_baseline_unchanged_new_and_recreated_containers() {
+  # #given
+  new_container_drift_fixture container-drift-suppression
+  run_container_drift_watch
+  assert_equal 'container drift baseline succeeds' '0' "$COMMAND_STATUS" || return
+  run_container_drift_watch
+  assert_equal 'container drift unchanged scan succeeds' '0' "$COMMAND_STATUS" || return
+  use_container_drift_snapshot container-drift-alpha-only.json
+  run_container_drift_watch
+  assert_equal 'container drift removed-container scan succeeds' '0' "$COMMAND_STATUS" || return
+  use_container_drift_snapshot container-drift-reintroduced-beta.json
+  run_container_drift_watch
+  assert_equal 'container drift reintroduced-container scan succeeds' '0' "$COMMAND_STATUS" || return
+  use_container_drift_snapshot container-drift-new-container.json
+  run_container_drift_watch
+  assert_equal 'container drift new-container scan succeeds' '0' "$COMMAND_STATUS" || return
+  assert_file_absent 'container drift suppresses baseline unchanged removed reintroduced and new containers' "$DRIFT_CURL_LOG" || return
+  use_container_drift_snapshot container-drift-new-container-restarted.json
+  run_container_drift_watch
+  assert_equal 'container drift records a new container for the next scan' '0' "$COMMAND_STATUS" || return
+  assert_webhook_event 'container drift notifies after a new container later restarts' gamma restarts 1 || return
+  use_container_drift_snapshot container-drift-recreated.json
+  # #when
+  run_container_drift_watch
+  # #then
+  assert_equal 'container drift recreated-container scan succeeds' '0' "$COMMAND_STATUS" || return
+  assert_equal 'container drift does not notify when a restart count drops' '1' "$(wc -l <"$DRIFT_CURL_LOG" | tr -d ' ')"
+}
+
+test_container_drift_retries_a_failed_webhook_without_advancing_state() {
+  # #given
+  new_container_drift_fixture container-drift-webhook-retry
+  run_container_drift_watch
+  assert_equal 'container drift baseline before webhook failure succeeds' '0' "$COMMAND_STATUS" || return
+  use_container_drift_snapshot container-drift-restarted.json
+  export FAKE_CURL_STATUS=19
+  run_container_drift_watch
+  unset FAKE_CURL_STATUS
+  [[ $COMMAND_STATUS != 0 ]] || { fail "container drift exits non-zero when the webhook fails: got [$COMMAND_STATUS]"; return; }
+  # #when
+  run_container_drift_watch
+  # #then
+  assert_equal 'container drift retries a failed webhook' '0' "$COMMAND_STATUS" || return
+  assert_equal 'container drift makes a second webhook attempt after failure' '2' "$(wc -l <"$DRIFT_CURL_LOG" | tr -d ' ')" || return
+  assert_webhook_event 'container drift retried restart notification' alpha restarts 2
+}
+
 run_test test_fake_tailscale_maps_the_server_path_and_returns_remote_status
 run_test test_hl_preserves_command_semantics
 run_test test_hl_blocks_real_command_when_probe_fails
@@ -418,6 +760,16 @@ run_test test_ship_pushes_pulls_and_deploys_each_time
 run_test test_ship_reports_status_after_deploy_failure
 run_test test_make_ship_forwards_services_and_rejects_empty_value
 run_test test_assert_file_content_rejects_a_missing_file
+run_test test_container_drift_fake_docker_matches_the_consumed_cli_boundary
+run_test test_assert_webhook_event_rejects_a_wrong_event
+run_test test_assert_webhook_event_accepts_the_webhook_contract
+run_test test_assert_whitespace_field_matches_only_complete_fields
+run_test test_fake_curl_records_json_request_bodies
+run_test test_docker_status_shows_container_drift_columns_and_filters_services
+run_test test_container_drift_notifies_when_restart_count_grows
+run_test test_container_drift_notifies_when_image_id_changes
+run_test test_container_drift_suppresses_baseline_unchanged_new_and_recreated_containers
+run_test test_container_drift_retries_a_failed_webhook_without_advancing_state
 
 if ((FAILURES)); then
   printf '%s of %s local tests failed\n' "$FAILURES" "$TESTS" >&2

@@ -1,0 +1,10 @@
+[
+  {
+    "Id": "alpha-container-id",
+    "Name": "/alpha",
+    "Image": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "State": {"ExitCode": 139},
+    "RestartCount": 6157,
+    "Config": {"Labels": {"com.docker.compose.project": "alpha"}}
+  }
+]
