@@ -270,6 +270,23 @@ lock-файла и не выполнит даже чтение. Операции
 - **`.stignore` для точки монтирования `rpg-guides`.** `opds-generator` монтирует `public/ttrpg/rpg-guides` внутрь `/books/rpg-guides`, то есть внутрь смонтированной только для чтения `public/library`. Каталог-приёмник обязан физически существовать в `library`, иначе контейнер не стартует (`error mounting ... read-only file system`). Но для Syncthing он чужеродный: 2026-08-18 папка BookLibrary его удалила, и сервис перестал подниматься. Решение — `/mnt/data/public/library/.stignore` со строкой `/rpg-guides`: Syncthing перестаёт видеть каталог (в панели папки появляется «Reduced by ignore patterns»), метка `Local Additions` не возникает, а `Revert Local Changes` его не сносит. Файл `.stignore` не синхронизируется и локален для этой машины.
 - **`Revert Local Changes` в Receive Only-папке уничтожает всё, чего нет у партнёра** — включая каталоги, созданные на сервере под точки монтирования. Не нажимать, не убедившись, что в папке нет ничего только-локального.
 
+## Наблюдение за контейнерами
+
+`container-drift-watch.timer` запускает `scripts/container-drift-watch.sh` каждые
+пять минут. Скрипт хранит предыдущие image ID и `RestartCount` в
+`/var/lib/container-drift-watch/state.json`. Рост счётчика или смена image ID
+посылает POST в локальный Home Assistant webhook; автоматизация
+`container_drift.yaml` отправляет push через `notify.mobile_app_nothingphone`.
+
+Проверка: `systemctl status container-drift-watch.timer`; журнал:
+`journalctl -t container-drift-watch -f`. Для разового обзора всех контейнеров:
+`./scripts/docker/status.sh` — там есть `RestartCount`, последний exit code, короткий
+image ID и время создания image.
+
+Dozzle alerts не используются. Docker events могут сообщить о `die`, но не отличают
+обычный recreate от смены image, не имеют cooldown для crash loop и требуют
+сохраняемого `/data` для правил. Timer покрывает оба сигнала одним state file.
+
 ## Сеть
 
 ### Доменная модель

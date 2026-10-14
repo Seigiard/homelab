@@ -1,0 +1,12 @@
+[Unit]
+Description=Check Docker containers for image drift and restart loops
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Persistent=true
+Unit=container-drift-watch.service
+
+[Install]
+WantedBy=timers.target
