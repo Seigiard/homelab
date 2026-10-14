@@ -46,10 +46,12 @@ homelab/
 ./scripts/docker/stop.sh             # Stop all
 ./scripts/docker/rebuild.sh          # Rebuild (pull + restart)
 ./scripts/docker/remove.sh           # Stop + remove containers
-./scripts/docker/status.sh           # Container status
+./scripts/docker/status.sh           # State, restart count, last exit, image ID and image creation time
 ```
 
 After first deployment, containers auto-start on reboot (`restart: unless-stopped`).
+`container-drift-watch.timer` checks every five minutes for a changed container image
+or a growing restart count and sends a Home Assistant phone notification.
 
 ## Shipping Changes
 

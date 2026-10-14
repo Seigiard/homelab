@@ -1,0 +1,15 @@
+automation:
+  - id: homelab_container_drift
+    alias: "Server: container drift"
+    mode: queued
+    max: 100
+    trigger:
+      - platform: webhook
+        webhook_id: homelab-container-drift
+        local_only: true
+        allowed_methods: [POST]
+    action:
+      - service: notify.mobile_app_nothingphone
+        data:
+          title: "Server: {{ trigger.json.container }}"
+          message: "{{ trigger.json.message }}"

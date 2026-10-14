@@ -270,6 +270,38 @@ lock-файла и не выполнит даже чтение. Операции
 - **`.stignore` для точки монтирования `rpg-guides`.** `opds-generator` монтирует `public/ttrpg/rpg-guides` внутрь `/books/rpg-guides`, то есть внутрь смонтированной только для чтения `public/library`. Каталог-приёмник обязан физически существовать в `library`, иначе контейнер не стартует (`error mounting ... read-only file system`). Но для Syncthing он чужеродный: 2026-08-18 папка BookLibrary его удалила, и сервис перестал подниматься. Решение — `/mnt/data/public/library/.stignore` со строкой `/rpg-guides`: Syncthing перестаёт видеть каталог (в панели папки появляется «Reduced by ignore patterns»), метка `Local Additions` не возникает, а `Revert Local Changes` его не сносит. Файл `.stignore` не синхронизируется и локален для этой машины.
 - **`Revert Local Changes` в Receive Only-папке уничтожает всё, чего нет у партнёра** — включая каталоги, созданные на сервере под точки монтирования. Не нажимать, не убедившись, что в папке нет ничего только-локального.
 
+## Наблюдение за контейнерами
+
+`container-drift-watch.timer` запускает `scripts/container-drift-watch.sh` каждые
+пять минут. Скрипт хранит предыдущие image ID и `RestartCount` в
+`/var/lib/container-drift-watch/state.json`. Рост счётчика или смена image ID
+посылает POST в локальный Home Assistant webhook; автоматизация
+`container_drift.yaml` отправляет push через `notify.mobile_app_nothingphone`.
+Один рестарт уже считается событием. Запись контейнера, которого нет в
+`docker ps -a`, хранится 24 часа с последним временем наблюдения. TTL считается
+только пока watcher видит контейнер отсутствующим: присутствующий контейнер всегда
+сравнивается с сохранённым состоянием, даже после паузы watcher дольше 24 часов.
+Если отсутствующий контейнер не вернётся за 24 часа, запись удаляется, и его позднее
+возвращение становится новой тихой базой.
+
+Проверка: `systemctl status container-drift-watch.timer`; журнал:
+`journalctl -t container-drift-watch -f`. Для разового обзора всех контейнеров:
+`./scripts/docker/status.sh` — там есть `STATE`, `RestartCount`, последний exit code,
+короткий image ID и время создания image.
+
+Для активации на уже работающем сервере выполните
+`./scripts/setup/13-setup-container-drift-watch.sh`, затем выкатите и перезапустите
+`homeassistant` или перезагрузите automations. После этого один раз проверьте push
+вручную: `curl -X POST -H 'Content-Type: application/json' -d '{"container":"manual-test","event":"image","message":"Container drift test"}' http://127.0.0.1:8123/api/webhook/homelab-container-drift`.
+Home Assistant отвечает `200` даже для незарегистрированного webhook, поэтому этот
+шаг подтверждается уведомлением на телефоне. Чтобы начать тихую базу заново,
+выполните `sudo rm /var/lib/container-drift-watch/state.json`; следующий tick не
+посылает уведомления.
+
+Dozzle alerts не используются. Docker events могут сообщить о `die`, но не отличают
+обычный recreate от смены image, не имеют cooldown для crash loop и требуют
+сохраняемого `/data` для правил. Timer покрывает оба сигнала одним state file.
+
 ## Сеть
 
 ### Доменная модель
