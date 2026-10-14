@@ -1,10 +1,11 @@
 #!/bin/bash
-# Notify Home Assistant after a container restarts repeatedly or changes image.
+# Notify Home Assistant after one container restart or an image change.
 
 set -euo pipefail
 
 STATE="${CONTAINER_DRIFT_STATE:-/var/lib/container-drift-watch/state.json}"
 HA_WEBHOOK_URL="${HA_WEBHOOK_URL:-http://127.0.0.1:8123/api/webhook/homelab-container-drift}"
+STATE_TTL=86400
 
 log() { logger -t container-drift-watch -p "daemon.$1" -- "$2"; }
 
@@ -49,6 +50,8 @@ append_state() {
 
 failed=0
 container_ids=()
+seen_names=''
+now=${CONTAINER_DRIFT_NOW:-$(date +%s)}
 ids=$(docker ps -a -q)
 if [[ -n $ids ]]; then
     while IFS= read -r container_id; do
@@ -58,13 +61,17 @@ fi
 
 if ((${#container_ids[@]} > 0)); then
     for container_id in "${container_ids[@]}"; do
-        container=$(docker inspect "$container_id")
-        current=$(printf '%s' "$container" | jq -ce \
-            '.[0] | {name: (.Name | ltrimstr("/")), image: .Image, restarts: .RestartCount}
+        if ! container=$(docker inspect "$container_id"); then
+            log warning "skipping container $container_id: docker inspect failed"
+            continue
+        fi
+        current=$(printf '%s' "$container" | jq -ce --argjson last_seen "$now" \
+            '.[0] | {name: (.Name | ltrimstr("/")), image: .Image, restarts: .RestartCount, last_seen: $last_seen}
              | select(.name != "" and (.image | type == "string") and (.restarts | type == "number"))')
         name=$(printf '%s' "$current" | jq -r '.name')
         image=$(printf '%s' "$current" | jq -r '.image')
         restarts=$(printf '%s' "$current" | jq -r '.restarts')
+        seen_names="${seen_names}${name}"$'\n'
 
         if [[ $has_previous_state == false ]]; then
             append_state "$current"
@@ -77,31 +84,56 @@ if ((${#container_ids[@]} > 0)); then
             continue
         fi
 
+        previous_last_seen=$(printf '%s' "$previous" | jq -r '.last_seen // empty')
+        if [[ -z $previous_last_seen ]]; then
+            previous_last_seen=$now
+        fi
+        if (( now - previous_last_seen > STATE_TTL )); then
+            append_state "$current"
+            continue
+        fi
+
         previous_image=$(printf '%s' "$previous" | jq -r '.image')
         previous_restarts=$(printf '%s' "$previous" | jq -r '.restarts')
-        container_failed=0
+        stored_image=$image
+        stored_restarts=$restarts
 
         if (( restarts > previous_restarts )); then
             if ! notify "$name" restarts "Container $name restarted $((restarts - previous_restarts)) time(s) since the previous check."; then
-                container_failed=1
+                stored_restarts=$previous_restarts
                 failed=1
             fi
         fi
 
-        if [[ $container_failed == 0 && $image != "$previous_image" ]]; then
+        if [[ $image != "$previous_image" ]]; then
             if ! notify "$name" image "Container $name is running a different image than at the previous check."; then
-                container_failed=1
+                stored_image=$previous_image
                 failed=1
             fi
         fi
 
-        # Preserve this container's old state after a delivery failure so its alert retries.
-        if [[ $container_failed == 1 ]]; then
-            append_state "$previous"
-        else
-            append_state "$current"
-        fi
+        # Keep only a failed event's old value so successful alerts are not retried.
+        append_state "$(jq -cn --arg name "$name" --arg image "$stored_image" \
+            --argjson restarts "$stored_restarts" --argjson last_seen "$now" \
+            '{name: $name, image: $image, restarts: $restarts, last_seen: $last_seen}')"
     done
+fi
+
+if [[ $has_previous_state == true ]]; then
+    while IFS= read -r previous; do
+        previous_name=$(printf '%s' "$previous" | jq -r '.name')
+        if [[ -n $seen_names ]] && printf '%s' "$seen_names" | grep -Fqx -- "$previous_name"; then
+            continue
+        fi
+
+        previous_last_seen=$(printf '%s' "$previous" | jq -r '.last_seen // empty')
+        if [[ -z $previous_last_seen ]]; then
+            previous_last_seen=$now
+        fi
+        if (( now - previous_last_seen <= STATE_TTL )); then
+            append_state "$(printf '%s' "$previous" | jq -c --argjson last_seen "$previous_last_seen" '.last_seen = $last_seen')"
+        fi
+    done < <(jq -c '.[]' "$STATE")
 fi
 
 printf '\n]\n' >> "$next_state"

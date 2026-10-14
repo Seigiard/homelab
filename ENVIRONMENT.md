@@ -277,11 +277,24 @@ lock-файла и не выполнит даже чтение. Операции
 `/var/lib/container-drift-watch/state.json`. Рост счётчика или смена image ID
 посылает POST в локальный Home Assistant webhook; автоматизация
 `container_drift.yaml` отправляет push через `notify.mobile_app_nothingphone`.
+Один рестарт уже считается событием. Запись контейнера, которого нет в
+`docker ps -a`, хранится 24 часа с последним временем наблюдения. Если контейнер
+вернётся за это время, скрипт сравнит его с сохранённым состоянием. Позже 24 часов
+запись удаляется, и возвращённый контейнер становится новой тихой базой.
 
 Проверка: `systemctl status container-drift-watch.timer`; журнал:
 `journalctl -t container-drift-watch -f`. Для разового обзора всех контейнеров:
 `./scripts/docker/status.sh` — там есть `STATE`, `RestartCount`, последний exit code,
 короткий image ID и время создания image.
+
+Для активации на уже работающем сервере выполните
+`./scripts/setup/13-setup-container-drift-watch.sh`, затем выкатите и перезапустите
+`homeassistant` или перезагрузите automations. После этого один раз проверьте push
+вручную: `curl -X POST -H 'Content-Type: application/json' -d '{"container":"manual-test","event":"image","message":"Container drift test"}' http://127.0.0.1:8123/api/webhook/homelab-container-drift`.
+Home Assistant отвечает `200` даже для незарегистрированного webhook, поэтому этот
+шаг подтверждается уведомлением на телефоне. Чтобы начать тихую базу заново,
+выполните `sudo rm /var/lib/container-drift-watch/state.json`; следующий tick не
+посылает уведомления.
 
 Dozzle alerts не используются. Docker events могут сообщить о `die`, но не отличают
 обычный recreate от смены image, не имеют cooldown для crash loop и требуют

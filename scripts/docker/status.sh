@@ -37,7 +37,10 @@ printf '%-32s %-12s %-10s %-14s %-14s %s\n' \
 
 if ((${#container_ids[@]} > 0)); then
     for container_id in "${container_ids[@]}"; do
-        container=$(docker inspect "$container_id")
+        if ! container=$(docker inspect "$container_id"); then
+            printf 'Skipping container %s: docker inspect failed\n' "$container_id" >&2
+            continue
+        fi
         image_id=$(printf '%s' "$container" | jq -r '.[0].Image')
         image=$(docker image inspect "$image_id")
         name=$(printf '%s' "$container" | jq -r '.[0].Name | ltrimstr("/")')

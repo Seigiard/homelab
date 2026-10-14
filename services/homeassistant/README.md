@@ -93,6 +93,10 @@ Each `.yaml` under `config/packages/` is one package and may contain
   5 min (stuck failed-setup after a restart race), the `server_glances_autoreload`
   automation calls `homeassistant.reload_config_entry` — the programmatic Reload.
 
+- `container_drift.yaml` — local webhook for container image changes and restart
+  events. It queues up to 100 phone notifications through
+  `notify.mobile_app_nothingphone`.
+
 ## Git-versioned dashboard
 
 The Lovelace dashboard in `config/dashboards/home.yaml` (this repo) is mounted
