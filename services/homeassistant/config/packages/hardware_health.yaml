@@ -61,7 +61,7 @@ automation:
       - service: notify.mobile_app_nothingphone
         data:
           title: "⚠️ Сервер: мало места на SSD"
-          message: "SSD: занято {{ states('sensor.127_0_0_1_rootfs_disk_usage') }}%, свободно {{ states('sensor.127_0_0_1_rootfs_disk_free') }}."
+          message: "SSD: занято {{ states('sensor.127_0_0_1_rootfs_disk_usage') }}%, свободно {{ states('sensor.127_0_0_1_rootfs_disk_free') }} GiB."
 
   - id: server_raid_disk_space_warning
     alias: "Сервер: мало места на RAID"
@@ -75,7 +75,7 @@ automation:
       - service: notify.mobile_app_nothingphone
         data:
           title: "⚠️ Сервер: мало места на RAID"
-          message: "RAID: занято {{ states('sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_usage') }}%, свободно {{ states('sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_free') }}."
+          message: "RAID: занято {{ states('sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_usage') }}%, свободно {{ states('sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_free') }} GiB."
 
   - id: server_cpu_temp_warning
     alias: "Сервер: CPU нагрев (warning)"

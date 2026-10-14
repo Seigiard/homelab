@@ -1,6 +1,6 @@
 #!/bin/bash
 # ===========================================
-# Rebuild Docker Services (pull + restart)
+# Rebuild Docker Services (pull + restart + dangling-image prune)
 # ===========================================
 # Usage:
 #   ./scripts/docker/rebuild.sh                      # Rebuild all services
@@ -31,8 +31,9 @@ for service in "${services[@]}"; do
 done
 
 if prune_output=$(docker image prune -f); then
-    if [[ -n "$prune_output" ]]; then
-        log_info "$prune_output"
+    reclaimed_space=$(grep -F "Total reclaimed space:" <<< "$prune_output" || true)
+    if [[ -n "$reclaimed_space" ]]; then
+        log_info "$reclaimed_space"
     fi
 else
     log_warn "Could not prune dangling Docker images"

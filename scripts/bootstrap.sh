@@ -194,8 +194,6 @@ configure_network() {
         return 0
     fi
 
-    source "$PROJECT_DIR/scripts/lib/config.sh"
-
     NETPLAN_FILE="/etc/netplan/01-netcfg.yaml"
 
     log_step "Disabling cloud-init..."

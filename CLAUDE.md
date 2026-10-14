@@ -67,9 +67,9 @@ dotfiles/               # Симлинкуются в ~ при установк�
 
 <important if="you are working with disk space, journald, or Home Assistant hardware alerts">
 
-- `bootstrap.sh` caps persistent journal storage with `/etc/systemd/journald.conf.d/90-homelab.conf`; its `SystemMaxUse` value is `JOURNALD_SYSTEM_MAX_USE` in `scripts/lib/config.sh`.
-- `rebuild.sh` prunes dangling Docker images after all requested services, including a run where a service failed. It never uses `docker image prune -a`.
-- Home Assistant alerts on root SSD usage above 85% and RAID `/mnt/data` usage above 90%. The «Сервер» dashboard has their values in «Место»; use the real rootfs sensors, never `snap_*` sensors.
+- `bootstrap.sh` ограничивает постоянное хранилище журнала через `/etc/systemd/journald.conf.d/90-homelab.conf`; значение `SystemMaxUse` задано переменной `JOURNALD_SYSTEM_MAX_USE` в `scripts/lib/config.sh`.
+- `rebuild.sh` удаляет висячие образы Docker после обработки всех запрошенных сервисов, включая запуск с упавшим сервисом. Команда всегда `docker image prune -f`, без `-a`.
+- Home Assistant присылает уведомления при заполнении корневого SSD выше 85% и RAID `/mnt/data` выше 90%. В виде «Сервер» их значения показаны в группе «Место»; используй реальные rootfs-сенсоры, а не `snap_*`.
 
 </important>
 

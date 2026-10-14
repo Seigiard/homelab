@@ -136,7 +136,7 @@ sudo upsc eaton@localhost battery.charge
 ### Контроль свободного места
 
 - `bootstrap.sh` создаёт `/etc/systemd/journald.conf.d/90-homelab.conf` с `SystemMaxUse=1G` и перезапускает `systemd-journald`. Проверка: `journalctl --disk-usage`.
-- После обработки всех сервисов `scripts/docker/rebuild.sh` запускает `docker image prune -f`. Удаляются только dangling images; образы остановленных сервисов и локальная копия для отката остаются.
+- После обработки всех сервисов `scripts/docker/rebuild.sh` запускает `docker image prune -f`. Удаляются только dangling images; образы остановленных сервисов остаются.
 - Home Assistant шлёт push при заполнении SSD `/` выше 85% или RAID1 `/mnt/data` выше 90% в течение 10 минут. Те же rootfs-сенсоры показаны в группе «Место» вида «Сервер»; `snap_*` не используются, так как loop mounts всегда заполнены на 100%.
 
 ### RAID1 (`/dev/md0`)
