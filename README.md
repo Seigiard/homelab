@@ -53,15 +53,20 @@ After first deployment, containers auto-start on reboot (`restart: unless-stoppe
 
 ## Shipping Changes
 
-From the laptop, commit a service change and run:
+From the laptop repository root, switch to `main` with the service change
+committed there and the local working tree clean. Then run:
 
 ```bash
 ./scripts/local/ship.sh traefik
 ```
 
-`ship.sh` pushes `main`, checks that the server tree is clean, pulls, and deploys the
-named services. To run another command on the server, use
-`./scripts/local/hl '<command>'`. Do not copy files outside git.
+`ship.sh` pushes `main`, checks that the server tree is clean, pulls, and deploys
+the named services. Before deploying, it checks that the server HEAD matches the
+local commit. After it exits successfully, confirm that the status table lists the
+expected containers as running.
+
+To run another command on the server, use `./scripts/local/hl '<command>'`.
+Deliver version-controlled service changes through `ship.sh`.
 
 ## Services
 
