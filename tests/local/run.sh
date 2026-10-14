@@ -351,6 +351,77 @@ run_docker_status() {
   COMMAND_OUTPUT=$output
 }
 
+new_docker_rebuild_fixture() {
+  REBUILD_FIXTURE="$WORK_ROOT/$1"
+  REBUILD_REPO="$REBUILD_FIXTURE/repo"
+  REBUILD_BIN="$REBUILD_FIXTURE/bin"
+  REBUILD_LOG="$REBUILD_FIXTURE/docker.log"
+
+  mkdir -p "$REBUILD_REPO/scripts/docker" "$REBUILD_REPO/scripts/lib" \
+    "$REBUILD_REPO/services/a" "$REBUILD_REPO/services/b" "$REBUILD_BIN"
+  cp "$ROOT/scripts/docker/rebuild.sh" "$ROOT/scripts/docker/_lib.sh" "$REBUILD_REPO/scripts/docker/"
+  cp "$ROOT/scripts/lib/tui.sh" "$REBUILD_REPO/scripts/lib/tui.sh"
+  printf 'PUID=1000\nPGID=1000\n' >"$REBUILD_REPO/.env"
+  printf 'services:\n  a:\n' >"$REBUILD_REPO/services/a/docker-compose.yml"
+  printf 'services:\n  b:\n' >"$REBUILD_REPO/services/b/docker-compose.yml"
+
+  cat >"$REBUILD_BIN/docker" <<'EOF'
+#!/usr/bin/env bash
+set -u
+
+log=${FAKE_DOCKER_LOG:?}
+printf '%s' "$*" >>"$log"
+printf '\n' >>"$log"
+
+case ${1:-} in
+  compose)
+    compose_file=''
+    action=''
+    while (($#)); do
+      case $1 in
+        -f)
+          compose_file=$2
+          shift 2
+          ;;
+        pull|down|up)
+          action=$1
+          shift
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
+    service=$(basename "$(dirname "$compose_file")")
+    if [[ $action == pull && ${FAKE_DOCKER_FAIL_PULL_SERVICE:-} == "$service" ]]; then
+      exit 17
+    fi
+    ;;
+  image)
+    [[ ${2:-} == prune && ${3:-} == -f ]] || exit 64
+    if [[ ${FAKE_DOCKER_FAIL_PRUNE:-0} == 1 ]]; then
+      exit 18
+    fi
+    printf 'Total reclaimed space: 42MB\n'
+    ;;
+  *)
+    exit 64
+    ;;
+esac
+EOF
+  chmod +x "$REBUILD_BIN/docker"
+}
+
+run_docker_rebuild() {
+  local output
+  output=$(cd "$REBUILD_REPO" && PATH="$REBUILD_BIN:$PATH" FAKE_DOCKER_LOG="$REBUILD_LOG" \
+    FAKE_DOCKER_FAIL_PULL_SERVICE="${FAKE_DOCKER_FAIL_PULL_SERVICE:-}" \
+    FAKE_DOCKER_FAIL_PRUNE="${FAKE_DOCKER_FAIL_PRUNE:-0}" \
+    bash scripts/docker/rebuild.sh "$@" 2>&1)
+  COMMAND_STATUS=$?
+  COMMAND_OUTPUT=$output
+}
+
 assert_webhook_event() {
   local description=$1
   local expected_container=$2
@@ -778,6 +849,61 @@ test_docker_status_skips_a_container_that_vanishes_during_inspect() {
   assert_contains 'docker status prints every remaining container after an inspect race' 'beta' "$COMMAND_OUTPUT"
 }
 
+test_docker_rebuild_prunes_once_after_all_successful_services() {
+  # #given
+  new_docker_rebuild_fixture docker-rebuild-success
+  local expected
+  expected=$(printf '%s\n' \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env pull" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env down" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env up -d" \
+    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env pull" \
+    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env down" \
+    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env up -d" \
+    'image prune -f')
+  # #when
+  run_docker_rebuild a b
+  # #then
+  assert_equal 'docker rebuild succeeds when every service succeeds' '0' "$COMMAND_STATUS" || return
+  assert_file_content 'docker rebuild prunes dangling images once after every service' "$expected" "$REBUILD_LOG" || return
+  assert_contains 'docker rebuild shows the reclaimed-space line' 'Total reclaimed space: 42MB' "$COMMAND_OUTPUT"
+}
+
+test_docker_rebuild_prunes_after_a_failed_service_without_masking_its_status() {
+  # #given
+  new_docker_rebuild_fixture docker-rebuild-service-failure
+  export FAKE_DOCKER_FAIL_PULL_SERVICE=b
+  local expected
+  expected=$(printf '%s\n' \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env pull" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env down" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env up -d" \
+    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env pull" \
+    'image prune -f')
+  # #when
+  run_docker_rebuild a b
+  unset FAKE_DOCKER_FAIL_PULL_SERVICE
+  # #then
+  assert_equal 'docker rebuild keeps a failed service exit status' '1' "$COMMAND_STATUS" || return
+  assert_file_content 'docker rebuild still prunes after a service fails' "$expected" "$REBUILD_LOG"
+}
+
+test_docker_rebuild_warns_when_pruning_fails_without_failing_the_run() {
+  # #given
+  new_docker_rebuild_fixture docker-rebuild-prune-failure
+  export FAKE_DOCKER_FAIL_PRUNE=1
+  local prune_calls
+  # #when
+  run_docker_rebuild a b
+  unset FAKE_DOCKER_FAIL_PRUNE
+  prune_calls=$(awk '$0 == "image prune -f" { count++ } END { print count + 0 }' "$REBUILD_LOG")
+  # #then
+  assert_equal 'docker rebuild ignores a dangling-image prune failure' '0' "$COMMAND_STATUS" || return
+  assert_equal 'docker rebuild invokes dangling-image prune exactly once on failure' '1' "$prune_calls" || return
+  assert_equal 'docker rebuild invokes dangling-image prune last on failure' 'image prune -f' "$(awk 'END { print }' "$REBUILD_LOG")" || return
+  assert_contains 'docker rebuild logs prune failure as a warning' '[!]' "$COMMAND_OUTPUT"
+}
+
 test_container_drift_notifies_when_restart_count_grows() {
   # #given
   new_container_drift_fixture container-drift-restarts
@@ -1010,6 +1136,9 @@ run_test test_assert_webhook_event_rejects_a_wrong_method
 run_test test_fake_curl_records_json_request_bodies
 run_test test_docker_status_shows_container_drift_columns_and_filters_services
 run_test test_docker_status_skips_a_container_that_vanishes_during_inspect
+run_test test_docker_rebuild_prunes_once_after_all_successful_services
+run_test test_docker_rebuild_prunes_after_a_failed_service_without_masking_its_status
+run_test test_docker_rebuild_warns_when_pruning_fails_without_failing_the_run
 run_test test_container_drift_notifies_when_restart_count_grows
 run_test test_container_drift_notifies_when_image_id_changes
 run_test test_container_drift_suppresses_baseline_unchanged_new_and_recreated_containers

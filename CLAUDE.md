@@ -58,11 +58,19 @@ dotfiles/               # Симлинкуются в ~ при установк�
 ```bash
 ./scripts/docker/deploy.sh svc1 svc2    # деплой (без аргументов — все)
 ./scripts/docker/stop.sh svc1 svc2      # остановка
-./scripts/docker/rebuild.sh svc1        # pull + restart
+./scripts/docker/rebuild.sh svc1        # pull + restart, then prune dangling images
 ./scripts/docker/remove.sh svc1         # остановка + удаление контейнеров
 ./scripts/docker/status.sh              # статус всех
 ./scripts/setup/07-setup-ssh-key.sh     # любой шаг установки запускается отдельно
 ```
+</important>
+
+<important if="you are working with disk space, journald, or Home Assistant hardware alerts">
+
+- `bootstrap.sh` ограничивает постоянное хранилище журнала через `/etc/systemd/journald.conf.d/90-homelab.conf`; значение `SystemMaxUse` задано переменной `JOURNALD_SYSTEM_MAX_USE` в `scripts/lib/config.sh`.
+- `rebuild.sh` удаляет висячие образы Docker после обработки всех запрошенных сервисов, включая запуск с упавшим сервисом. Команда всегда `docker image prune -f`, без `-a`.
+- Home Assistant присылает уведомления при заполнении корневого SSD выше 85% и RAID `/mnt/data` выше 90%. В виде «Сервер» их значения показаны в группе «Место»; используй реальные rootfs-сенсоры, а не `snap_*`.
+
 </important>
 
 <important if="you are adding a new service or editing a service's docker-compose.yml">

@@ -27,6 +27,7 @@ export INSTALL_PATH="/opt/homelab"
 
 export HOSTNAME="home"
 export TIMEZONE="Europe/Bratislava"
+export JOURNALD_SYSTEM_MAX_USE="1G"
 
 # -------------------------------------------
 # Network (static IP)

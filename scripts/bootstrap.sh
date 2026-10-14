@@ -63,6 +63,8 @@ DATA_PATH="${DATA_PATH:-/mnt/data}"
 PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
 
+source "$PROJECT_DIR/scripts/lib/config.sh"
+
 # -------------------------------------------
 # Install Docker
 # -------------------------------------------
@@ -191,8 +193,6 @@ configure_network() {
         log_info "[TEST] Skipping network configuration"
         return 0
     fi
-
-    source "$PROJECT_DIR/scripts/lib/config.sh"
 
     NETPLAN_FILE="/etc/netplan/01-netcfg.yaml"
 
@@ -406,6 +406,24 @@ EOF
 }
 
 # -------------------------------------------
+# Configure system journal
+# -------------------------------------------
+
+configure_journald() {
+    local drop_in_dir="/etc/systemd/journald.conf.d"
+    local drop_in_file="$drop_in_dir/90-homelab.conf"
+
+    log_step "Capping systemd journal usage at $JOURNALD_SYSTEM_MAX_USE..."
+    install -d -m 755 "$drop_in_dir"
+    cat > "$drop_in_file" << EOF
+[Journal]
+SystemMaxUse=$JOURNALD_SYSTEM_MAX_USE
+EOF
+    systemctl restart systemd-journald
+    log_info "systemd journal capped at $JOURNALD_SYSTEM_MAX_USE"
+}
+
+# -------------------------------------------
 # Main
 # -------------------------------------------
 
@@ -439,6 +457,9 @@ main() {
 
     print_header "Configuring SMART monitoring"
     configure_smartd
+
+    print_header "Configuring system journal"
+    configure_journald
 
     print_footer "Bootstrap completed!"
 

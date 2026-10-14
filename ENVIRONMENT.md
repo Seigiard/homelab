@@ -133,6 +133,12 @@ sudo upsc eaton@localhost battery.charge
 
 **SMART на SATA-дисках работает нормально** — запрет `smartctl` касается только NVMe Kingston (см. «Известные проблемы железа»). Приёмка новых дисков: `sudo smartctl -x /dev/sdX` (интересуют `Power_On_Hours`, `Reallocated_Sector_Ct`, `Current_Pending_Sector`, `Offline_Uncorrectable`, `UDMA_CRC_Error_Count` — все нули у нового диска), затем `sudo smartctl -t long /dev/sdX` (≈10–13 ч на 6–8 ТБ, идёт в прошивке диска, обрыв SSH не мешает, перезагрузка прерывает) и `sudo smartctl -l selftest /dev/sdX` → ждём `Extended offline  Completed without error`.
 
+### Контроль свободного места
+
+- `bootstrap.sh` создаёт `/etc/systemd/journald.conf.d/90-homelab.conf` с `SystemMaxUse=1G` и перезапускает `systemd-journald`. Проверка: `journalctl --disk-usage`.
+- После обработки всех сервисов `scripts/docker/rebuild.sh` запускает `docker image prune -f`. Удаляются только dangling images; образы остановленных сервисов остаются.
+- Home Assistant шлёт push при заполнении SSD `/` выше 85% или RAID1 `/mnt/data` выше 90% в течение 10 минут. Те же rootfs-сенсоры показаны в группе «Место» вида «Сервер»; `snap_*` не используются, так как loop mounts всегда заполнены на 100%.
+
 ### RAID1 (`/dev/md0`)
 
 Зеркало на **целых дисках, без разделов** (`mdadm --create /dev/md0 --level=1 --raid-devices=2 --bitmap=internal /dev/sda /dev/sdb`) — оба диска одной модели, возни с выравниванием разделов нет. `--bitmap=internal` (write-intent bitmap): после аварийного выключения пересинхронизируются только изменённые участки, а не все 5.5 ТБ.
