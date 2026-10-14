@@ -44,7 +44,7 @@ homelab/
 ./scripts/docker/deploy.sh           # Deploy all services
 ./scripts/docker/deploy.sh traefik   # Deploy single service
 ./scripts/docker/stop.sh             # Stop all
-./scripts/docker/rebuild.sh          # Rebuild (pull + restart)
+./scripts/docker/rebuild.sh          # Rebuild (pull + restart, then prune dangling images)
 ./scripts/docker/remove.sh           # Stop + remove containers
 ./scripts/docker/status.sh           # State, restart count, last exit, image ID and image creation time
 ```

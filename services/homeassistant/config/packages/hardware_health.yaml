@@ -10,6 +10,10 @@
 #   Fan3 (it8613)        : sensor.127_0_0_1_it8613_2_fan_speed   — НЕ подключён, всегда 0 → в алерты НЕ берём
 #   RAID1 disk 1 (sda)   : sensor.living_room_127_0_0_1_raid_disk_1_temperature   (добавлено 2026-08-19)
 #   RAID1 disk 2 (sdb)   : sensor.living_room_127_0_0_1_raid_disk_2_temperature
+#   SSD / usage           : sensor.127_0_0_1_rootfs_disk_usage
+#   SSD / free            : sensor.127_0_0_1_rootfs_disk_free
+#   RAID1 /mnt/data usage : sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_usage
+#   RAID1 /mnt/data free  : sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_free
 #
 # Пуш — notify.mobile_app_nothingphone (legacy mobile_app сервис: принимает
 #   data.priority/ttl для пробивных critical-пушей). philips_ac3737.yaml шлёт через
@@ -45,6 +49,34 @@
 #     снова — следующий тик повторит.
 
 automation:
+  - id: server_ssd_disk_space_warning
+    alias: "Сервер: мало места на SSD"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.127_0_0_1_rootfs_disk_usage
+        above: 85
+        for: "00:10:00"
+    action:
+      - service: notify.mobile_app_nothingphone
+        data:
+          title: "⚠️ Сервер: мало места на SSD"
+          message: "SSD: занято {{ states('sensor.127_0_0_1_rootfs_disk_usage') }}%, свободно {{ states('sensor.127_0_0_1_rootfs_disk_free') }}."
+
+  - id: server_raid_disk_space_warning
+    alias: "Сервер: мало места на RAID"
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_usage
+        above: 90
+        for: "00:10:00"
+    action:
+      - service: notify.mobile_app_nothingphone
+        data:
+          title: "⚠️ Сервер: мало места на RAID"
+          message: "RAID: занято {{ states('sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_usage') }}%, свободно {{ states('sensor.living_room_127_0_0_1_rootfs_mnt_data_disk_free') }}."
+
   - id: server_cpu_temp_warning
     alias: "Сервер: CPU нагрев (warning)"
     mode: single

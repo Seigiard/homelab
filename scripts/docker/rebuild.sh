@@ -30,6 +30,14 @@ for service in "${services[@]}"; do
     do_rebuild "$service" || failed+=("$service")
 done
 
+if prune_output=$(docker image prune -f); then
+    if [[ -n "$prune_output" ]]; then
+        log_info "$prune_output"
+    fi
+else
+    log_warn "Could not prune dangling Docker images"
+fi
+
 if [[ ${#failed[@]} -gt 0 ]]; then
     print_footer "Rebuild finished with errors"
     log_error "Failed: ${failed[*]}"
