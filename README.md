@@ -51,6 +51,23 @@ homelab/
 
 After first deployment, containers auto-start on reboot (`restart: unless-stopped`).
 
+## Shipping Changes
+
+From the laptop repository root, switch to `main` with the service change
+committed there and the local working tree clean. Then run:
+
+```bash
+./scripts/local/ship.sh traefik
+```
+
+`ship.sh` pushes `main`, checks that the server tree is clean, pulls, and deploys
+the named services. Before deploying, it checks that the server HEAD matches the
+local commit. After it exits successfully, confirm that the status table lists the
+expected containers as running.
+
+To run another command on the server, use `./scripts/local/hl '<command>'`.
+Deliver version-controlled service changes through `ship.sh`.
+
 ## Services
 
 Each service lives in `services/<name>/docker-compose.yml`. List all services:

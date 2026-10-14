@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Runs on the laptop.
+
+set -u
+
+host=seigiard@home
+probe_timeout=${HL_PROBE_TIMEOUT:-10}
+probe_command='cd /opt/homelab && true'
+probe_error=$(mktemp)
+trap 'rm -f "$probe_error"' EXIT
+
+tailscale ssh "$host" -o BatchMode=yes "$probe_command" >/dev/null 2>"$probe_error" &
+probe_pid=$!
+
+(
+    sleep "$probe_timeout"
+    kill -0 "$probe_pid" 2>/dev/null && kill "$probe_pid" 2>/dev/null
+) >/dev/null 2>&1 &
+timeout_pid=$!
+
+wait "$probe_pid"
+probe_status=$?
+kill "$timeout_pid" 2>/dev/null || true
+wait "$timeout_pid" 2>/dev/null || true
+
+if ((probe_status != 0)); then
+    [[ -s $probe_error ]] && cat "$probe_error" >&2
+    printf '%s\n' 'No connection to the server. Tailscale ACL check mode may be waiting for a browser login; see ENVIRONMENT.md.' >&2
+    exit "$probe_status"
+fi
+
+if (($# == 0)); then
+    interactive_command="cd /opt/homelab && exec \"\${SHELL:-bash}\" -l"
+    exec tailscale ssh "$host" -t -o BatchMode=yes "$interactive_command"
+fi
+
+if (($# != 1)); then
+    printf 'Usage: %s [<command string>]\n' "$0" >&2
+    exit 2
+fi
+
+if [[ -t 0 ]]; then
+    exec tailscale ssh "$host" -t -o BatchMode=yes "cd /opt/homelab && $1"
+fi
+
+exec tailscale ssh "$host" -o BatchMode=yes "cd /opt/homelab && $1"

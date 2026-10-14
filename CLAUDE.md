@@ -43,7 +43,17 @@ dotfiles/               # Симлинкуются в ~ при установк�
 /mnt/data/backups/      # Бэкапы
 ```
 
+<important if="you need to run a command on the server">
+
+С ноутбука серверная команда запускается через `./scripts/local/hl '<command>'` (выполняется в `/opt/homelab`). Если `hl` пишет `No connection to the server` — показать вывод пользователю: возможно, Tailscale ждёт браузер-проверку (`ENVIRONMENT.md` → Tailscale).
+
+</important>
+
 <important if="you need to deploy, stop, rebuild, remove, or check the status of services, or rerun an install step">
+
+С ноутбука изменения сервисов доставляются через git: закоммитить в `main`, затем `./scripts/local/ship.sh svc1 svc2` (push, pull на сервере, deploy, status). Если `ship.sh` отказывает из-за грязного дерева на сервере — показать вывод пользователю, сброс решает он.
+
+На сервере (через `hl` или в серверной сессии):
 
 ```bash
 ./scripts/docker/deploy.sh svc1 svc2    # деплой (без аргументов — все)
@@ -59,7 +69,7 @@ dotfiles/               # Симлинкуются в ~ при установк�
 
 1. Создать `services/myservice/docker-compose.yml`, сеть `traefik-net`.
 2. Добавить Traefik + Homepage labels — пример в любом существующем сервисе.
-3. `./scripts/docker/deploy.sh myservice`
+3. Закоммитить в `main` и выкатить с ноутбука: `./scripts/local/ship.sh myservice`.
 
 - Homepage с Docker socket требует `user: root`.
 - **Образ объявляет `VOLUME` → биндить корень тома.** Иначе docker создаёт анонимный том и при каждом пересоздании контейнера бросает предыдущий. Пример починки: `opml-generator` (`/audiobooks` → `appdata/opml-generator/shelves`). Исключение — `samba` (`dperson/samba` объявляет `/etc`, `/var/lib/samba`, `/var/cache/samba`, `/run/samba`): эти пути биндить нельзя, состояние пересобирается из флагов `-u` при старте. Чистка: `docker volume prune -f`.
@@ -82,7 +92,7 @@ dotfiles/               # Симлинкуются в ~ при установк�
 NUT и Tailscale работают на хосте, вне Docker.
 
 - **NUT:** хост даёт надёжный shutdown. Конфиг `/etc/nut/`, setup `09-setup-nut.sh`. PeaNUT (web UI, Docker) ходит к хосту через `host.docker.internal:3493`.
-- **Tailscale:** setup `10-setup-tailscale.sh`, переменные `TS_*` в `config.sh`, аутентификация интерактивная. Доступ: `tailscale ssh seigiard@home`. **`accept-dns=false` обязательно** — с `true` Tailscale переписывает `/etc/resolv.conf` на MagicDNS и ломает split-horizon AdGuard.
+- **Tailscale:** setup `10-setup-tailscale.sh`, переменные `TS_*` в `config.sh`, аутентификация интерактивная. Доступ с ноутбука: `./scripts/local/hl` (обёртка над `tailscale ssh seigiard@home`). **`accept-dns=false` обязательно** — с `true` Tailscale переписывает `/etc/resolv.conf` на MagicDNS и ломает split-horizon AdGuard.
 </important>
 
 <important if="you are touching Cloudflare, the tunnel, TLS, or HTTPS redirects">
