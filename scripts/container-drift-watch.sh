@@ -66,8 +66,9 @@ if ((${#container_ids[@]} > 0)); then
             continue
         fi
         current=$(printf '%s' "$container" | jq -ce --argjson last_seen "$now" \
-            '.[0] | {name: (.Name | ltrimstr("/")), image: .Image, restarts: .RestartCount, last_seen: $last_seen}
-             | select(.name != "" and (.image | type == "string") and (.restarts | type == "number"))')
+            '.[0] | {id: .Id, name: (.Name | ltrimstr("/")), image: .Image, restarts: .RestartCount, last_seen: $last_seen}
+             | select((.id | type == "string") and .name != "" and (.image | type == "string") and (.restarts | type == "number"))')
+        id=$(printf '%s' "$current" | jq -r '.id')
         name=$(printf '%s' "$current" | jq -r '.name')
         image=$(printf '%s' "$current" | jq -r '.image')
         restarts=$(printf '%s' "$current" | jq -r '.restarts')
@@ -84,19 +85,14 @@ if ((${#container_ids[@]} > 0)); then
             continue
         fi
 
-        previous_last_seen=$(printf '%s' "$previous" | jq -r '.last_seen // empty')
-        if [[ -z $previous_last_seen ]]; then
-            previous_last_seen=$now
-        fi
-        if (( now - previous_last_seen > STATE_TTL )); then
-            append_state "$current"
-            continue
-        fi
-
+        previous_id=$(printf '%s' "$previous" | jq -r '.id // empty')
         previous_image=$(printf '%s' "$previous" | jq -r '.image')
         previous_restarts=$(printf '%s' "$previous" | jq -r '.restarts')
         stored_image=$image
         stored_restarts=$restarts
+        if [[ -n $previous_id && $id != "$previous_id" ]]; then
+            previous_restarts=0
+        fi
 
         if (( restarts > previous_restarts )); then
             if ! notify "$name" restarts "Container $name restarted $((restarts - previous_restarts)) time(s) since the previous check."; then
@@ -113,9 +109,9 @@ if ((${#container_ids[@]} > 0)); then
         fi
 
         # Keep only a failed event's old value so successful alerts are not retried.
-        append_state "$(jq -cn --arg name "$name" --arg image "$stored_image" \
+        append_state "$(jq -cn --arg id "$id" --arg name "$name" --arg image "$stored_image" \
             --argjson restarts "$stored_restarts" --argjson last_seen "$now" \
-            '{name: $name, image: $image, restarts: $restarts, last_seen: $last_seen}')"
+            '{id: $id, name: $name, image: $image, restarts: $restarts, last_seen: $last_seen}')"
     done
 fi
 

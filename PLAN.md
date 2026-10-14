@@ -15,7 +15,7 @@
 ## Планируемая интеграция
 
 - [ ] **herdr remote** — сервер как SSH-машина для herdr 0.9.0 (`herdr machine add server` с mbp2026). SSH-доступ уже работает (Tailscale, ключи в 1Password на клиентах). herdr сам ничего не копирует на удалённые машины.
-  - На сервере нужны: бинарь herdr (шаг `scripts/setup/13-setup-herdr.sh`) и агентский стек из my-mac-setup — herdr-плагины (`~/.config/herdr/plugins`), хелперы (`~/.local/bin`, `~/.local/lib`), скиллы агентов.
+  - На сервере нужны: бинарь herdr (шаг `scripts/setup/14-setup-herdr.sh`) и агентский стек из my-mac-setup — herdr-плагины (`~/.config/herdr/plugins`), хелперы (`~/.local/bin`, `~/.local/lib`), скиллы агентов.
   - Механизм связки решён (2026-09-10): chezmoi-роль `server` в my-mac-setup деплоит только агентские пути, zsh и остальное остаётся за homelab. Наборы путей не пересекаются. Известное пересечение — `~/.ssh/config` против `07-setup-ssh-key.sh`, владельца назначит план реализации.
   - Setup-шаг homelab: установить chezmoi и запустить `MMS_MACHINE_ROLE=server chezmoi init --apply`.
   - Парная задача в my-mac-setup: `docs/issues/2026-09-09-001-set-up-herdr-0-9-0-multi-machine-remote.md`.
