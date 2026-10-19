@@ -356,17 +356,26 @@ network:
 - **Двойной NIC на AOOSTAR.** Под `en*` подпадают оба onboard 2.5GbE: `eno1` (активный, кабель здесь) и `enp2s0` (резерв, без линка). Любой USB-Ethernet (`enxXXXX`) тоже совпал бы. `.41` пропишется на все совпавшие порты — пока кабель воткнут в **один** порт, конфликта нет (осознанный компромисс). Держать линк в одном onboard-порту.
 - **EEE-off** (`nic-tuning.service`) резолвит активный интерфейс в рантайме по дефолтному маршруту (`ip route show default`) — тоже без привязки к имени.
 
-`1.1.1.1` — строгий fallback (только когда AdGuard недоступен), задаётся через drop-in `/etc/systemd/resolved.conf.d/fallback.conf`:
+`1.1.1.1` — fallback, задаётся через drop-in `/etc/systemd/resolved.conf.d/fallback.conf`:
 
 ```ini
 [Resolve]
 FallbackDNS=1.1.1.1 1.0.0.1
 ```
 
+- **Fallback не спасает от остановленного AdGuard.** systemd-resolved берёт `FallbackDNS` только когда DNS-серверов не задано вообще, а не когда `127.0.0.1` не отвечает. Пока контейнер `adguard` остановлен, на хосте не работает резолв, в том числе `git pull` внутри `ship.sh`. Поэтому `stop.sh adguard` перед `ship.sh adguard` не делать; если остановлен — сначала `./scripts/docker/deploy.sh adguard` на сервере.
 - **Не добавлять `1.1.1.1` в `nameservers.addresses`** — systemd-resolved считает все адреса списка равноправными и ротирует их, из-за чего часть запросов уходит мимо AdGuard (split-horizon ломается непредсказуемо).
 - **`accept-ra: false`** убирает третий DNS-сервер (`fe80::...`), который роутер навязывает по IPv6 Router Advertisement. Без него `resolvectl status` показывает на интерфейсе 3 DNS вместо одного.
 - Применение: `sudo netplan apply && sudo systemctl restart systemd-resolved`.
 - Проверка: `resolvectl status` → на активном Link (имя зависит от железа, см. `ip -br addr`) должно быть `DNS Servers: 127.0.0.1`, в Global — `Fallback DNS Servers: 1.1.1.1 1.0.0.1`. `resolvectl query dns.1218217.xyz` должен вернуть локальный `192.168.1.41`. Офлайн (без линка) локальный резолв проверяется напрямую: `dig @127.0.0.1 dns.1218217.xyz +short` → `192.168.1.41`.
+
+### AdGuard Home: клиенты и списки фильтров
+
+- **Клиент — только сам сервер.** Роутер не раздаёт `192.168.1.41` как DNS: с ним приложения Kaufland и Tesco не работают, а второй DNS роутер задать не позволяет. В журнале запросов почти всё приходит с `172.18.0.1` (хост через docker-proxy).
+- **Лимит памяти 1G** (`services/adguard/docker-compose.yml`). При 512M контейнер убивал OOM-killer во время ежесуточного обновления фильтров (exit 137, 17 и 18.10.2026): старый и новый наборы правил лежат в памяти одновременно. Проверка: `journalctl -k | grep -i "Killed process.*AdGuardHome"`.
+- **Списки с 19.10.2026:** включены AdGuard DNS filter, HaGeZi Pro, HaGeZi TIF Medium (`tif.medium.txt` с jsdelivr, ~940 тыс. правил), Ukrainian Security Filter. Выключены OISD Big (почти целиком покрыт HaGeZi Pro + TIF), Steven Black и PhishTank/OpenPhish (мало уникальных доменов). Полный TIF (~2,2 млн правил) давал 75% всех правил. Итого ~1,33 млн правил вместо 2,93 млн, память после старта 171MiB вместо 347MiB. Бэкап конфига до правки: `appdata/adguard/conf/AdGuardHome.yaml.bak.20261019`.
+- **Регион SK/CZ:** DNS-списка для Словакии в реестре AdGuard нет. Встроенную рекламу на сайтах убирает только браузерный блокировщик (uBlock Origin + «EasyList Czech and Slovak»).
+- **Правка конфига без sudo:** `AdGuardHome.yaml` принадлежит root, и AdGuard перезаписывает его при остановке. Порядок: остановить контейнер, править через временный контейнер с томом `appdata/adguard` (`docker run --rm --entrypoint sh -v /opt/homelab/appdata/adguard:/a adguard/adguardhome:latest ...`), сразу запустить `deploy.sh adguard`.
 
 ### Tailscale (mesh VPN)
 
