@@ -371,10 +371,10 @@ FallbackDNS=1.1.1.1 1.0.0.1
 
 ### AdGuard Home: клиенты и списки фильтров
 
-- **Клиент — только сам сервер.** Роутер не раздаёт `192.168.1.41` как DNS: с ним приложения Kaufland и Tesco не работают, а второй DNS роутер задать не позволяет. В журнале запросов почти всё приходит с `172.18.0.1` (хост через docker-proxy).
-- **Лимит памяти 1G** (`services/adguard/docker-compose.yml`). При 512M контейнер убивал OOM-killer во время ежесуточного обновления фильтров (exit 137, 17 и 18.10.2026): старый и новый наборы правил лежат в памяти одновременно. Проверка: `journalctl -k | grep -i "Killed process.*AdGuardHome"`.
-- **Списки с 19.10.2026:** включены AdGuard DNS filter, HaGeZi Pro, HaGeZi TIF Medium (`tif.medium.txt` с jsdelivr, ~940 тыс. правил), Ukrainian Security Filter. Выключены OISD Big (почти целиком покрыт HaGeZi Pro + TIF), Steven Black и PhishTank/OpenPhish (мало уникальных доменов). Полный TIF (~2,2 млн правил) давал 75% всех правил. Итого ~1,33 млн правил вместо 2,93 млн, память после старта 171MiB вместо 347MiB. Бэкап конфига до правки: `appdata/adguard/conf/AdGuardHome.yaml.bak.20261019`.
-- **Регион SK/CZ:** DNS-списка для Словакии в реестре AdGuard нет. Встроенную рекламу на сайтах убирает только браузерный блокировщик (uBlock Origin + «EasyList Czech and Slovak»).
+- **Клиент — только сам сервер.** Роутер не раздаёт `192.168.1.41`: с ним не работают приложения Kaufland и Tesco, а второй DNS роутер задать не позволяет.
+- **OOM при обновлении фильтров.** Во время ежесуточного обновления старый и новый наборы правил лежат в памяти одновременно. При лимите 512M контейнер убивался (exit 137, 10.2026). Проверка: `journalctl -k | grep -i "Killed process.*AdGuardHome"`.
+- **Выбор списков (10.2026):** OISD Big почти целиком покрыт HaGeZi Pro + TIF. Steven Black и PhishTank/OpenPhish дают мало уникальных доменов. Полный HaGeZi TIF (~2,2 млн правил, 75% всех) заменён на TIF Medium ради памяти. Текущий набор: `docker exec adguard sed -n "/^filters:/,/^whitelist_filters:/p" /opt/adguardhome/conf/AdGuardHome.yaml` или веб-интерфейс.
+- **Регион SK/CZ:** DNS-списка нет. Встроенную рекламу на сайтах убирает только uBlock Origin + «EasyList Czech and Slovak».
 - **Правка конфига без sudo:** `AdGuardHome.yaml` принадлежит root, и AdGuard перезаписывает его при остановке. Порядок: остановить контейнер, править через временный контейнер с томом `appdata/adguard` (`docker run --rm --entrypoint sh -v /opt/homelab/appdata/adguard:/a adguard/adguardhome:latest ...`), сразу запустить `deploy.sh adguard`.
 
 ### Tailscale (mesh VPN)
