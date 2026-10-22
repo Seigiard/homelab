@@ -10,6 +10,13 @@ services:
       - OVERRIDES=/config/overrides.json
       # One 16000x22000 PNG needs ~1.4 GB while decoding; 2 parallel jobs stay well inside the limit.
       - THUMBNAIL_CONCURRENCY=2
+      # Claude vision classification (tags + summary per map). All three come from the
+      # root .env. Pass-through form on purpose: an empty CLASSIFY_MAX_CALLS= or
+      # CLASSIFY_MODEL= crashes the process at startup, an unset one is simply ignored.
+      # No ANTHROPIC_API_KEY = classification disabled.
+      - ANTHROPIC_API_KEY
+      - CLASSIFY_MAX_CALLS
+      - CLASSIFY_MODEL
     volumes:
       # Collection (HDD), never written
       - ${DATA_PATH:-/mnt/data}/public/ttrpg/BattleMaps:/maps:ro

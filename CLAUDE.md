@@ -147,6 +147,14 @@ Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON.
 - **VAAPI на AMD Vega 8:** пробрасывается весь `/dev/dri`, доступ даёт `group_add` с GID группы `render` из `.env` → `RENDER_GROUP_ID` (`getent group render`). Неверный GID = молчаливый софтверный транскодинг без ошибок в логах.
 </important>
 
+<important if="you are working on ttrpg-map-viewer classification, ANTHROPIC_API_KEY, or the map tags and summaries">
+
+- Ключ и лимиты живут в корневом `.env` на сервере (`ANTHROPIC_API_KEY`, `CLASSIFY_MAX_CALLS`, `CLASSIFY_MODEL`), compose передаёт их pass-through. **Пустое значение `CLASSIFY_MAX_CALLS=`/`CLASSIFY_MODEL=` роняет контейнер на старте** — лишнюю строку удалять, не обнулять.
+- Статус: в образе нет curl, запрос через `bun -e 'fetch(...)'` — команда в `ENVIRONMENT.md` → «Классификация карт».
+- Кэш ответов в `/mnt/data/appdata/ttrpg-map-viewer/.classification/`; смена модели требует поднять версию промпта в коде viewer-а, иначе кэш отдаст старые ответы.
+
+</important>
+
 <important if="you are adding an install package or a dotfile">
 
 - Пакеты: массивы `APT_PACKAGES`, `CARGO_PACKAGES` в `scripts/lib/config.sh`.

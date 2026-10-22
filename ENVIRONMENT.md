@@ -204,6 +204,14 @@ sudo mdadm --detail /dev/md0
 
 **Тяжёлое восстановимое appdata — на HDD, в `/mnt/data/appdata/<svc>`.** Сюда идут данные, которые сервис пересобирает сам из исходников (превью, кэши каталогов). На SSD остаются только конфиги. Restic этот путь не бэкапит, и это намеренно. `ttrpg-map-viewer` владеет своим каталогом целиком: генератор удаляет всё, что не узнаёт, поэтому туда ничего своего не класть. Ручные обложки — `appdata/ttrpg-map-viewer/config/overrides.json` на SSD (файл необязателен).
 
+**Классификация карт (Claude vision).** Включается ключом `ANTHROPIC_API_KEY` в корневом `.env`; без ключа сервис работает как раньше. Переменные `CLASSIFY_MAX_CALLS` (лимит вызовов API за запуск процесса) и `CLASSIFY_MODEL` (по умолчанию `claude-haiku-5-5`) передаются в контейнер pass-through: **пустое значение роняет контейнер на старте** (`Invalid CLASSIFY_MAX_CALLS`), поэтому ненужную строку удалять, а не обнулять. Классификация стартует после прохода обложек. Кэш ответов — `/mnt/data/appdata/ttrpg-map-viewer/.classification/`, живёт в томе и повторно те же карты не оплачивает; смена модели без поднятия версии промпта в коде viewer-а отдаст старые ответы из кэша. Статус (в образе нет curl):
+
+```bash
+docker exec ttrpg-map-viewer bun -e 'fetch("http://127.0.0.1:3000/internal/status").then(r=>r.json()).then(j=>console.log(JSON.stringify(j.classification,null,2)))'
+```
+
+Ожидаемо `state: "enabled"`, `calls` растёт до лимита, `stoppedReason: null`; при `state: "stopped"` в `stoppedReason` текст ошибки API. Ключ выпущен в отдельном workspace Anthropic Console со spend limit.
+
 ### Бэкапы (Backrest/restic)
 
 | Репозиторий | rclone remote                                         | Объём  | Retention                      | Prune        |
