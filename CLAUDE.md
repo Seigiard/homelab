@@ -122,7 +122,7 @@ Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON.
 - **Dropbox-репо ~10 ГБ, держать запас.** Всё крупное и восстановимое — в excludes (веса моделей, `home-assistant_v2.db*`, бинарники). Полный репо не лечится prune: restic не пишет даже lock (`path/insufficient_space`) → только `rclone purge dropbox:backups` + `restic init` и новый GUID в конфиге.
 - Конфиг планов — `appdata/backrest/config/config.json`, в git не лежит. Правка: `docker cp` + рестарт, старый сохранить как `config.json.bak.*`.
 - Проверка: `rclone about dropbox:` и `restic snapshots --no-lock --compact` — колонка размеров ровная, выброс = что-то крупное проскочило мимо excludes.
-- Инцидент 2026-09-23, текущие excludes и retention — `ENVIRONMENT.md` → «Бэкапы (Backrest/restic)».
+- Текущие excludes, retention и разбор переполнения репо — `ENVIRONMENT.md` → «Бэкапы (Backrest/restic)».
 </important>
 
 <important if="you are checking disk health, SMART, NVMe, or firmware updates">
