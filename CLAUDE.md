@@ -58,7 +58,7 @@ dotfiles/               # Симлинкуются в ~ при установк�
 ```bash
 ./scripts/docker/deploy.sh svc1 svc2    # деплой (без аргументов — все)
 ./scripts/docker/stop.sh svc1 svc2      # остановка
-./scripts/docker/rebuild.sh svc1        # pull + restart, then prune dangling images
+./scripts/docker/rebuild.sh svc1        # pull/build + restart, then prune dangling images
 ./scripts/docker/remove.sh svc1         # остановка + удаление контейнеров
 ./scripts/docker/status.sh              # статус всех
 ./scripts/setup/07-setup-ssh-key.sh     # любой шаг установки запускается отдельно
@@ -145,6 +145,7 @@ Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON.
 - **Источник истины — живой appdata**: он пережил смерть диска и свежее архивов в `backups/`. Архивы оставить нераспакованными.
 - Медиафайлы после переезда на зеркало не вернулись: stash показывает каталог как missing, transmission-omg качает раздачи заново.
 - **VAAPI на AMD Vega 8:** пробрасывается весь `/dev/dri`, доступ даёт `group_add` с GID группы `render` из `.env` → `RENDER_GROUP_ID` (`getent group render`). Неверный GID = молчаливый софтверный транскодинг без ошибок в логах.
+- **stash собирается локально:** `deploy.sh` берёт готовый образ, поэтому после правки `Dockerfile` и для обновления stash нужен `rebuild.sh stash`. Устройство VAAPI — `ENVIRONMENT.md` → «VAAPI в stash».
 </important>
 
 <important if="you are working on ttrpg-map-viewer classification, ANTHROPIC_API_KEY, or the map tags and summaries">

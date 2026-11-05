@@ -1,8 +1,11 @@
 services:
   stash:
-    image: stashapp/stash:latest
+    build: .
+    image: homelab/stash:local
     container_name: stash
     restart: unless-stopped
+    group_add:
+      - "${RENDER_GROUP_ID:-993}"
     environment:
       - TZ=${TZ:-Europe/Bratislava}
     volumes:
@@ -14,6 +17,10 @@ services:
       - ${APPDATA_PATH:-/opt/homelab/appdata}/stash/blobs:/blobs
       # Media (HDD)
       - ${DATA_PATH:-/mnt/data}/users/andrew/OMG:/data
+    devices:
+      # AMD Vega 8 iGPU (Ryzen 5825U) via amdgpu — VAAPI transcoding.
+      # Whole /dev/dri: card node numbering shifts between boots on amdgpu.
+      - /dev/dri:/dev/dri
     deploy:
       resources:
         limits:
