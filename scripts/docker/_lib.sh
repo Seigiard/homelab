@@ -269,7 +269,10 @@ do_rebuild() {
     # registry -- the service then stays dead and takes cloudflared with it.
     # With the image already local, up -d needs no name resolution at all.
     # A failed pull now also leaves the running container untouched.
-    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" pull || return 1
+    # up -d never rebuilds an image that already exists, so a service built from
+    # a local Dockerfile refreshes its base here, under the same rule.
+    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" pull --ignore-buildable || return 1
+    docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" build --pull || return 1
     docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" down || return 1
     docker compose -f "$SERVICES_DIR/$service/docker-compose.yml" --env-file "$PROJECT_DIR/.env" up -d || return 1
     log_info "$service rebuilt"

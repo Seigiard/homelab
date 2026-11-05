@@ -383,7 +383,7 @@ case ${1:-} in
           compose_file=$2
           shift 2
           ;;
-        pull|down|up)
+        pull|build|down|up)
           action=$1
           shift
           ;;
@@ -395,6 +395,9 @@ case ${1:-} in
     service=$(basename "$(dirname "$compose_file")")
     if [[ $action == pull && ${FAKE_DOCKER_FAIL_PULL_SERVICE:-} == "$service" ]]; then
       exit 17
+    fi
+    if [[ $action == build && ${FAKE_DOCKER_FAIL_BUILD_SERVICE:-} == "$service" ]]; then
+      exit 19
     fi
     ;;
   image)
@@ -416,6 +419,7 @@ run_docker_rebuild() {
   local output
   output=$(cd "$REBUILD_REPO" && PATH="$REBUILD_BIN:$PATH" FAKE_DOCKER_LOG="$REBUILD_LOG" \
     FAKE_DOCKER_FAIL_PULL_SERVICE="${FAKE_DOCKER_FAIL_PULL_SERVICE:-}" \
+    FAKE_DOCKER_FAIL_BUILD_SERVICE="${FAKE_DOCKER_FAIL_BUILD_SERVICE:-}" \
     FAKE_DOCKER_FAIL_PRUNE="${FAKE_DOCKER_FAIL_PRUNE:-0}" \
     bash scripts/docker/rebuild.sh "$@" 2>&1)
   COMMAND_STATUS=$?
@@ -854,10 +858,12 @@ test_docker_rebuild_prunes_once_after_all_successful_services() {
   new_docker_rebuild_fixture docker-rebuild-success
   local expected
   expected=$(printf '%s\n' \
-    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env pull" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env pull --ignore-buildable" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env build --pull" \
     "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env down" \
     "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env up -d" \
-    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env pull" \
+    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env pull --ignore-buildable" \
+    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env build --pull" \
     "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env down" \
     "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env up -d" \
     'image prune -f')
@@ -875,10 +881,11 @@ test_docker_rebuild_prunes_after_a_failed_service_without_masking_its_status() {
   export FAKE_DOCKER_FAIL_PULL_SERVICE=b
   local expected
   expected=$(printf '%s\n' \
-    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env pull" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env pull --ignore-buildable" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env build --pull" \
     "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env down" \
     "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env up -d" \
-    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env pull" \
+    "compose -f $REBUILD_REPO/services/b/docker-compose.yml --env-file $REBUILD_REPO/.env pull --ignore-buildable" \
     'image prune -f')
   # #when
   run_docker_rebuild a b
@@ -886,6 +893,23 @@ test_docker_rebuild_prunes_after_a_failed_service_without_masking_its_status() {
   # #then
   assert_equal 'docker rebuild keeps a failed service exit status' '1' "$COMMAND_STATUS" || return
   assert_file_content 'docker rebuild still prunes after a service fails' "$expected" "$REBUILD_LOG"
+}
+
+test_docker_rebuild_keeps_the_running_container_when_the_build_fails() {
+  # #given
+  new_docker_rebuild_fixture docker-rebuild-build-failure
+  export FAKE_DOCKER_FAIL_BUILD_SERVICE=a
+  local expected
+  expected=$(printf '%s\n' \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env pull --ignore-buildable" \
+    "compose -f $REBUILD_REPO/services/a/docker-compose.yml --env-file $REBUILD_REPO/.env build --pull" \
+    'image prune -f')
+  # #when
+  run_docker_rebuild a
+  unset FAKE_DOCKER_FAIL_BUILD_SERVICE
+  # #then
+  assert_equal 'docker rebuild reports a failed build' '1' "$COMMAND_STATUS" || return
+  assert_file_content 'docker rebuild does not take down a service whose build failed' "$expected" "$REBUILD_LOG"
 }
 
 test_docker_rebuild_warns_when_pruning_fails_without_failing_the_run() {
@@ -1138,6 +1162,7 @@ run_test test_docker_status_shows_container_drift_columns_and_filters_services
 run_test test_docker_status_skips_a_container_that_vanishes_during_inspect
 run_test test_docker_rebuild_prunes_once_after_all_successful_services
 run_test test_docker_rebuild_prunes_after_a_failed_service_without_masking_its_status
+run_test test_docker_rebuild_keeps_the_running_container_when_the_build_fails
 run_test test_docker_rebuild_warns_when_pruning_fails_without_failing_the_run
 run_test test_container_drift_notifies_when_restart_count_grows
 run_test test_container_drift_notifies_when_image_id_changes

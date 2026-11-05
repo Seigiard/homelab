@@ -1,6 +1,6 @@
 #!/bin/bash
 # ===========================================
-# Rebuild Docker Services (pull + restart + dangling-image prune)
+# Rebuild Docker Services (pull/build + restart + dangling-image prune)
 # ===========================================
 # Usage:
 #   ./scripts/docker/rebuild.sh                      # Rebuild all services
