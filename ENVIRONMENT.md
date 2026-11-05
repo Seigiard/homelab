@@ -58,9 +58,17 @@ Update Error: Not updatable as UEFI ESP partition not detected
 
 - **`amdgpu` из коробки** на ядре Ubuntu 24.04 (6.8) — переход Intel→AMD прозрачен, проприетарных драйверов не нужно. `i915` (Intel GPU) просто не подгружается.
 - **CPU-микрокод:** `amd64-microcode` установлен. `intel-microcode`, если остался от прошлого железа, на AMD не используется (можно `apt purge`).
-- **VAAPI-транскодинг** (Jellyfin, stash, в перспективе Immich): на AMD — `mesa-va-drivers` (radeonsi), **не** Intel `intel-media-va-driver`. Образ `jellyfin/jellyfin` несёт свои драйверы внутри, на хосте пакет нужен только для диагностики через `vainfo`. Контейнеру пробрасывается весь `/dev/dri` (нумерация `cardN` на amdgpu плавает между загрузками), а доступ к нему даёт `group_add` с GID группы `render` — он в `.env` как `RENDER_GROUP_ID`. Не совпал GID — Jellyfin молча уходит в софтверный транскодинг.
-- **VAAPI в stash:** образ `stashapp/stash` не несёт драйвер AMD, поэтому `services/stash/Dockerfile` ставит `mesa-va-gallium`. Статический `appdata/stash/config/ffmpeg` (6.1) собран без VAAPI, поэтому в `config.yml` заданы `ffmpeg_path: /usr/bin/ffmpeg` и `ffprobe_path: /usr/bin/ffprobe` — ffmpeg из образа. При пустых значениях stash выбирает статический бинарник. Проверка: `docker logs stash | grep -A2 InitHWSupport` показывает `H264 VAAPI`. HEVC в этом списке нет, хотя GPU его кодирует. GPU работает на потоке `stream.m3u8` (HLS, `h264_vaapi`); `stream.mp4` кодируется на CPU (`libx264`), это не поломка. Настройки «поток по умолчанию» в stash нет: плеер берёт первый поток из `sceneStreams`. Поэтому в Settings → Interface → Custom Javascript (`javascript` в `config.yml`, вне git) обёртка над `fetch` ставит `HLS HD (720p)` первым. У сцен ниже 720p такого потока нет: они стартуют с Direct, а без Direct (например, `.wmv`) — с `HLS` в исходном размере. Откат — выключить Custom Javascript.
+- **VAAPI-транскодинг** (Jellyfin, stash, в перспективе Immich): на AMD — `mesa-va-drivers` (radeonsi), **не** Intel `intel-media-va-driver`. Образ `jellyfin/jellyfin` несёт свои драйверы внутри, на хосте пакет нужен только для диагностики через `vainfo`. Контейнеру пробрасывается весь `/dev/dri` (нумерация `cardN` на amdgpu плавает между загрузками), а доступ к нему даёт `group_add` с GID группы `render` — он в `.env` как `RENDER_GROUP_ID`. Не совпал GID — сервис молча уходит в софтверный транскодинг. Драйвер для stash ставит его собственный образ — см. «stash: VAAPI и поток по умолчанию».
 - **Сенсоры:** температуры читаются через `k10temp` (AMD), не `coretemp`; при необходимости `sudo sensors-detect`.
+
+### stash: VAAPI и поток по умолчанию
+
+- **Драйвер:** образ `stashapp/stash` не несёт драйвер AMD, `services/stash/Dockerfile` ставит `mesa-va-gallium`.
+- **ffmpeg:** в `config.yml` заданы `ffmpeg_path: /usr/bin/ffmpeg` и `ffprobe_path: /usr/bin/ffprobe` — ffmpeg из образа. При пустых значениях stash берёт статический `appdata/stash/config/ffmpeg` (6.1), собранный без VAAPI.
+- **Проверка:** `docker logs stash 2>&1 | grep -A1 InitHWSupport` показывает `H264 VAAPI - h264_vaapi`. HEVC в этом списке нет, хотя GPU его кодирует.
+- **Какой поток идёт через GPU:** `stream.m3u8` (HLS, `h264_vaapi`). `stream.mp4` кодируется на CPU (`libx264`) — это норма.
+- **Поток по умолчанию:** плеер берёт первый поток из `sceneStreams`, настройки в stash нет. Поэтому Custom Javascript (Settings → Interface; код в `appdata/stash/config/custom.js`, выключатель `javascriptenabled` в `config.yml`, оба вне git) оборачивает `fetch` и ставит `HLS HD (720p)` первым. Сцены ниже 720p стартуют с Direct, а без Direct (например, `.wmv`) — с `HLS` в исходном размере. Откат — выключить Custom Javascript.
+- Видео подвисает при работающем VAAPI → «Домашний доступ к `*.1218217.xyz`».
 
 ### Управление вентиляторами (Super-I/O IT8613E)
 
@@ -324,7 +332,7 @@ Dozzle alerts не используются. Docker events могут сообщ
 | Уровень    | Домен              | Протокол | Механизм                       |
 | ---------- | ------------------ | -------- | ------------------------------ |
 | Локальный  | `*.home.local`     | HTTP     | mDNS через Avahi (системный)   |
-| Локальный  | `*.1218217.xyz`    | HTTPS    | Split-horizon DNS (AdGuard Home) + Let's Encrypt (Cloudflare DNS challenge) |
+| Локальный  | `*.1218217.xyz`    | HTTPS    | Split-horizon DNS (AdGuard Home) + Let's Encrypt (Cloudflare DNS challenge). Только для клиентов AdGuard, сейчас это сам сервер; остальные домашние устройства идут через Cloudflare — см. «Домашний доступ к `*.1218217.xyz`» |
 | Внешний    | `*.1218217.xyz`    | HTTPS    | Cloudflare Tunnel → Authelia    |
 
 ### Инфраструктурные компоненты
@@ -336,6 +344,12 @@ Dozzle alerts не используются. Docker events могут сообщ
 - **AdGuard Home** — DNS + блокировка рекламы + split-horizon для локального HTTPS
 - **Avahi** — mDNS для `*.home.local` (системный сервис, не Docker)
 - **Tailscale** — mesh VPN (WireGuard) для удалённого SSH-доступа к хосту. Host-сервис, не Docker (как NUT). См. раздел «Tailscale» ниже
+
+### Домашний доступ к `*.1218217.xyz`
+
+- **Дома ноутбук ходит на `*.1218217.xyz` через Cloudflare.** Его DNS — Tailscale (NextDNS) и роутер, оба отдают IP Cloudflare. Трафик упирается в отдачу домашнего канала (замер 2026-11-05: 4–5 Мбит/с). Видео в stash из-за этого подвисает на HLS 720p (`qp 20`, до 7 Мбит/с). Через `http://stash.home.local` тот же поток идёт без простоев, сегмент качается ~0,3 с.
+- **Редирект домашних браузеров на `*.home.local`.** Контейнер `home-redirect-watch` узнаёт публичный IP сервера и пишет `services/traefik/config/dynamic/home-redirect.yml` (вне git). Traefik редиректит запрос, когда `Cf-Connecting-Ip` равен этому IP и браузер открывает страницу (`Sec-Fetch-Dest: document`). Интервал обновления и список сервисов (`HOME_REDIRECT_SERVICES`) заданы в `services/traefik/docker-compose.yml`. Добавлять только сервисы, которые открывают в браузере. `auth` держать вне списка: редирект может сломать вход через Authelia (не проверялось).
+- **Откат редиректа.** До следующего деплоя `traefik`: `docker stop home-redirect-watch` и удалить файл. Насовсем: убрать сервис `home-redirect-watch` из compose, `docker rm -f home-redirect-watch` и удалить файл.
 
 ### DNS хоста (netplan + systemd-resolved)
 
@@ -380,9 +394,7 @@ FallbackDNS=1.1.1.1 1.0.0.1
 
 ### AdGuard Home: клиенты и списки фильтров
 
-- **Клиент — только сам сервер.** Роутер не раздаёт `192.168.1.41`: с ним не работают приложения Kaufland и Tesco, а второй DNS роутер задать не позволяет.
-- **Следствие: дома ноутбук ходит на `*.1218217.xyz` через Cloudflare.** Его DNS — Tailscale (NextDNS) и роутер, оба отдают IP Cloudflare. Трафик упирается в отдачу домашнего канала (замер 2026-11-05: 4–5 Мбит/с). Видео в stash из-за этого подвисает на HLS 720p (`qp 20`, до 7 Мбит/с). Через `http://stash.home.local` тот же поток идёт без простоев, сегмент качается ~0,3 с.
-- **Редирект домашних браузеров на `*.home.local`.** Контейнер `home-redirect-watch` раз в 5 минут узнаёт публичный IP сервера и пишет `services/traefik/config/dynamic/home-redirect.yml` (вне git). Traefik редиректит запрос, когда `Cf-Connecting-Ip` равен этому IP и браузер открывает страницу (`Sec-Fetch-Dest: document`). Список сервисов — `HOME_REDIRECT_SERVICES` в `services/traefik/docker-compose.yml`, сейчас только `stash`. `auth` туда не добавлять: может сломаться вход через Authelia. Откат — остановить контейнер и удалить файл.
+- **Клиент — только сам сервер.** Роутер не раздаёт `192.168.1.41`: с ним не работают приложения Kaufland и Tesco, а второй DNS роутер задать не позволяет. Поэтому остальные домашние устройства ходят на `*.1218217.xyz` через Cloudflare — см. «Домашний доступ к `*.1218217.xyz`».
 - **OOM при обновлении фильтров.** Во время ежесуточного обновления старый и новый наборы правил лежат в памяти одновременно. При лимите 512M контейнер убивался (exit 137, 10.2026). Проверка: `journalctl -k | grep -i "Killed process.*AdGuardHome"`.
 - **Выбор списков (10.2026):** OISD Big почти целиком покрыт HaGeZi Pro + TIF. Steven Black и PhishTank/OpenPhish дают мало уникальных доменов. Полный HaGeZi TIF (~2,2 млн правил, 75% всех) заменён на TIF Medium ради памяти. Текущий набор: `docker exec adguard sed -n "/^filters:/,/^whitelist_filters:/p" /opt/adguardhome/conf/AdGuardHome.yaml` или веб-интерфейс.
 - **Регион SK/CZ:** DNS-списка нет. Встроенную рекламу на сайтах убирает только uBlock Origin + «EasyList Czech and Slovak».

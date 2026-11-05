@@ -106,6 +106,8 @@ NUT и Tailscale работают на хосте, вне Docker.
 <important if="you are touching Cloudflare, the tunnel, TLS, or HTTPS redirects">
 
 Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON.
+
+Роутер `home-redirect` (файл вне git) уводит домашние браузеры с `stash.1218217.xyz` на `http://stash.home.local` — `ENVIRONMENT.md` → «Домашний доступ к `*.1218217.xyz`».
 </important>
 
 <important if="you are debugging ytpod, or YouTube playback returns 403 or 520">
@@ -145,7 +147,8 @@ Cloudflare: SSL mode = Flexible, Always Use HTTPS = ON.
 - **Источник истины — живой appdata**: он пережил смерть диска и свежее архивов в `backups/`. Архивы оставить нераспакованными.
 - Медиафайлы после переезда на зеркало не вернулись: stash показывает каталог как missing, transmission-omg качает раздачи заново.
 - **VAAPI на AMD Vega 8:** пробрасывается весь `/dev/dri`, доступ даёт `group_add` с GID группы `render` из `.env` → `RENDER_GROUP_ID` (`getent group render`). Неверный GID = молчаливый софтверный транскодинг без ошибок в логах.
-- **stash собирается локально:** `deploy.sh` берёт готовый образ, поэтому после правки `Dockerfile` и для обновления stash нужен `rebuild.sh stash`. Устройство VAAPI — `ENVIRONMENT.md` → «VAAPI в stash».
+- **stash собирается локально** (`services/stash/Dockerfile`): `deploy.sh` и `ship.sh` не пересобирают уже существующий образ. После правки `Dockerfile`: `./scripts/local/ship.sh stash`, затем `./scripts/local/hl './scripts/docker/rebuild.sh stash'`. Обновление stash — только вторая команда.
+- Транскодинг stash идёт на CPU или плеер стартует не с HLS 720p → `ENVIRONMENT.md` → «stash: VAAPI и поток по умолчанию». Видео подвисает или `stash.1218217.xyz` уводит на `stash.home.local` → `ENVIRONMENT.md` → «Домашний доступ к `*.1218217.xyz`».
 </important>
 
 <important if="you are working on ttrpg-map-viewer classification, ANTHROPIC_API_KEY, or the map tags and summaries">
