@@ -58,6 +58,30 @@ services:
       - "homepage.href=https://traefik.${EXTERNAL_DOMAIN:-1218217.xyz}"
       - "homepage.description=Reverse Proxy"
 
+  # A container instead of a systemd timer: it ships with the service, without sudo.
+  home-redirect-watch:
+    image: alpine:3.23
+    container_name: home-redirect-watch
+    restart: unless-stopped
+    user: ${PUID:-1000}:${PGID:-1000}
+    command: ["sh", "-c", "while :; do sh /update-home-redirect.sh; sleep 300; done"]
+    environment:
+      - HOME_REDIRECT_FILE=/dynamic/home-redirect.yml
+      # Regex alternatives, e.g. stash|movies. Add only services used in a browser.
+      - HOME_REDIRECT_SERVICES=stash
+      - EXTERNAL_DOMAIN=${EXTERNAL_DOMAIN:-1218217.xyz}
+      - LOCAL_DOMAIN=${LOCAL_DOMAIN:-home.local}
+    volumes:
+      - ./config/dynamic:/dynamic
+      - ./update-home-redirect.sh:/update-home-redirect.sh:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.05'
+          memory: 16M
+    networks:
+      - traefik-net
+
 networks:
   traefik-net:
     external: true

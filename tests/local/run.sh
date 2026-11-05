@@ -928,6 +928,48 @@ test_docker_rebuild_warns_when_pruning_fails_without_failing_the_run() {
   assert_contains 'docker rebuild logs prune failure as a warning' '[!]' "$COMMAND_OUTPUT"
 }
 
+run_home_redirect_update() {
+  # Arguments: fixture directory, fake Cloudflare trace response.
+  local fixture=$1 trace=$2 output
+  mkdir -p "$fixture/bin"
+  cat >"$fixture/bin/wget" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' '$trace'
+EOF
+  chmod +x "$fixture/bin/wget"
+  output=$(PATH="$fixture/bin:$PATH" HOME_REDIRECT_FILE="$fixture/home-redirect.yml" \
+    HOME_REDIRECT_SERVICES='stash' EXTERNAL_DOMAIN='example.test' LOCAL_DOMAIN='home.local' \
+    sh "$ROOT/services/traefik/update-home-redirect.sh" 2>&1)
+  COMMAND_STATUS=$?
+  COMMAND_OUTPUT=$output
+}
+
+test_home_redirect_rule_follows_the_public_ip() {
+  # #given
+  local fixture="$WORK_ROOT/home-redirect-follows"
+  run_home_redirect_update "$fixture" 'ip=203.0.113.7'
+  assert_equal 'home redirect first update succeeds' '0' "$COMMAND_STATUS" || return
+  assert_contains 'home redirect rule matches the first public IP' 'Header(`Cf-Connecting-Ip`, `203.0.113.7`)' "$(cat "$fixture/home-redirect.yml")" || return
+  # #when
+  run_home_redirect_update "$fixture" 'ip=198.51.100.9'
+  # #then
+  assert_equal 'home redirect second update succeeds' '0' "$COMMAND_STATUS" || return
+  assert_contains 'home redirect rule matches the new public IP' 'Header(`Cf-Connecting-Ip`, `198.51.100.9`)' "$(cat "$fixture/home-redirect.yml")"
+}
+
+test_home_redirect_keeps_the_rule_when_the_ip_lookup_is_invalid() {
+  # #given
+  local fixture="$WORK_ROOT/home-redirect-invalid" expected
+  run_home_redirect_update "$fixture" 'ip=203.0.113.7'
+  assert_equal 'home redirect setup update succeeds' '0' "$COMMAND_STATUS" || return
+  expected=$(cat "$fixture/home-redirect.yml")
+  # #when
+  run_home_redirect_update "$fixture" '<html>gateway error</html>'
+  # #then
+  assert_equal 'home redirect reports an invalid IP lookup' '1' "$COMMAND_STATUS" || return
+  assert_file_content 'home redirect keeps the last working rule' "$expected" "$fixture/home-redirect.yml"
+}
+
 test_container_drift_notifies_when_restart_count_grows() {
   # #given
   new_container_drift_fixture container-drift-restarts
@@ -1163,6 +1205,8 @@ run_test test_docker_status_skips_a_container_that_vanishes_during_inspect
 run_test test_docker_rebuild_prunes_once_after_all_successful_services
 run_test test_docker_rebuild_prunes_after_a_failed_service_without_masking_its_status
 run_test test_docker_rebuild_keeps_the_running_container_when_the_build_fails
+run_test test_home_redirect_rule_follows_the_public_ip
+run_test test_home_redirect_keeps_the_rule_when_the_ip_lookup_is_invalid
 run_test test_docker_rebuild_warns_when_pruning_fails_without_failing_the_run
 run_test test_container_drift_notifies_when_restart_count_grows
 run_test test_container_drift_notifies_when_image_id_changes
