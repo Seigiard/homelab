@@ -28,8 +28,11 @@ services:
       -g "vfs objects = catia fruit streams_xattr"
       -g "fruit:metadata = stream"
       -g "fruit:model = MacSamba"
+      -I /etc/samba/timemachine.conf
     volumes:
       - ${DATA_PATH:-/mnt/data}:/data
+      # Time Machine shares; mDNS announcement lives in scripts/avahi/.
+      - ./timemachine.conf:/etc/samba/timemachine.conf:ro
     ports:
       - "139:139"
       - "445:445"

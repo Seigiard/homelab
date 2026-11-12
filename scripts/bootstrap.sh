@@ -130,7 +130,7 @@ create_directories() {
     mkdir -p "$DATA_PATH"/public/{movies,tv,music,.torrents-temp}
     mkdir -p "$DATA_PATH"/users/andrew/{files,photos,sync}
     mkdir -p "$DATA_PATH"/users/yuliia/{files,photos,sync}
-    mkdir -p "$DATA_PATH"/backups
+    mkdir -p "$DATA_PATH"/backups/timemachine/{andrew,yuliia}
 
     log_info "Directory structure created"
 }

@@ -6,6 +6,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 source "$SCRIPT_DIR/../lib/config.sh"
 source "$SCRIPT_DIR/../lib/tui.sh"
 
@@ -45,6 +46,13 @@ publish-domain=yes
 
 [rlimits]
 EOF
+
+# Service announcements (Time Machine shares of the samba container)
+log_step "Installing Avahi service files"
+for service_file in "$PROJECT_DIR"/scripts/avahi/*.service; do
+    sudo install -m 644 "$service_file" /etc/avahi/services/
+    log_info "Installed: /etc/avahi/services/$(basename "$service_file")"
+done
 
 # Restart avahi
 sudo systemctl restart avahi-daemon
