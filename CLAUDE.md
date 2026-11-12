@@ -90,6 +90,13 @@ dotfiles/               # Симлинкуются в ~ при установк�
 - **Jellyfin и Navidrome снаружи без middleware** — телевизоры и мобильные плееры не проходят редирект; защищает собственный логин сервиса.
 </important>
 
+<important if="you are working on Time Machine, the Samba shares, or Avahi service announcements">
+
+- Time Machine живёт в контейнере `samba`: шары — `services/samba/timemachine.conf` (подключён через `-I`, потому что `-s` у `dperson/samba` не принимает опции шары), mDNS-анонс — `scripts/avahi/timemachine.service`, ставится хостовым шагом `04-setup-avahi.sh` (нужен sudo с паролем — запускает пользователь).
+- Имя шары в `timemachine.conf` и `adVN=` в avahi-файле должны совпадать. Квота `fruit:time machine max size` только per-share: в `[global]` она подменит свободное место у всех шар.
+- Подробности и проверка — `ENVIRONMENT.md` → «Time Machine (SMB)».
+</important>
+
 <important if="you are editing a value in .env that contains `$`, such as BASIC_AUTH_USERS">
 
 Значение — в одинарных кавычках с одинарным `$`: `BASIC_AUTH_USERS='feeds:$2y$05$...'`. `deploy.sh` делает `source .env` в bash, и без кавычек `$$` раскроется в PID. Генерация: `htpasswd -nbB feeds 'pass'`, результат обернуть в `'...'`.

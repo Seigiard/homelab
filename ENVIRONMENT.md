@@ -284,6 +284,20 @@ lock-файла и не выполнит даже чтение. Операции
 | users/andrew/photos |                    | a.photos.home.local  | auth   |
 | users/yuliia/       | y.files.home.local | files.home.local     | auth   |
 | users/yuliia/photos |                    | y.photos.home.local  | auth   |
+| backups/timemachine/andrew | home.local → `TimeMachine-andrew` |  | auth, Time Machine |
+| backups/timemachine/yuliia | home.local → `TimeMachine-yuliia` |  | auth, Time Machine |
+
+### Time Machine (SMB)
+
+Бэкапы макбуков идут в тот же контейнер `samba`, отдельных сервисов нет. Три части:
+
+- **Шары** — `services/samba/timemachine.conf`, подключается в smb.conf через `-I` в compose. Шара на пользователя, `valid users` совпадает с `SAMBA_USER_*` из `.env`. `fruit:time machine max size = 1T` — квота: Time Machine видит её как размер диска и без неё заполняет весь RAID, прежде чем начнёт удалять старые копии. Квота задана в файле, а не в `.env`: include-файл Samba переменных окружения не раскрывает.
+- **mDNS-анонс** — `scripts/avahi/timemachine.service`, ставится в `/etc/avahi/services/` шагом `04-setup-avahi.sh` (Avahi — хостовый сервис). Записи `_adisk._tcp` с `adVN=<имя шары>` показывают диски в System Settings → Time Machine без ручного монтирования; `_smb._tcp` показывает сервер в Finder → Network; `_device-info` даёт иконку Time Capsule. Переименовал шару — поправь `adVN=` и перезапусти шаг.
+- **Данные** — `/mnt/data/backups/timemachine/<user>/<Mac>.sparsebundle`, владелец `1000:1000`. В restic не входят и не должны: это сами бэкапы.
+
+Дефолтный smb.conf образа `dperson/samba` уже содержит `fruit:time machine = yes` в `[global]`, поэтому любая шара контейнера технически принимает Time Machine; квота и анонс есть только у двух шар выше.
+
+Проверка с мака: `dns-sd -L home _adisk._tcp local` показывает `dk0=`/`dk1=`; с сервера `docker exec samba smbclient -L localhost -U andrew%<пароль>` показывает `TimeMachine-andrew`. Подключение: System Settings → Time Machine → Add Backup Disk → `TimeMachine-<user> on home`, логин — пользователь Samba. Или из терминала: `sudo tmutil setdestination -a 'smb://andrew:<пароль>@home.local/TimeMachine-andrew'`.
 
 ### Syncthing
 
